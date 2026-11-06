@@ -37,7 +37,7 @@ function LoginPage() {
     <Shell>
       <div className="mx-auto max-w-sm">
         <h1 className="font-serif text-2xl">{mode === "signin" ? "Sign in" : "Create account"}</h1>
-        <p className="mt-1 text-sm text-muted">Your progress will sync across browsers and devices.</p>
+        <p className="mt-1 text-sm text-muted">Sign in so this browser and your other devices share one account. If the sync fails, this device still keeps its own copy.</p>
         {!authEnabled ? (
           <p className="mt-4 text-sm text-muted">Sign-in is not enabled on this deployment yet.</p>
         ) : (

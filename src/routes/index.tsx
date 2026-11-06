@@ -11,31 +11,13 @@ import { useDesk } from "@/lib/desk/provider";
 import { careerRank } from "@/lib/desk/ranks";
 import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
+import { DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
+import { MODE_EVENT, loadMode, type DeskMode } from "@/lib/desk/modes";
 import { RpgMode } from "./modes";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
-
-type Mode = "classic" | "base" | "trail" | "encounter" | "rpg" | "notes" | "ops";
-
-const modes: { id: Mode; label: string }[] = [
-  { id: "classic", label: "Classic" },
-  { id: "base", label: "Home Base" },
-  { id: "trail", label: "Uro Trail" },
-  { id: "encounter", label: "Encounter" },
-  { id: "notes", label: "Field Notes" },
-  { id: "rpg", label: "RPG" },
-  { id: "ops", label: "Ops" },
-];
-
-const MODE_KEY = "callroom-desk-mode";
-
-function loadMode(): Mode {
-  if (typeof window === "undefined") return "classic";
-  const saved = localStorage.getItem(MODE_KEY);
-  return modes.some((item) => item.id === saved) ? (saved as Mode) : "classic";
-}
 
 const focusChoices: { id: Focus; label: string }[] = [
   { id: "boost", label: "Boost" },
@@ -76,7 +58,7 @@ function completedBattleTopics(state: DeskState): Set<string> {
 function Home() {
   const desk = useDesk();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("classic");
+  const [mode, setMode] = useState<DeskMode>("classic");
   const stats = bucketStats(desk.state);
   const ranked = [...stats].sort((a, b) => b.suggested - a.suggested);
   const top = ranked[0];
@@ -88,13 +70,11 @@ function Home() {
   const battleDone = completedBattleTopics(desk.state);
 
   useEffect(() => {
-    setMode(loadMode());
+    const sync = () => setMode(loadMode());
+    sync();
+    window.addEventListener(MODE_EVENT, sync);
+    return () => window.removeEventListener(MODE_EVENT, sync);
   }, []);
-
-  const changeMode = (next: Mode) => {
-    setMode(next);
-    localStorage.setItem(MODE_KEY, next);
-  };
 
   const startAdaptive = () => {
     const id = desk.createTest({
@@ -153,22 +133,6 @@ function Home() {
             ? `${rank.left} more correct to ${rank.next}. The last title needs every Bank item and every guideline item.`
             : "Every item in the bank is correct."}
         </p>
-      </div>
-
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="text-sm font-semibold text-muted">Mode</span>
-        {modes.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => changeMode(m.id)}
-            className={`min-h-11 rounded px-3 text-sm font-semibold ${
-              mode === m.id ? "bg-navy text-white" : "border border-line bg-paper"
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
       </div>
 
       {mode === "classic" && (
@@ -471,8 +435,17 @@ function FieldNotes({
   battleDone: Set<string>;
   startTopicBattle: (topicId: string) => void;
 }) {
+  const desk = useDesk();
   const [view, setView] = useState<"gyms" | "collection">("gyms");
-  const caughtCount = battleDone.size;
+  const [caught, setCaught] = useState<number[]>([]);
+  const [fresh, setFresh] = useState<Creature[]>([]);
+  const have = new Set(caught);
+
+  useEffect(() => {
+    const result = syncCatches(desk.state.tests);
+    setCaught(result.caught);
+    setFresh(result.fresh);
+  }, [desk.state.tests]);
 
   return (
     <section className="overflow-hidden rounded border border-field-ink bg-field text-field-ink">
@@ -480,7 +453,7 @@ function FieldNotes({
         <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
         <h1 className="font-serif text-3xl tracking-tight">Field Notes</h1>
         <p className="mt-1 text-sm">
-          Eight gyms. Beat the next case to catch it. {caughtCount}/{fieldCreatures.length} in the guide.
+          Eight gyms. Each question you get right in a win catches one original field creature. {have.size}/151 caught.
         </p>
         <div className="mt-4 flex gap-2">
           <button
@@ -503,6 +476,12 @@ function FieldNotes({
           </button>
         </div>
       </div>
+
+      {view === "gyms" && fresh.length > 0 && (
+        <div className="mx-4 mt-4 rounded border border-field-fern bg-white p-3 text-sm">
+          Just caught: {fresh.map((creature) => `#${String(creature.number).padStart(3, "0")} ${creature.name}`).join(", ")}
+        </div>
+      )}
 
       {view === "gyms" && (
         <div className="p-4">
@@ -550,25 +529,24 @@ function FieldNotes({
 
       {view === "collection" && (
         <div className="p-4">
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
-            {fieldCreatures.map((c) => {
-              const isCaught = battleDone.has(c.id);
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-8">
+            {DEX.map((creature) => {
+              const isCaught = have.has(creature.number);
               return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => !isCaught && startTopicBattle(c.id)}
-                  disabled={isCaught}
+                <div
+                  key={creature.number}
                   className={`rounded border p-2 text-center text-xs ${
-                    isCaught
-                      ? "border-field-fern bg-white text-field-fern"
-                      : "border-field-ink/15 bg-field-ink/5 text-field-ink"
+                    isCaught ? "border-field-fern bg-white" : "border-field-ink/15 bg-field-ink/5"
                   }`}
                 >
-                  <div className="font-mono text-[10px] opacity-70">#{String(c.number).padStart(3, "0")}</div>
-                  <div className={`mx-auto mt-1 h-8 w-8 rounded-full ${isCaught ? "bg-field-fern" : "bg-field-ink/10"}`} />
-                  <div className="mt-1 truncate font-semibold">{isCaught ? c.name : "???"}</div>
-                </button>
+                  <div className="font-mono text-[10px] opacity-70">#{String(creature.number).padStart(3, "0")}</div>
+                  {isCaught ? (
+                    <img src={portraitFor(creature.number)} alt="" className="mx-auto mt-1 h-14 w-14 rounded-full object-cover" />
+                  ) : (
+                    <div className="mx-auto mt-1 h-14 w-14 rounded-full bg-field-ink/10" />
+                  )}
+                  <div className="mt-1 truncate font-semibold">{isCaught ? creature.name : "???"}</div>
+                </div>
               );
             })}
           </div>
