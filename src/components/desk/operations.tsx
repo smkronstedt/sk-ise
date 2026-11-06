@@ -185,7 +185,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
               </p>
             </div>
           </div>
-          <img src="/ops/task-unit.png" alt="Task unit" className="mx-auto h-40 w-auto object-contain" />
+          <img src="/ops/task-unit.png" alt="Task unit" className="mx-auto h-56 w-auto object-contain" />
           <div className="text-center">
             <img src="/ops/trident.png" alt="Trident" className="mx-auto h-24 w-auto" />
             <p className="mt-1 text-sm text-ops-olive">
@@ -319,7 +319,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
 
       {panel === "camp" && (
         <div className="grid gap-4 p-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
-          <div>
+          <div className="flex flex-col items-center">
             <img src="/ops/operator.jpg" alt="Your operator" className="max-h-96 w-full rounded border border-ops-amber object-cover object-top" />
             <img src="/ops/trident.png" alt="Trident" className="mt-3 h-16 w-auto" />
           </div>
