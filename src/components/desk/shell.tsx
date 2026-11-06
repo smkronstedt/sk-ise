@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { authClient, authEnabled } from "@/lib/auth/client";
+import { authClient, authEnabled, signOut } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadCards } from "@/lib/cards";
 import { deskModes, loadMode, saveMode, type DeskMode } from "@/lib/desk/modes";
@@ -15,6 +15,7 @@ const links = [
   { to: "/guidelines", label: "Guidelines" },
   { to: "/booklets", label: "Booklets" },
   { to: "/cards", label: "Cards" },
+  { to: "/leaderboard", label: "Leaderboard" },
 ] as const;
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -25,6 +26,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const { user, isPending } = useCurrentUserState();
   const [syncNote, setSyncNote] = useState("Saved on this device");
   const [mode, setMode] = useState<DeskMode>("classic");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     setMode(loadMode());
@@ -76,9 +78,38 @@ export function Shell({ children }: { children: ReactNode }) {
           </nav>
           {authEnabled ? (
             session.data?.user ? (
-              <p className="w-full text-xs text-white/70 sm:w-auto">
-                {session.data.user.email} · {syncNote}
-              </p>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-white/10"
+                  aria-label="Account menu"
+                >
+                  {session.data.user.image ? (
+                    <img src={session.data.user.image} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="font-semibold">{(session.data.user.name || "S").slice(0, 1).toUpperCase()}</span>
+                  )}
+                </button>
+                {menuOpen ? (
+                  <div className="absolute right-0 z-30 mt-2 w-52 rounded border border-line bg-paper py-1 text-ink shadow">
+                    <p className="px-3 py-2 text-xs text-muted">{syncNote}</p>
+                    <Link to="/profile" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold hover:bg-chip">
+                      Profile
+                    </Link>
+                    <Link to="/settings" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold hover:bg-chip">
+                      Settings
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => void signOut("/login")}
+                      className="block w-full px-3 py-2 text-left text-sm font-semibold hover:bg-chip"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             ) : (
               <Link to="/login" className="rounded px-3 py-2 text-sm font-semibold text-white/85 hover:bg-white/10">
                 Sign in

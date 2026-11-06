@@ -27,15 +27,23 @@ export const saveProgress = createServerFn({ method: "POST" })
     const sql = await getSql();
     const desk = JSON.stringify(parsed.desk ?? {});
     const bank = JSON.stringify(parsed.bank ?? {});
-    const cards = JSON.stringify(parsed.cards ?? []);
+    const cards = JSON.stringify(parsed.cards ?? {});
+    const score = bankScore(parsed.bank);
     await sql`
-      insert into user_progress (user_id, desk, bank, cards, updated_at)
-      values (${context.userId}, ${desk}::jsonb, ${bank}::jsonb, ${cards}::jsonb, now())
+      insert into user_progress (user_id, desk, bank, cards, score, updated_at)
+      values (${context.userId}, ${desk}::jsonb, ${bank}::jsonb, ${cards}::jsonb, ${score}, now())
       on conflict (user_id) do update set
         desk = excluded.desk,
         bank = excluded.bank,
         cards = excluded.cards,
+        score = excluded.score,
         updated_at = now()
     `;
     return { ok: true as const };
   });
+
+function bankScore(bank: unknown) {
+  const answers = (bank as { answers?: Record<string, { correct?: boolean }> } | null)?.answers;
+  if (!answers) return 0;
+  return Object.values(answers).filter((row) => row?.correct).length;
+}
