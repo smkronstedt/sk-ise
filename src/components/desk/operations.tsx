@@ -145,7 +145,10 @@ export function Operations({ correct, total }: { correct: number; total: number 
       <div className="border-b border-white/10 px-4 py-4">
         <p className="text-xs font-semibold tracking-wide text-ops-amber uppercase">Night ops</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-          <h1 className="font-serif text-3xl tracking-tight">Two routes. One camp.</h1>
+          <div className="flex items-center gap-3">
+            <img src="/ops/operator.jpg" alt="Your operator" className="h-16 w-16 rounded-full border border-ops-amber object-cover object-top" />
+            <h1 className="font-serif text-3xl tracking-tight">Two routes. One camp.</h1>
+          </div>
           <p className="text-sm text-ops-olive">
             Lv {level}
             <span className="mx-2 text-faint">·</span>
@@ -289,7 +292,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
 
       {panel === "camp" && (
         <div className="grid gap-4 p-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
-          <img src="/ops/operator.jpg" alt="" className="max-h-96 w-full rounded border border-line object-cover object-top" />
+          <img src="/ops/operator.jpg" alt="Your operator" className="max-h-96 w-full rounded border border-ops-amber object-cover object-top" />
           <div>
             <h2 className="font-serif text-2xl">Camp</h2>
             <p className="mt-1 text-sm text-muted">One item per slot. Supplies stay on once you buy them.</p>
