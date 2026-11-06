@@ -1,4 +1,4 @@
-import { loadProgress, saveProgress } from "@/lib/progress.server";
+import { loadProgress, saveProgress } from "@/lib/progress-api";
 
 const DESK = "callroom-desk-v1";
 const BANK = "callroom-original-bank-v1";
