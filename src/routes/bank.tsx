@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Shell } from "@/components/desk/shell";
+import { logActivity } from "@/lib/desk/activity";
 import { addCard } from "@/lib/cards";
 import { linksForBankTopic } from "@/lib/desk/statements";
 import {
@@ -122,6 +123,7 @@ function BankPage() {
         [item.id]: { choice: picked, correct: isCorrect },
       },
     });
+    logActivity("questions");
     if (!isCorrect) addCard(item, "auto");
   };
 

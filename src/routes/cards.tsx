@@ -9,6 +9,7 @@ import {
   addGenerated,
   type Card,
 } from '@/lib/cards';
+import { logActivity } from '@/lib/desk/activity';
 
 export const Route = createFileRoute('/cards')({
   component: CardsPage,
@@ -38,6 +39,7 @@ function CardsPage() {
     const updated = cards.map((c) => (c.id === next.id ? next : c));
     setCards(updated);
     saveCards(updated);
+    logActivity('cards');
     const remaining = updated.filter((c) => c.due <= Date.now() && c.source !== 'full');
     setCurrent(remaining[0] ?? null);
     setRevealed(false);

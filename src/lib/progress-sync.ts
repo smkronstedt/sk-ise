@@ -1,4 +1,5 @@
 import { loadProgress, saveProgress } from "@/lib/progress-api";
+import { loadActivity, mergeActivity, saveActivity, type DayLog } from "@/lib/desk/activity";
 
 const DESK = "callroom-desk-v1";
 const BANK = "callroom-original-bank-v1";
@@ -60,7 +61,9 @@ export async function syncDeviceProgress(): Promise<"synced" | "device"> {
       return "synced";
     }
     const parsed = JSON.parse(remote.payload) as { desk?: unknown; bank?: unknown; cards?: unknown };
-    const cardsField = parsed.cards as { list?: unknown; ops?: unknown } | unknown[] | null;
+    const cardsField = parsed.cards as { list?: unknown; ops?: unknown; activity?: Record<string, DayLog> } | unknown[] | null;
+    const remoteActivity = Array.isArray(cardsField) ? null : cardsField?.activity;
+    saveActivity(mergeActivity(loadActivity(), remoteActivity));
     const remoteBundle: Bundle = {
       desk: parsed.desk ?? null,
       bank: parsed.bank ?? null,
@@ -83,6 +86,6 @@ function pack(bundle: Bundle) {
   return {
     desk: bundle.desk ?? {},
     bank: bundle.bank ?? {},
-    cards: { list: bundle.cards ?? [], ops: bundle.ops ?? null },
+    cards: { list: bundle.cards ?? [], ops: bundle.ops ?? null, activity: loadActivity() },
   };
 }

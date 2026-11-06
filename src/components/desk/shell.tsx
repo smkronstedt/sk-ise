@@ -10,6 +10,7 @@ const links = [
   { to: "/bank", label: "Bank" },
   { to: "/create", label: "Build" },
   { to: "/tests", label: "Tests" },
+  { to: "/log", label: "Log" },
   { to: "/items", label: "Items" },
   { to: "/guidelines", label: "Guidelines" },
   { to: "/booklets", label: "Booklets" },

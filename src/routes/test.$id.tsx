@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Figure } from "@/components/desk/figure";
 import { Shell } from "@/components/desk/shell";
 import { scoreTest } from "@/lib/desk/adapt";
+import { logActivity } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
 import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
@@ -106,6 +107,7 @@ function TestPage() {
       };
       saveBankProgress(progress);
     }
+    logActivity("questions");
   };
 
   const jump = (index: number) => {

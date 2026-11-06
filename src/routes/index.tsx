@@ -268,6 +268,14 @@ function ClassicView({
       </section>
 
       <aside className="flex flex-col gap-4">
+        <section className="rounded border border-amber-500 bg-amber-50 p-4">
+          <p className="text-xs font-semibold tracking-wide text-amber-800 uppercase">Prize and log</p>
+          <h2 className="font-serif text-2xl text-amber-950">SASP year purse</h2>
+          <p className="mt-1 text-sm text-amber-950">Finish a 150-question year for $1,000. The calendar counts questions and cards by day.</p>
+          <Link to="/log" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-navy">
+            Open the log
+          </Link>
+        </section>
         <section className="rounded border border-line bg-paper p-4">
           <p className="text-sm font-semibold tracking-wide text-muted uppercase">2025 in-service</p>
           <h2 className="font-serif text-2xl tracking-tight">
