@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { loadCards } from "@/lib/cards";
 
 const links = [
   { to: "/", label: "Desk" },
@@ -9,10 +10,12 @@ const links = [
   { to: "/items", label: "Items" },
   { to: "/guidelines", label: "Guidelines" },
   { to: "/booklets", label: "Booklets" },
+  { to: "/cards", label: "Cards" },
 ] as const;
 
 export function Shell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (state) => state.location.pathname });
+  const dueCount = typeof window !== "undefined" ? loadCards().filter((c) => c.due <= Date.now() && c.source !== "full").length : 0;
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-navy-2 bg-navy text-white">
@@ -31,6 +34,7 @@ export function Shell({ children }: { children: ReactNode }) {
                   className={`rounded px-3 py-2 text-sm font-semibold ${on ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
                 >
                   {link.label}
+                  {link.to === "/cards" && dueCount > 0 ? <span className="ml-1 text-xs">{dueCount}</span> : null}
                 </Link>
               );
             })}
