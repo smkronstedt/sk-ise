@@ -5,7 +5,7 @@ import { bucketStats, scoreTest } from "@/lib/desk/adapt";
 import { ise2025 } from "@/lib/desk/ise";
 import { questions } from "@/lib/desk/questions";
 import { useDesk } from "@/lib/desk/provider";
-import type { BlueprintId, Focus } from "@/lib/desk/types";
+import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
 
 export const Route = createFileRoute("/")({
@@ -37,13 +37,24 @@ const focusChoices: { id: Focus; label: string }[] = [
   { id: "ease", label: "Ease" },
 ];
 
-// Original Field Notes creatures (one per topic)
 const fieldCreatures = topics.map((t, i) => ({
   id: t.id,
   name: t.short,
   number: i + 1,
   type: t.blueprintId,
 }));
+
+function completedBattleTopics(state: DeskState): Set<string> {
+  const done = new Set<string>();
+  for (const test of state.tests) {
+    if (test.status !== "done") continue;
+    if (!test.name.startsWith("Battle:")) continue;
+    const topicShort = test.name.replace("Battle: ", "");
+    const topic = topics.find((t) => t.short === topicShort);
+    if (topic) done.add(topic.id);
+  }
+  return done;
+}
 
 function Home() {
   const desk = useDesk();
@@ -57,6 +68,7 @@ function Home() {
   const openTests = [...desk.state.tests].reverse();
   const pct = attempted ? Math.round((correct / attempted) * 100) : 0;
   const mastered = stats.filter((s) => s.attempted > 5 && s.correct / s.attempted >= 0.7).length;
+  const battleDone = completedBattleTopics(desk.state);
 
   useEffect(() => {
     setMode(loadMode());
@@ -124,9 +136,9 @@ function Home() {
         />
       )}
       {mode === "base" && <HomeBase pct={pct} mastered={mastered} dueCards={0} startAdaptive={startAdaptive} />}
-      {mode === "trail" && <UroTrail stats={stats} startAdaptive={startAdaptive} />}
+      {mode === "trail" && <UroTrail stats={stats} battleDone={battleDone} startAdaptive={startAdaptive} />}
       {mode === "encounter" && <Encounter pct={pct} top={top} startAdaptive={startAdaptive} />}
-      {mode === "notes" && <FieldNotes stats={stats} startTopicBattle={startTopicBattle} />}
+      {mode === "notes" && <FieldNotes battleDone={battleDone} startTopicBattle={startTopicBattle} />}
       {mode === "rpg" && <RpgPlaceholder />}
     </Shell>
   );
@@ -363,19 +375,21 @@ function HomeBase({
 
 function UroTrail({
   stats,
+  battleDone,
   startAdaptive,
 }: {
   stats: ReturnType<typeof bucketStats>;
+  battleDone: Set<string>;
   startAdaptive: () => void;
 }) {
   return (
     <section className="rounded border border-line bg-paper overflow-hidden">
       <div className="bg-gradient-to-b from-emerald-50 to-white px-6 py-6">
         <h1 className="font-serif text-3xl tracking-tight">Uro Trail</h1>
-        <p className="mt-1 text-sm text-muted">Landmarks unlock as you master topics.</p>
+        <p className="mt-1 text-sm text-muted">Landmarks unlock when you complete a battle.</p>
         <div className="mt-5 flex flex-wrap gap-2">
           {stats.map((s) => {
-            const done = s.attempted > 3 && s.correct / Math.max(s.attempted, 1) >= 0.65;
+            const done = battleDone.has(s.id) || (s.attempted >= 3 && s.correct / Math.max(s.attempted, 1) >= 0.6);
             return (
               <div
                 key={s.id}
@@ -398,7 +412,7 @@ function UroTrail({
         </button>
       </div>
       <div className="h-48 bg-gradient-to-r from-green-100 via-amber-50 to-sky-100 flex items-center justify-center">
-        <div className="text-sm text-muted">Trail map — your wagon advances with progress</div>
+        <div className="text-sm text-muted">Trail map — landmarks light up after battles</div>
       </div>
     </section>
   );
@@ -442,26 +456,23 @@ function Encounter({
 }
 
 function FieldNotes({
-  stats,
+  battleDone,
   startTopicBattle,
 }: {
-  stats: ReturnType<typeof bucketStats>;
+  battleDone: Set<string>;
   startTopicBattle: (topicId: string) => void;
 }) {
-  const caught = new Set(
-    stats.filter((s) => s.attempted > 3 && s.correct / Math.max(s.attempted, 1) >= 0.65).map((s) => s.id),
-  );
-  const next = fieldCreatures.find((c) => !caught.has(c.id));
+  const next = fieldCreatures.find((c) => !battleDone.has(c.id));
 
   return (
     <section className="rounded border border-line bg-paper overflow-hidden">
       <div className="bg-gradient-to-b from-amber-50 to-white px-6 py-6">
         <h1 className="font-serif text-3xl tracking-tight">Field Notes</h1>
         <p className="mt-1 text-sm text-muted">
-          Collect all {fieldCreatures.length} cases. Battles use your real questions.
+          Collect all {fieldCreatures.length} cases. Finish a battle to catch it.
         </p>
         <div className="mt-4 flex items-center gap-4">
-          <div className="text-2xl font-bold text-amber-700">{caught.size}/{fieldCreatures.length}</div>
+          <div className="text-2xl font-bold text-amber-700">{battleDone.size}/{fieldCreatures.length}</div>
           <div className="text-sm text-muted">caught</div>
           {next && (
             <button
@@ -479,7 +490,7 @@ function FieldNotes({
         <h2 className="mb-3 text-sm font-semibold text-muted uppercase">Collection</h2>
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
           {fieldCreatures.map((c) => {
-            const isCaught = caught.has(c.id);
+            const isCaught = battleDone.has(c.id);
             return (
               <button
                 key={c.id}
