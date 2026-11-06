@@ -7,6 +7,7 @@ import { questions } from "@/lib/desk/questions";
 import { useDesk } from "@/lib/desk/provider";
 import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
+import { UroTrail, RpgMode } from "./modes";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -147,10 +148,10 @@ function Home() {
         />
       )}
       {mode === "base" && <HomeBase pct={pct} mastered={mastered} dueCards={0} startAdaptive={startAdaptive} />}
-      {mode === "trail" && <UroTrail stats={stats} battleDone={battleDone} startAdaptive={startAdaptive} />}
+      {mode === "trail" && <UroTrail battleDone={battleDone} startAdaptive={startAdaptive} />}
       {mode === "encounter" && <Encounter pct={pct} top={top} startAdaptive={startAdaptive} />}
       {mode === "notes" && <FieldNotes battleDone={battleDone} startTopicBattle={startTopicBattle} />}
-      {mode === "rpg" && <RpgPlaceholder />}
+      {mode === "rpg" && <RpgMode pct={pct} mastered={mastered} battleDone={battleDone} startAdaptive={startAdaptive} />}
     </Shell>
   );
 }
@@ -384,51 +385,6 @@ function HomeBase({
   );
 }
 
-function UroTrail({
-  stats,
-  battleDone,
-  startAdaptive,
-}: {
-  stats: ReturnType<typeof bucketStats>;
-  battleDone: Set<string>;
-  startAdaptive: () => void;
-}) {
-  return (
-    <section className="rounded border border-line bg-paper overflow-hidden">
-      <div className="bg-gradient-to-b from-emerald-50 to-white px-6 py-6">
-        <h1 className="font-serif text-3xl tracking-tight">Uro Trail</h1>
-        <p className="mt-1 text-sm text-muted">Landmarks unlock when you complete a battle.</p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {stats.map((s) => {
-            const done = battleDone.has(s.id) || (s.attempted >= 3 && s.correct / Math.max(s.attempted, 1) >= 0.6);
-            return (
-              <div
-                key={s.id}
-                className={`rounded-full border px-3 py-1 text-sm font-semibold ${
-                  done ? "border-green-600 bg-green-100 text-green-800" : "border-line bg-white text-ink"
-                }`}
-              >
-                {s.short}
-                {done ? " ✓" : ""}
-              </div>
-            );
-          })}
-        </div>
-        <button
-          type="button"
-          onClick={startAdaptive}
-          className="mt-5 min-h-11 rounded bg-emerald-700 px-5 text-sm font-semibold text-white"
-        >
-          Continue trail
-        </button>
-      </div>
-      <div className="h-48 bg-gradient-to-r from-green-100 via-amber-50 to-sky-100 flex items-center justify-center">
-        <div className="text-sm text-muted">Trail map — landmarks light up after battles</div>
-      </div>
-    </section>
-  );
-}
-
 function Encounter({
   pct,
   top,
@@ -574,18 +530,6 @@ function FieldNotes({
           </div>
         </div>
       )}
-    </section>
-  );
-}
-
-function RpgPlaceholder() {
-  return (
-    <section className="rounded border border-line bg-paper p-6">
-      <h1 className="font-serif text-3xl tracking-tight">RPG</h1>
-      <p className="mt-1 text-sm text-muted">Overworld coming. Topics will become towns and dungeons that unlock with mastery.</p>
-      <div className="mt-6 h-40 rounded bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center text-sm text-muted">
-        Map in progress
-      </div>
     </section>
   );
 }
