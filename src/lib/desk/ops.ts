@@ -26,32 +26,32 @@ export type Gear = {
   note: string;
 };
 
-export type Town = { id: string; name: string; note: string; topics: string[] };
+export type Town = { id: string; name: string; note: string; topics: string[]; x: number; y: number };
 
 export const theaters: { id: TheaterId; name: string; towns: Town[] }[] = [
   {
     id: "afghanistan",
     name: "Afghanistan",
     towns: [
-      { id: "bagram", name: "Bagram", note: "The strip. Basics before you roll.", topics: ["Anatomy/Embryology", "Ethics/Professionalism/Statistics", "Pharmacology", "Imaging/Radiation Safety"] },
-      { id: "kabul", name: "Kabul", note: "Bladder and urothelial oncology.", topics: ["Oncology-Bladder/Urothelial"] },
-      { id: "jalalabad", name: "Jalalabad", note: "Prostate oncology.", topics: ["Oncology-Prostate"] },
-      { id: "kandahar", name: "Kandahar", note: "Kidney and adrenal.", topics: ["Oncology-Kidney", "Oncology-Adrenal"] },
-      { id: "helmand", name: "Lashkar Gah", note: "Stones.", topics: ["Stones"] },
-      { id: "herat", name: "Herat", note: "Trauma and diversion. Last town on this route.", topics: ["Trauma/Reconstruction", "Urinary Diversion"] },
+      { id: "bagram", name: "Bagram", note: "The strip. Basics before you roll.", x: 46, y: 22, topics: ["Anatomy/Embryology", "Ethics/Professionalism/Statistics", "Pharmacology", "Imaging/Radiation Safety"] },
+      { id: "kabul", name: "Kabul", note: "Bladder and urothelial oncology.", x: 50, y: 40, topics: ["Oncology-Bladder/Urothelial"] },
+      { id: "jalalabad", name: "Jalalabad", note: "Prostate oncology.", x: 76, y: 48, topics: ["Oncology-Prostate"] },
+      { id: "kandahar", name: "Kandahar", note: "Kidney and adrenal.", x: 58, y: 68, topics: ["Oncology-Kidney", "Oncology-Adrenal"] },
+      { id: "helmand", name: "Lashkar Gah", note: "Stones.", x: 34, y: 76, topics: ["Stones"] },
+      { id: "herat", name: "Herat", note: "Trauma and diversion. Last town on this route.", x: 16, y: 52, topics: ["Trauma/Reconstruction", "Urinary Diversion"] },
     ],
   },
   {
     id: "iraq",
     name: "Iraq",
     towns: [
-      { id: "kuwait", name: "Kuwait staging", note: "Infection and inflammation.", topics: ["Infection/Inflammation"] },
-      { id: "basra", name: "Basra", note: "BPH, LUTS, and incontinence.", topics: ["BPH/LUTS", "Voiding Dysfunction/Incontinence"] },
-      { id: "nasiriyah", name: "Nasiriyah", note: "Neurogenic bladder and pelvic floor.", topics: ["Neurogenic Bladder", "Female Urology/Pelvic Floor"] },
-      { id: "baghdad", name: "Baghdad", note: "Andrology and sexual dysfunction.", topics: ["Infertility/Andrology", "Sexual Dysfunction"] },
-      { id: "ramadi", name: "Ramadi", note: "Testis, penis, and urethra.", topics: ["Oncology-Testis", "Oncology-Penis/Urethra"] },
-      { id: "fallujah", name: "Fallujah", note: "Pediatrics.", topics: ["Pediatrics"] },
-      { id: "mosul", name: "Mosul", note: "Laparoscopy, transplant, and the rest. Last town.", topics: ["Laparoscopy/Robotics/Perioperative", "Transplant/Renal Physiology", "Other"] },
+      { id: "kuwait", name: "Kuwait staging", note: "Infection and inflammation.", x: 54, y: 84, topics: ["Infection/Inflammation"] },
+      { id: "basra", name: "Basra", note: "BPH, LUTS, and incontinence.", x: 48, y: 70, topics: ["BPH/LUTS", "Voiding Dysfunction/Incontinence"] },
+      { id: "nasiriyah", name: "Nasiriyah", note: "Neurogenic bladder and pelvic floor.", x: 40, y: 56, topics: ["Neurogenic Bladder", "Female Urology/Pelvic Floor"] },
+      { id: "baghdad", name: "Baghdad", note: "Andrology and sexual dysfunction.", x: 56, y: 42, topics: ["Infertility/Andrology", "Sexual Dysfunction"] },
+      { id: "ramadi", name: "Ramadi", note: "Testis, penis, and urethra.", x: 28, y: 44, topics: ["Oncology-Testis", "Oncology-Penis/Urethra"] },
+      { id: "fallujah", name: "Fallujah", note: "Pediatrics.", x: 42, y: 36, topics: ["Pediatrics"] },
+      { id: "mosul", name: "Mosul", note: "Laparoscopy, transplant, and the rest. Last town.", x: 50, y: 16, topics: ["Laparoscopy/Robotics/Perioperative", "Transplant/Renal Physiology", "Other"] },
     ],
   },
 ];

@@ -37,6 +37,8 @@ export function Operations({ correct, total }: { correct: number; total: number 
   const [theater, setTheater] = useState<TheaterId>("afghanistan");
   const [panel, setPanel] = useState<"map" | "camp" | "shop">("map");
   const [busy, setBusy] = useState("");
+  const [selectedId, setSelectedId] = useState("bagram");
+  const [flash, setFlash] = useState("");
 
   useEffect(() => {
     setSave(loadOps());
@@ -193,11 +195,64 @@ export function Operations({ correct, total }: { correct: number; total: number 
                 </button>
               ))}
             </div>
-            <img
-              src={theater === "afghanistan" ? "/ops/afghanistan.jpg" : "/ops/iraq.jpg"}
-              alt=""
-              className="w-full rounded border border-line object-cover"
-            />
+            <div className="relative">
+              <img
+                src={theater === "afghanistan" ? "/ops/afghanistan.jpg" : "/ops/iraq.jpg"}
+                alt=""
+                className="w-full rounded border border-line object-cover"
+              />
+              {route.towns.map((town) => {
+                const on = town.id === selectedId;
+                const done = cleared(town);
+                return (
+                  <button
+                    key={town.id}
+                    type="button"
+                    aria-label={town.name}
+                    onClick={() => {
+                      setSelectedId(town.id);
+                      setFlash(`${town.name} selected`);
+                    }}
+                    style={{ left: `${town.x}%`, top: `${town.y}%` }}
+                    className={`absolute z-10 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 ${
+                      on ? "border-navy bg-paper ring-4 ring-navy" : done ? "border-correct bg-paper" : "border-white bg-navy"
+                    }`}
+                  >
+                    <span className={`h-3 w-3 rounded-full ${done ? "bg-correct" : on ? "bg-navy" : "bg-white"}`} />
+                  </button>
+                );
+              })}
+              {(() => {
+                const town = route.towns.find((item) => item.id === selectedId) ?? route.towns[openIndex];
+                if (!town) return null;
+                const index = route.towns.findIndex((item) => item.id === town.id);
+                const done = cleared(town);
+                const open = index <= openIndex;
+                const resume = desk.state.tests.some((test) => test.status === "open" && test.name === missionName(town));
+                return (
+                  <div className="absolute inset-x-3 bottom-3 z-20 rounded border border-navy bg-paper p-3">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <h2 className="font-semibold">{town.name}</h2>
+                      <span className="text-sm text-muted">{done ? "Cleared" : open ? "Open" : "Locked"}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-muted">{town.note}</p>
+                    {open ? (
+                      <button
+                        type="button"
+                        onClick={() => void startTown(town)}
+                        disabled={busy === town.id}
+                        className="mt-2 min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white disabled:opacity-50"
+                      >
+                        {busy === town.id ? "Opening…" : resume ? "Resume" : done ? "Run again" : "Start"}
+                      </button>
+                    ) : (
+                      <p className="mt-2 text-sm">Clear {route.towns[index - 1]?.name} first.</p>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+            {flash ? <p className="mt-2 text-sm font-semibold">{flash}</p> : null}
           </div>
           <ol className="flex flex-col gap-2">
             {route.towns.map((town, index) => {
@@ -206,7 +261,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
               const current = index === openIndex && !done;
               const resume = desk.state.tests.some((test) => test.status === "open" && test.name === missionName(town));
               return (
-                <li key={town.id} className={`rounded border px-3 py-3 ${current ? "border-navy bg-blue-soft" : "border-line"}`}>
+                <li key={town.id} className={`rounded border px-3 py-3 ${town.id === selectedId ? "border-navy bg-blue-soft" : "border-line"}`}>
                   <div className="flex items-baseline justify-between gap-2">
                     <h2 className="font-semibold">{town.name}</h2>
                     <span className="text-sm text-muted">{done ? "Cleared" : current ? "You are here" : open ? "Open" : "Locked"}</span>
