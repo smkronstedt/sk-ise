@@ -74,9 +74,9 @@ export function RpgMode({
   battleDone: Set<string>;
   startAdaptive: () => void;
 }) {
-  const level = Math.floor(pct / 10) + 1;
-  const rank = pct >= 80 ? "Chief" : pct >= 65 ? "Senior" : pct >= 50 ? "Junior" : "Intern";
   const caught = battleDone.size;
+  const level = Math.min(caught + 1, 31);
+  const rank = caught >= 20 ? "Chief" : caught >= 12 ? "Senior" : caught >= 6 ? "Junior" : "Intern";
 
   return (
     <section className="rounded border border-line bg-paper overflow-hidden">
@@ -102,10 +102,10 @@ export function RpgMode({
         <div className="mt-5">
           <div className="mb-1 flex justify-between text-sm">
             <span>Progress</span>
-            <span>{pct}%</span>
+            <span>{caught}/31</span>
           </div>
           <div className="h-3 overflow-hidden rounded bg-chip">
-            <div className="h-full bg-indigo-600" style={{ width: `${pct}%` }} />
+            <div className="h-full bg-indigo-600" style={{ width: `${(caught / 31) * 100}%` }} />
           </div>
         </div>
 
