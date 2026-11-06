@@ -16,6 +16,8 @@ import {
 } from "@/lib/desk/ops";
 import { useDesk } from "@/lib/desk/provider";
 
+const MEDIC = 40;
+
 const slots: { id: Slot; label: string }[] = [
   { id: "head", label: "Head" },
   { id: "eyes", label: "Eyes" },
@@ -82,11 +84,29 @@ export function Operations({ correct, total }: { correct: number; total: number 
 
   const theaterDone = (id: TheaterId) => theaters.find((row) => row.id === id)?.towns.every((town) => cleared(town)) ?? false;
   const hornOpen = theaterDone("afghanistan") && theaterDone("iraq");
+  const lastOp = desk.state.tests
+    .filter((test) => test.status === "done" && test.name.startsWith("Op:"))
+    .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0))[0];
+  let hits = 0;
+  if (lastOp) {
+    for (const id of lastOp.questionIds) {
+      const answer = lastOp.answers[id];
+      if (!answer?.submitted || answer.choice == null) continue;
+      if (answer.choice !== getQuestion(id)?.answer) hits += 1;
+    }
+  }
+  const down = Boolean(lastOp && hits >= 6 && !save.treated.includes(lastOp.id));
+
+  const payMedic = () => {
+    if (!lastOp || !down || cash < MEDIC) return;
+    commit({ ...save, treated: [...save.treated, lastOp.id], fees: save.fees + MEDIC });
+  };
 
   const frontier = route.towns.findIndex((town) => !cleared(town));
   const openIndex = frontier === -1 ? route.towns.length - 1 : frontier;
 
   const startTown = async (town: Town) => {
+    if (down) return;
     const existing = desk.state.tests.find((test) => test.status === "open" && test.name === missionName(town));
     if (existing) {
       void navigate({ to: "/test/$id", params: { id: existing.id } });
@@ -155,9 +175,9 @@ export function Operations({ correct, total }: { correct: number; total: number 
           Night ops
           <img src="/ops/trident-flag.png" alt="" className="h-8 w-8 rounded object-cover" />
         </p>
-        <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <img src="/ops/operator.jpg" alt="Your operator" className="h-16 w-16 rounded-full border border-ops-amber object-cover object-top" />
+        <div className="mt-2 grid items-center gap-4 lg:grid-cols-[minmax(0,1.2fr)_auto_auto]">
+          <div className="flex min-w-0 items-center gap-3">
+            <img src="/ops/operator.jpg" alt="Your operator" className="h-16 w-16 shrink-0 rounded-full border border-ops-amber object-cover object-top" />
             <div>
               <h1 className="font-serif text-3xl tracking-tight">Two routes. One camp.</h1>
               <p className="mt-2 max-w-xl text-sm text-ops-olive">
@@ -165,9 +185,9 @@ export function Operations({ correct, total }: { correct: number; total: number 
               </p>
             </div>
           </div>
-          <img src="/ops/task-unit.png" alt="Task unit" className="h-20 w-20 object-contain" />
-          <div className="text-right">
-            <img src="/ops/trident.png" alt="Trident" className="ml-auto h-10 w-auto" />
+          <img src="/ops/task-unit.png" alt="Task unit" className="mx-auto h-40 w-auto object-contain" />
+          <div className="text-center">
+            <img src="/ops/trident.png" alt="Trident" className="mx-auto h-24 w-auto" />
             <p className="mt-1 text-sm text-ops-olive">
               Lv {level}
               <span className="mx-2 text-faint">·</span>
@@ -198,6 +218,21 @@ export function Operations({ correct, total }: { correct: number; total: number 
             Study the bank
           </Link>
         </div>
+        {down ? (
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded border border-ops-amber/60 px-3 py-2">
+            <p className="text-sm text-ops-olive">
+              {hits} misses on the last town. You are down. A combat medic costs ${MEDIC} before you roll again.
+            </p>
+            <button
+              type="button"
+              disabled={cash < MEDIC}
+              onClick={payMedic}
+              className="min-h-11 rounded bg-ops-amber px-4 text-sm font-semibold text-ops disabled:opacity-40"
+            >
+              {cash < MEDIC ? `Need $${MEDIC}` : `Pay medic $${MEDIC}`}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {panel === "map" && (

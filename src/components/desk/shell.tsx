@@ -55,7 +55,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </Link>
           <p className="hidden items-center gap-2 text-sm text-white/70 sm:flex">
             Team Guys only X
-            <img src="/ops/bone-frog.jpg" alt="" className="h-8 w-8 rounded-full object-cover" />
+            <img src="/ops/bone-frog.png" alt="" className="h-8 w-14 object-contain" />
           </p>
           <nav className="ml-auto flex flex-wrap gap-1">
             {links.map((link) => {

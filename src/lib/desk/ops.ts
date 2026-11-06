@@ -113,6 +113,7 @@ export type OpsSave = {
   equipped: Partial<Record<Slot, string>>;
   here: Record<TheaterId, string>;
   fees: number;
+  treated: string[];
 };
 
 function emptySave(): OpsSave {
@@ -121,6 +122,7 @@ function emptySave(): OpsSave {
     equipped: {},
     here: { afghanistan: "bagram", iraq: "kuwait", horn: "lemonnier" },
     fees: 0,
+    treated: [],
   };
 }
 
@@ -134,6 +136,7 @@ export function loadOps(): OpsSave {
       equipped: parsed.equipped ?? {},
       here: { ...emptySave().here, ...parsed.here },
       fees: parsed.fees ?? 0,
+      treated: parsed.treated ?? [],
     };
   } catch {
     return emptySave();
