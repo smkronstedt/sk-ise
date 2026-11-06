@@ -102,9 +102,9 @@ function Home() {
           applyPlan={applyPlan}
         />
       )}
-      {mode === "base" && <HomeBase pct={pct} mastered={mastered} dueCards={0} />}
-      {mode === "trail" && <UroTrail stats={stats} />}
-      {mode === "encounter" && <Encounter pct={pct} top={top} />}
+      {mode === "base" && <HomeBase pct={pct} mastered={mastered} dueCards={0} startAdaptive={startAdaptive} />}
+      {mode === "trail" && <UroTrail stats={stats} startAdaptive={startAdaptive} />}
+      {mode === "encounter" && <Encounter pct={pct} top={top} startAdaptive={startAdaptive} />}
       {mode === "rpg" && <RpgPlaceholder />}
     </Shell>
   );
@@ -289,76 +289,132 @@ function ClassicView({
   );
 }
 
-function HomeBase({ pct, mastered, dueCards }: { pct: number; mastered: number; dueCards: number }) {
+function HomeBase({
+  pct,
+  mastered,
+  dueCards,
+  startAdaptive,
+}: {
+  pct: number;
+  mastered: number;
+  dueCards: number;
+  startAdaptive: () => void;
+}) {
+  const rank = pct >= 80 ? "Chief" : pct >= 65 ? "Senior" : pct >= 50 ? "Junior" : "Intern";
   return (
-    <section className="rounded border border-line bg-paper p-6">
-      <h1 className="font-serif text-3xl tracking-tight">Call Room</h1>
-      <p className="mt-1 text-sm text-muted">Home base — updates with your progress.</p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded border border-line p-4 text-center">
-          <div className="text-3xl font-bold text-green-600">{pct}%</div>
-          <div className="text-sm text-muted">Correct</div>
+    <section className="rounded border border-line bg-paper overflow-hidden">
+      <div className="bg-gradient-to-b from-slate-100 to-white px-6 py-8">
+        <h1 className="font-serif text-3xl tracking-tight">Call Room</h1>
+        <p className="mt-1 text-sm text-muted">Your desk updates as you study.</p>
+        <div className="mt-6 flex flex-wrap gap-4">
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-4xl font-bold text-green-600">{pct}%</div>
+            <div className="text-sm text-muted">Correct</div>
+          </div>
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-4xl font-bold text-blue-600">{mastered}</div>
+            <div className="text-sm text-muted">Topics mastered</div>
+          </div>
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-4xl font-bold text-amber-600">{dueCards}</div>
+            <div className="text-sm text-muted">Cards due</div>
+          </div>
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-navy">{rank}</div>
+            <div className="text-sm text-muted">Rank</div>
+          </div>
         </div>
-        <div className="rounded border border-line p-4 text-center">
-          <div className="text-3xl font-bold text-blue-600">{mastered}</div>
-          <div className="text-sm text-muted">Topics mastered</div>
-        </div>
-        <div className="rounded border border-line p-4 text-center">
-          <div className="text-3xl font-bold text-amber-600">{dueCards}</div>
-          <div className="text-sm text-muted">Cards due</div>
-        </div>
+        <button
+          type="button"
+          onClick={startAdaptive}
+          className="mt-6 min-h-11 rounded bg-blue px-5 text-sm font-semibold text-white"
+        >
+          Start adaptive block
+        </button>
       </div>
-      <div className="mt-6 h-32 rounded bg-gradient-to-b from-blue-50 to-white flex items-end justify-center">
-        <div className="mb-2 text-sm text-muted">Your desk fills in as you study</div>
+      <div className="h-40 bg-gradient-to-b from-blue-50 to-slate-100 flex items-end justify-center pb-4">
+        <div className="text-sm text-muted">Desk scene — charts light up as topics are mastered</div>
       </div>
     </section>
   );
 }
 
-function UroTrail({ stats }: { stats: ReturnType<typeof bucketStats> }) {
+function UroTrail({
+  stats,
+  startAdaptive,
+}: {
+  stats: ReturnType<typeof bucketStats>;
+  startAdaptive: () => void;
+}) {
   return (
-    <section className="rounded border border-line bg-paper p-6">
-      <h1 className="font-serif text-3xl tracking-tight">Uro Trail</h1>
-      <p className="mt-1 text-sm text-muted">Progress map — landmarks unlock as you master topics.</p>
-      <div className="mt-6 flex flex-wrap gap-3">
-        {stats.slice(0, 8).map((s) => {
-          const done = s.attempted > 3 && s.correct / s.attempted >= 0.65;
-          return (
-            <div
-              key={s.id}
-              className={`rounded border px-3 py-2 text-sm ${
-                done ? "border-green-600 bg-green-50" : "border-line bg-paper"
-              }`}
-            >
-              {s.short}
-              {done ? " ✓" : ""}
-            </div>
-          );
-        })}
+    <section className="rounded border border-line bg-paper overflow-hidden">
+      <div className="bg-gradient-to-b from-emerald-50 to-white px-6 py-6">
+        <h1 className="font-serif text-3xl tracking-tight">Uro Trail</h1>
+        <p className="mt-1 text-sm text-muted">Landmarks unlock as you master topics.</p>
+        <div className="mt-5 flex flex-wrap gap-2">
+          {stats.map((s) => {
+            const done = s.attempted > 3 && s.correct / Math.max(s.attempted, 1) >= 0.65;
+            return (
+              <div
+                key={s.id}
+                className={`rounded-full border px-3 py-1 text-sm font-semibold ${
+                  done ? "border-green-600 bg-green-100 text-green-800" : "border-line bg-white text-ink"
+                }`}
+              >
+                {s.short}
+                {done ? " ✓" : ""}
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={startAdaptive}
+          className="mt-5 min-h-11 rounded bg-emerald-700 px-5 text-sm font-semibold text-white"
+        >
+          Continue trail
+        </button>
       </div>
-      <div className="mt-6 h-40 rounded bg-gradient-to-r from-green-100 via-amber-50 to-blue-100 flex items-center justify-center text-sm text-muted">
-        Trail map coming
+      <div className="h-48 bg-gradient-to-r from-green-100 via-amber-50 to-sky-100 flex items-center justify-center">
+        <div className="text-sm text-muted">Trail map — your wagon advances with progress</div>
       </div>
     </section>
   );
 }
 
-function Encounter({ pct, top }: { pct: number; top: ReturnType<typeof bucketStats>[0] | undefined }) {
+function Encounter({
+  pct,
+  top,
+  startAdaptive,
+}: {
+  pct: number;
+  top: ReturnType<typeof bucketStats>[0] | undefined;
+  startAdaptive: () => void;
+}) {
   return (
     <section className="rounded border border-line bg-paper p-6">
       <h1 className="font-serif text-3xl tracking-tight">Case Encounter</h1>
       <p className="mt-1 text-sm text-muted">Face the next weak topic.</p>
-      <div className="mt-6 flex items-center justify-between rounded border border-line p-4">
-        <div>
-          <div className="font-semibold">You</div>
-          <div className="text-sm text-muted">{pct}% overall</div>
+      <div className="mt-6 flex items-center justify-between rounded-lg border border-line bg-slate-50 p-5">
+        <div className="text-center">
+          <div className="text-lg font-semibold">You</div>
+          <div className="mt-1 text-3xl font-bold text-blue-600">{pct}%</div>
+          <div className="text-sm text-muted">overall</div>
         </div>
-        <div className="text-2xl">vs</div>
-        <div className="text-right">
-          <div className="font-semibold">{top?.short ?? "Next case"}</div>
-          <div className="text-sm text-muted">Suggested focus</div>
+        <div className="text-3xl text-muted">vs</div>
+        <div className="text-center">
+          <div className="text-lg font-semibold">{top?.short ?? "Next case"}</div>
+          <div className="mt-1 text-sm text-muted">Suggested focus</div>
+          <div className="mt-1 text-xs text-muted">{top ? `${top.percent}% of exam` : ""}</div>
         </div>
       </div>
+      <button
+        type="button"
+        onClick={startAdaptive}
+        className="mt-5 min-h-11 w-full rounded bg-navy px-5 text-sm font-semibold text-white"
+      >
+        Start encounter
+      </button>
     </section>
   );
 }
@@ -367,7 +423,10 @@ function RpgPlaceholder() {
   return (
     <section className="rounded border border-line bg-paper p-6">
       <h1 className="font-serif text-3xl tracking-tight">RPG</h1>
-      <p className="mt-1 text-sm text-muted">Overworld coming. Topics will become towns and dungeons.</p>
+      <p className="mt-1 text-sm text-muted">Overworld coming. Topics will become towns and dungeons that unlock with mastery.</p>
+      <div className="mt-6 h-40 rounded bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center text-sm text-muted">
+        Map in progress
+      </div>
     </section>
   );
 }
