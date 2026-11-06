@@ -63,6 +63,13 @@ export function Operations({ correct, total }: { correct: number; total: number 
     afghanistan: "/ops/afghanistan.jpg",
     iraq: "/ops/iraq.jpg",
     horn: "/ops/horn.jpg",
+    syria: "/ops/syria.jpg",
+    philippines: "/ops/philippines.jpg",
+    iran: "/ops/iran.jpg",
+    route7: "/ops/gaza.jpg",
+    route8: "/ops/russia.jpg",
+    route9: "/ops/korea.jpg",
+    route10: "/ops/china.jpg",
   };
 
   const missionName = (town: Town) => `Op: ${town.name}`;
@@ -83,7 +90,15 @@ export function Operations({ correct, total }: { correct: number; total: number 
     });
 
   const theaterDone = (id: TheaterId) => theaters.find((row) => row.id === id)?.towns.every((town) => cleared(town)) ?? false;
-  const hornOpen = theaterDone("afghanistan") && theaterDone("iraq");
+  const later: TheaterId[] = ["horn", "syria", "philippines", "iran", "route7", "route8", "route9", "route10"];
+  const theaterOpen = (id: TheaterId): boolean => {
+    if (id === "afghanistan" || id === "iraq") return true;
+    const index = later.indexOf(id);
+    if (index < 0) return false;
+    if (index === 0) return theaterDone("afghanistan") && theaterDone("iraq");
+    const prev = later[index - 1];
+    return theaterOpen(prev) && theaterDone(prev);
+  };
   const lastOp = desk.state.tests
     .filter((test) => test.status === "done" && test.name.startsWith("Op:"))
     .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0))[0];
@@ -238,9 +253,9 @@ export function Operations({ correct, total }: { correct: number; total: number 
       {panel === "map" && (
         <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(16rem,0.8fr)]">
           <div>
-            <div className="mb-3 flex gap-2">
+            <div className="mb-3 flex flex-wrap gap-2">
               {theaters.map((row) => {
-                const locked = row.id === "horn" && !hornOpen;
+                const locked = !theaterOpen(row.id);
                 return (
                   <button
                     key={row.id}
@@ -252,7 +267,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
                     }}
                     className={`min-h-11 rounded px-4 text-sm font-semibold ${theater === row.id ? "bg-ops-amber text-ops" : "border border-white/20 text-white"} disabled:opacity-40`}
                   >
-                    {row.name}
+                    {row.classified ? "Undisclosed" : row.name}
                     {locked ? " · locked" : ""}
                   </button>
                 );

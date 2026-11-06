@@ -1,6 +1,16 @@
 const KEY = "callroom-ops-v1";
 
-export type TheaterId = "afghanistan" | "iraq" | "horn";
+export type TheaterId =
+  | "afghanistan"
+  | "iraq"
+  | "horn"
+  | "syria"
+  | "philippines"
+  | "iran"
+  | "route7"
+  | "route8"
+  | "route9"
+  | "route10";
 export type Slot =
   | "eyes"
   | "head"
@@ -28,7 +38,7 @@ export type Gear = {
 
 export type Town = { id: string; name: string; note: string; topics: string[]; x: number; y: number };
 
-export const theaters: { id: TheaterId; name: string; towns: Town[] }[] = [
+export const theaters: { id: TheaterId; name: string; classified?: boolean; towns: Town[] }[] = [
   {
     id: "afghanistan",
     name: "Afghanistan",
@@ -64,6 +74,92 @@ export const theaters: { id: TheaterId; name: string; towns: Town[] }[] = [
       { id: "mogadishu", name: "Mogadishu", note: "Trauma and reconstruction.", x: 68, y: 58, topics: ["Trauma/Reconstruction", "Urinary Diversion"] },
       { id: "kismayo", name: "Kismayo", note: "Infection and sexual health.", x: 60, y: 76, topics: ["Infection/Inflammation", "Sexual Dysfunction"] },
       { id: "manda", name: "Manda Bay", note: "Pediatrics and neurogenic bladder. Last town on this coast.", x: 28, y: 70, topics: ["Pediatrics", "Neurogenic Bladder"] },
+    ],
+  },
+  {
+    id: "syria",
+    name: "Syria",
+    towns: [
+      { id: "damascus", name: "Damascus", note: "Core again. Anatomy, imaging, and ethics.", x: 42, y: 62, topics: ["Anatomy/Embryology", "Imaging/Radiation Safety", "Ethics/Professionalism/Statistics"] },
+      { id: "aleppo", name: "Aleppo", note: "Bladder and urothelial oncology.", x: 48, y: 28, topics: ["Oncology-Bladder/Urothelial"] },
+      { id: "homs", name: "Homs", note: "Kidney and adrenal.", x: 46, y: 46, topics: ["Oncology-Kidney", "Oncology-Adrenal"] },
+      { id: "latakia", name: "Latakia", note: "Stones on the coast.", x: 22, y: 36, topics: ["Stones"] },
+      { id: "palmyra", name: "Palmyra", note: "Testis, penis, and urethra.", x: 62, y: 50, topics: ["Oncology-Testis", "Oncology-Penis/Urethra"] },
+      { id: "deir", name: "Deir ez-Zor", note: "Trauma. Last town on this route.", x: 78, y: 58, topics: ["Trauma/Reconstruction"] },
+    ],
+  },
+  {
+    id: "philippines",
+    name: "Philippines",
+    towns: [
+      { id: "manila", name: "Manila", note: "Prostate oncology.", x: 28, y: 32, topics: ["Oncology-Prostate"] },
+      { id: "subic", name: "Subic", note: "BPH, LUTS, and incontinence.", x: 24, y: 28, topics: ["BPH/LUTS", "Voiding Dysfunction/Incontinence"] },
+      { id: "clark", name: "Clark", note: "Infection and pharmacology.", x: 30, y: 30, topics: ["Infection/Inflammation", "Pharmacology"] },
+      { id: "cebu", name: "Cebu", note: "Female pelvic floor.", x: 48, y: 52, topics: ["Female Urology/Pelvic Floor"] },
+      { id: "palawan", name: "Palawan", note: "Andrology.", x: 18, y: 48, topics: ["Infertility/Andrology", "Sexual Dysfunction"] },
+      { id: "zamboanga", name: "Zamboanga", note: "Pediatrics. Last island.", x: 62, y: 68, topics: ["Pediatrics"] },
+    ],
+  },
+  {
+    id: "iran",
+    name: "Iran",
+    towns: [
+      { id: "tehran", name: "Tehran", note: "Neurogenic bladder.", x: 48, y: 32, topics: ["Neurogenic Bladder"] },
+      { id: "tabriz", name: "Tabriz", note: "Transplant and renal physiology.", x: 28, y: 24, topics: ["Transplant/Renal Physiology"] },
+      { id: "isfahan", name: "Isfahan", note: "Laparoscopy and perioperative care.", x: 46, y: 48, topics: ["Laparoscopy/Robotics/Perioperative"] },
+      { id: "shiraz", name: "Shiraz", note: "Diversion.", x: 48, y: 64, topics: ["Urinary Diversion"] },
+      { id: "bushehr", name: "Bushehr", note: "Stones again, on the gulf.", x: 40, y: 74, topics: ["Stones"] },
+      { id: "bandar", name: "Bandar Abbas", note: "The rest of the bank. Last town.", x: 70, y: 78, topics: ["Other", "Oncology-Adrenal"] },
+    ],
+  },
+  {
+    id: "route7",
+    name: "Undisclosed",
+    classified: true,
+    towns: [
+      { id: "r7-1", name: "Rafah", note: "Stones and imaging.", x: 30, y: 78, topics: ["Stones", "Imaging/Radiation Safety"] },
+      { id: "r7-2", name: "Khan Yunis", note: "Bladder oncology.", x: 36, y: 62, topics: ["Oncology-Bladder/Urothelial"] },
+      { id: "r7-3", name: "Deir al-Balah", note: "Voiding and incontinence.", x: 34, y: 48, topics: ["Voiding Dysfunction/Incontinence", "BPH/LUTS"] },
+      { id: "r7-4", name: "Gaza City", note: "Trauma and reconstruction.", x: 32, y: 36, topics: ["Trauma/Reconstruction"] },
+      { id: "r7-5", name: "Jabalia", note: "Infection. Last city on this route.", x: 34, y: 22, topics: ["Infection/Inflammation"] },
+    ],
+  },
+  {
+    id: "route8",
+    name: "Undisclosed",
+    classified: true,
+    towns: [
+      { id: "r8-1", name: "Murmansk", note: "Core and pharmacology.", x: 28, y: 18, topics: ["Anatomy/Embryology", "Pharmacology"] },
+      { id: "r8-2", name: "St. Petersburg", note: "Prostate oncology.", x: 24, y: 28, topics: ["Oncology-Prostate"] },
+      { id: "r8-3", name: "Kaliningrad", note: "Neurogenic bladder.", x: 16, y: 32, topics: ["Neurogenic Bladder"] },
+      { id: "r8-4", name: "Moscow", note: "Kidney and testis oncology.", x: 36, y: 36, topics: ["Oncology-Kidney", "Oncology-Testis"] },
+      { id: "r8-5", name: "Sevastopol", note: "Andrology.", x: 30, y: 48, topics: ["Infertility/Andrology", "Sexual Dysfunction"] },
+      { id: "r8-6", name: "Vladivostok", note: "Pediatrics. Last city.", x: 88, y: 42, topics: ["Pediatrics"] },
+    ],
+  },
+  {
+    id: "route9",
+    name: "Undisclosed",
+    classified: true,
+    towns: [
+      { id: "r9-1", name: "Sinuiju", note: "Core and stones.", x: 22, y: 30, topics: ["Stones", "Anatomy/Embryology"] },
+      { id: "r9-2", name: "Pyongyang", note: "Prostate oncology.", x: 40, y: 46, topics: ["Oncology-Prostate"] },
+      { id: "r9-3", name: "Kaesong", note: "Trauma.", x: 36, y: 62, topics: ["Trauma/Reconstruction"] },
+      { id: "r9-4", name: "Wonsan", note: "Infection and pharmacology.", x: 62, y: 48, topics: ["Infection/Inflammation", "Pharmacology"] },
+      { id: "r9-5", name: "Chongjin", note: "Pediatrics. Last city.", x: 78, y: 22, topics: ["Pediatrics"] },
+    ],
+  },
+  {
+    id: "route10",
+    name: "Undisclosed",
+    classified: true,
+    towns: [
+      { id: "r10-1", name: "Beijing", note: "Ethics and the core.", x: 62, y: 32, topics: ["Ethics/Professionalism/Statistics", "Anatomy/Embryology"] },
+      { id: "r10-2", name: "Qingdao", note: "Stones.", x: 74, y: 38, topics: ["Stones"] },
+      { id: "r10-3", name: "Shanghai", note: "Urothelial oncology and laparoscopy.", x: 76, y: 52, topics: ["Oncology-Bladder/Urothelial", "Laparoscopy/Robotics/Perioperative"] },
+      { id: "r10-4", name: "Guangzhou", note: "Female pelvic floor.", x: 64, y: 72, topics: ["Female Urology/Pelvic Floor"] },
+      { id: "r10-5", name: "Hong Kong", note: "Transplant.", x: 68, y: 78, topics: ["Transplant/Renal Physiology"] },
+      { id: "r10-6", name: "Chengdu", note: "Trauma, diversion, and whatever is left.", x: 42, y: 52, topics: ["Trauma/Reconstruction", "Urinary Diversion", "Other"] },
     ],
   },
 ];
@@ -120,7 +216,18 @@ function emptySave(): OpsSave {
   return {
     owned: [],
     equipped: {},
-    here: { afghanistan: "bagram", iraq: "kuwait", horn: "lemonnier" },
+    here: {
+      afghanistan: "bagram",
+      iraq: "kuwait",
+      horn: "lemonnier",
+      syria: "damascus",
+      philippines: "manila",
+      iran: "tehran",
+      route7: "r7-1",
+      route8: "r8-1",
+      route9: "r9-1",
+      route10: "r10-1",
+    },
     fees: 0,
     treated: [],
   };
