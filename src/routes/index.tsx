@@ -12,13 +12,14 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Mode = "classic" | "base" | "trail" | "encounter" | "rpg";
+type Mode = "classic" | "base" | "trail" | "encounter" | "rpg" | "notes";
 
 const modes: { id: Mode; label: string }[] = [
   { id: "classic", label: "Classic" },
   { id: "base", label: "Home Base" },
   { id: "trail", label: "Uro Trail" },
   { id: "encounter", label: "Encounter" },
+  { id: "notes", label: "Field Notes" },
   { id: "rpg", label: "RPG" },
 ];
 
@@ -35,6 +36,14 @@ const focusChoices: { id: Focus; label: string }[] = [
   { id: "hold", label: "Hold" },
   { id: "ease", label: "Ease" },
 ];
+
+// Original Field Notes creatures (one per topic)
+const fieldCreatures = topics.map((t, i) => ({
+  id: t.id,
+  name: t.short,
+  number: i + 1,
+  type: t.blueprintId,
+}));
 
 function Home() {
   const desk = useDesk();
@@ -66,6 +75,18 @@ function Home() {
       pool: "all",
       count: 15,
       name: "2025 plan",
+    });
+    if (id) void navigate({ to: "/test/$id", params: { id } });
+  };
+
+  const startTopicBattle = (topicId: string) => {
+    const id = desk.createTest({
+      mode: "tutor",
+      adaptive: false,
+      topicIds: [topicId],
+      pool: "all",
+      count: 5,
+      name: `Battle: ${topics.find((t) => t.id === topicId)?.short ?? topicId}`,
     });
     if (id) void navigate({ to: "/test/$id", params: { id } });
   };
@@ -105,6 +126,7 @@ function Home() {
       {mode === "base" && <HomeBase pct={pct} mastered={mastered} dueCards={0} startAdaptive={startAdaptive} />}
       {mode === "trail" && <UroTrail stats={stats} startAdaptive={startAdaptive} />}
       {mode === "encounter" && <Encounter pct={pct} top={top} startAdaptive={startAdaptive} />}
+      {mode === "notes" && <FieldNotes stats={stats} startTopicBattle={startTopicBattle} />}
       {mode === "rpg" && <RpgPlaceholder />}
     </Shell>
   );
@@ -415,6 +437,68 @@ function Encounter({
       >
         Start encounter
       </button>
+    </section>
+  );
+}
+
+function FieldNotes({
+  stats,
+  startTopicBattle,
+}: {
+  stats: ReturnType<typeof bucketStats>;
+  startTopicBattle: (topicId: string) => void;
+}) {
+  const caught = new Set(
+    stats.filter((s) => s.attempted > 3 && s.correct / Math.max(s.attempted, 1) >= 0.65).map((s) => s.id),
+  );
+  const next = fieldCreatures.find((c) => !caught.has(c.id));
+
+  return (
+    <section className="rounded border border-line bg-paper overflow-hidden">
+      <div className="bg-gradient-to-b from-amber-50 to-white px-6 py-6">
+        <h1 className="font-serif text-3xl tracking-tight">Field Notes</h1>
+        <p className="mt-1 text-sm text-muted">
+          Collect all {fieldCreatures.length} cases. Battles use your real questions.
+        </p>
+        <div className="mt-4 flex items-center gap-4">
+          <div className="text-2xl font-bold text-amber-700">{caught.size}/{fieldCreatures.length}</div>
+          <div className="text-sm text-muted">caught</div>
+          {next && (
+            <button
+              type="button"
+              onClick={() => startTopicBattle(next.id)}
+              className="ml-auto min-h-11 rounded bg-amber-600 px-5 text-sm font-semibold text-white"
+            >
+              Battle {next.name}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="p-4">
+        <h2 className="mb-3 text-sm font-semibold text-muted uppercase">Collection</h2>
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
+          {fieldCreatures.map((c) => {
+            const isCaught = caught.has(c.id);
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => !isCaught && startTopicBattle(c.id)}
+                disabled={isCaught}
+                className={`rounded border p-2 text-center text-xs ${
+                  isCaught
+                    ? "border-green-600 bg-green-50 text-green-800"
+                    : "border-line bg-paper hover:bg-amber-50"
+                }`}
+              >
+                <div className="font-mono text-[10px] text-muted">#{String(c.number).padStart(3, "0")}</div>
+                <div className="mt-1 font-semibold truncate">{isCaught ? c.name : "???"}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </section>
   );
 }
