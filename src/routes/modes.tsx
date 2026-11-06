@@ -37,7 +37,7 @@ export function UroTrail({
         <div className="relative">
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-emerald-200" />
           <div className="flex flex-col gap-3">
-            {landmarks.map((l, i) => (
+            {landmarks.map((l) => (
               <div key={l.id} className="relative flex items-center gap-3 pl-10">
                 <div
                   className={`absolute left-2.5 h-4 w-4 rounded-full border-2 ${
@@ -120,6 +120,78 @@ export function RpgMode({
 
       <div className="h-40 bg-gradient-to-br from-indigo-100 to-purple-50 flex items-center justify-center text-sm text-muted">
         Character scene — grows with level
+      </div>
+    </section>
+  );
+}
+
+const missions = [
+  { id: "oncology", name: "Objective Alpha", region: "North" },
+  { id: "stones", name: "Objective Bravo", region: "East" },
+  { id: "andrology", name: "Objective Charlie", region: "Central" },
+  { id: "obstruction", name: "Objective Delta", region: "West" },
+  { id: "urogyn", name: "Objective Echo", region: "South" },
+  { id: "peds", name: "Objective Foxtrot", region: "Highlands" },
+  { id: "core", name: "Objective Golf", region: "Valley" },
+  { id: "basic", name: "Objective Hotel", region: "Base" },
+];
+
+export function MissionMap({
+  battleDone,
+  startTopicBattle,
+}: {
+  battleDone: Set<string>;
+  startTopicBattle: (topicId: string) => void;
+}) {
+  return (
+    <section className="rounded border border-line bg-paper overflow-hidden">
+      <div className="bg-gradient-to-b from-slate-100 to-white px-6 py-6">
+        <h1 className="font-serif text-3xl tracking-tight">Operations</h1>
+        <p className="mt-1 text-sm text-muted">
+          Complete missions by finishing topic battles. Original study map.
+        </p>
+      </div>
+
+      <div className="p-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {missions.map((mission) => {
+            const missionTopics = topics.filter((t) => t.blueprintId === mission.id);
+            const done = missionTopics.filter((t) => battleDone.has(t.id)).length;
+            const next = missionTopics.find((t) => !battleDone.has(t.id));
+            const cleared = done === missionTopics.length && missionTopics.length > 0;
+            return (
+              <div key={mission.id} className="rounded border border-line p-4">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="font-semibold">{mission.name}</h2>
+                  <span className="text-sm text-muted">{done}/{missionTopics.length}</span>
+                </div>
+                <p className="mt-1 text-sm text-muted">{mission.region}</p>
+                <div className="mt-3 flex flex-wrap gap-1">
+                  {missionTopics.map((t) => (
+                    <span
+                      key={t.id}
+                      className={`rounded px-2 py-0.5 text-xs ${
+                        battleDone.has(t.id) ? "bg-green-100 text-green-800" : "bg-chip text-muted"
+                      }`}
+                    >
+                      {t.short}
+                    </span>
+                  ))}
+                </div>
+                {next && !cleared && (
+                  <button
+                    type="button"
+                    onClick={() => startTopicBattle(next.id)}
+                    className="mt-3 min-h-9 rounded bg-slate-700 px-3 text-sm font-semibold text-white"
+                  >
+                    Start {next.short}
+                  </button>
+                )}
+                {cleared && <p className="mt-3 text-sm font-semibold text-green-700">Mission complete</p>}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
