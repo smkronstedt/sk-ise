@@ -27,6 +27,7 @@ function BankPage() {
   const [topic, setTopic] = useState("all");
   const [status, setStatus] = useState<Status>("all");
   const [query, setQuery] = useState("");
+  const [hardOnly, setHardOnly] = useState(false);
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [progress, setProgress] = useState<BankProgress>(emptyBankProgress);
@@ -78,16 +79,16 @@ function BankPage() {
       if (status === "correct" && !saved?.correct) return false;
       if (status === "incorrect" && saved?.correct !== false) return false;
       if (status === "marked" && !progress.marks[item.id]) return false;
-      if (!needle) return true;
+      if (hardOnly && item.hard !== true) return false;
       const blob = `${item.question} ${item.learning_point} ${item.source_ref} ${item.topic}`.toLowerCase();
       return blob.includes(needle);
     });
-  }, [items, progress.answers, progress.marks, query, status, topic]);
+  }, [items, progress.answers, progress.marks, query, status, topic, hardOnly]);
 
   useEffect(() => {
     setIndex(0);
     setPicked(null);
-  }, [topic, status, query, view]);
+  }, [topic, status, query, view, hardOnly]);
 
   const write = (next: BankProgress) => {
     setProgress(next);
@@ -180,6 +181,13 @@ function BankPage() {
           <option value="correct">Correct</option>
           <option value="marked">Marked</option>
         </select>
+        <button
+          type="button"
+          onClick={() => setHardOnly((on) => !on)}
+          className={`min-h-11 rounded px-3 text-sm font-semibold ${hardOnly ? "bg-navy text-white" : "border border-line bg-paper"}`}
+        >
+          Hard only
+        </button>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}

@@ -42,6 +42,7 @@ function toQuestion(item: BankItem): Question {
     explanation: [item.rationale, facts].filter(Boolean).join(" "),
     wrong: choices.map(() => ""),
     objective: item.learning_point || item.source_ref || item.topic,
+    hard: item.hard === true,
     guide: Object.entries(guideLinks).find(([, link]) => link.href === linksForBankTopic(item.topic)[0]?.href)?.[0],
   };
 }

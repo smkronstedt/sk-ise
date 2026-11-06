@@ -43,6 +43,7 @@ export type Question = {
   explanation: string;
   wrong: string[];
   objective: string;
+  hard?: boolean;
   figure?: FigureId;
   /** Which AUA guideline this item teaches, when it is a statement question. */
   guide?: string;

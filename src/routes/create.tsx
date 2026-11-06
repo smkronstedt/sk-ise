@@ -34,6 +34,7 @@ function CreatePage() {
   const [focused, setFocused] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [hardOnly, setHardOnly] = useState(false);
 
   useEffect(() => {
     void loadCatalog().then(() => {
@@ -46,9 +47,10 @@ function CreatePage() {
   const trainerCount = new Map<string, number>();
   for (const question of questions) trainerCount.set(question.topicId, (trainerCount.get(question.topicId) ?? 0) + 1);
 
+  const bankPool = hardOnly ? bankList().filter((question) => question.hard) : bankList();
   const available =
     source === "bank"
-      ? filterPool(desk.state, bankList(), picked, pool).length
+      ? filterPool(desk.state, bankPool, picked, pool).length
       : eligibleQuestions(desk.state, picked, pool).length;
 
   const focusedTopic =
@@ -74,7 +76,7 @@ function CreatePage() {
   const start = () => {
     const take = Math.min(count, available);
     const questionIds =
-      source === "bank" ? pickFrom(desk.state, bankList(), picked, pool, take) : undefined;
+      source === "bank" ? pickFrom(desk.state, bankPool, picked, pool, take) : undefined;
     const id = desk.createTest({
       name,
       mode,
@@ -166,6 +168,15 @@ function CreatePage() {
             </button>
           ))}
         </div>
+        {source === "bank" ? (
+          <button
+            type="button"
+            onClick={() => setHardOnly((on) => !on)}
+            className={`mt-3 min-h-11 rounded border px-3 text-sm font-semibold ${hardOnly ? "border-navy bg-navy text-white" : "border-line bg-paper"}`}
+          >
+            Hard set only
+          </button>
+        ) : null}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold">Items</span>

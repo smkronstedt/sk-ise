@@ -26430,5 +26430,775 @@
    "IVC wall re-resection is considered only for a delayed, isolated visible recurrence; radiation and PET-CT have no role for microscopic margins."
   ],
   "source_ref": "SASP 2025 Q149"
+ },
+ {
+  "topic": "Stones",
+  "question": "A 27-year-old man has passed six stones. They are faint on plain film and the cyanide-nitroprusside test is positive. Urine pH is 6.0 and the urine is sterile. Fluids and alkali have failed. The drug class to add is:",
+  "options": {
+   "A": "a xanthine oxidase inhibitor.",
+   "B": "a thiol such as tiopronin.",
+   "C": "a urease inhibitor as sole therapy.",
+   "D": "a thiazide.",
+   "E": "an antibiotic for six weeks."
+  },
+  "answer": "B",
+  "rationale": "A positive cyanide-nitroprusside test is cystine. Volume and alkali to a urine pH near 7 to 7.5 come first. When stones continue, a thiol (tiopronin or penicillamine) binds cystine and makes it soluble. Allopurinol does not treat cystinuria. A urease inhibitor is for struvite.",
+  "learning_point": "Cystinuria: cyanide-nitroprusside positive, then fluids and alkali, then a thiol if stones continue.",
+  "key_facts": [
+   "Cystine is the only stone with that positive screen.",
+   "Target pH is about 7 to 7.5.",
+   "Thiols are second-line."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1215"
+ },
+ {
+  "topic": "Stones",
+  "question": "A 54-year-old woman with recurrent Proteus infections has a 4 cm branched renal pelvic stone of magnesium ammonium phosphate. She is afebrile today. Definitive treatment is:",
+  "options": {
+   "A": "shock-wave lithotripsy alone.",
+   "B": "potassium citrate and observation.",
+   "C": "percutaneous nephrolithotomy plus culture-directed antibiotics.",
+   "D": "acetohydroxamic acid as the only treatment.",
+   "E": "bilateral stents and no stone removal."
+  },
+  "answer": "C",
+  "rationale": "Struvite forms when urease-splitting bacteria make the urine alkaline. A staghorn will keep growing and can destroy the kidney. The stone has to come out completely, which for a branched stone means percutaneous nephrolithotomy, with antibiotics. Shock-wave monotherapy leaves fragments that reinfect. A urease inhibitor is an adjunct when surgery cannot be done.",
+  "learning_point": "A struvite staghorn is removed percutaneously. Urease inhibitors do not replace stone removal.",
+  "key_facts": [
+   "Proteus is the classic urease organism.",
+   "Residual struvite regrows quickly.",
+   "SWL alone is the wrong operation for a staghorn."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1216"
+ },
+ {
+  "topic": "Stones",
+  "question": "A 61-year-old man has a 1.2 cm renal pelvic stone, invisible on plain film, measuring 380 Hounsfield units. Urine pH is 5.0 and he is not infected. Initial treatment is:",
+  "options": {
+   "A": "alkalinization with potassium citrate.",
+   "B": "percutaneous nephrolithotomy this week.",
+   "C": "hydrochlorothiazide.",
+   "D": "allopurinol with no change in urine pH.",
+   "E": "observation until the stone becomes radiopaque."
+  },
+  "answer": "A",
+  "rationale": "Low attenuation, radiolucent, and an acid urine is the picture of uric acid. Potassium citrate raises urine pH to about 6.5 to 7 and the stone can dissolve. Allopurinol does not dissolve a stone that is already there. Surgery is for failed dissolution, obstruction, or a calcium shell.",
+  "learning_point": "Pure uric acid stones are low HU and dissolve when the urine is alkalinized.",
+  "key_facts": [
+   "A calcium shell will not dissolve.",
+   "Do not alkalinize an infected obstructed kidney.",
+   "Target pH is about 6.5 to 7."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1217"
+ },
+ {
+  "topic": "Stones",
+  "question": "A 46-year-old woman forms calcium phosphate stones. Bicarbonate is 16 mEq/L, chloride is 112 mEq/L, potassium is 3.1 mEq/L, and her urine pH will not fall below 6.5 after an acid load. The diagnosis is:",
+  "options": {
+   "A": "type 2 proximal renal tubular acidosis.",
+   "B": "type 1 distal renal tubular acidosis.",
+   "C": "type 4 hyperkalemic renal tubular acidosis.",
+   "D": "enteric hyperoxaluria.",
+   "E": "cystinuria."
+  },
+  "answer": "B",
+  "rationale": "Distal RTA cannot acidify the urine, so pH stays high despite a hyperchloremic, hypokalemic acidosis. That alkaline urine grows calcium phosphate stones and nephrocalcinosis. Proximal RTA can still drop the urine pH once serum bicarbonate falls below its threshold. Type 4 RTA is hyperkalemic. Enteric hyperoxaluria causes calcium oxalate stones.",
+  "learning_point": "Distal RTA: hypokalemic acidosis, urine that will not acidify, calcium phosphate stones.",
+  "key_facts": [
+   "Nephrocalcinosis is common.",
+   "Potassium citrate treats the acidosis and the stones.",
+   "Type 4 RTA comes with high potassium, often from diabetes or drugs."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1218"
+ },
+ {
+  "topic": "Stones",
+  "question": "A 70-year-old diabetic man has a fever of 39.2 C, blood pressure of 88/50 mmHg, a white count of 18,000, and a 9 mm obstructing proximal ureteral stone. The next step is:",
+  "options": {
+   "A": "shock-wave lithotripsy today.",
+   "B": "urgent decompression and antibiotics before definitive stone treatment.",
+   "C": "potassium citrate during the hypotension.",
+   "D": "oral antibiotics and clinic follow-up.",
+   "E": "ureteroscopy and laser lithotripsy as the first move."
+  },
+  "answer": "B",
+  "rationale": "An infected obstructed kidney is a closed-space infection, and he is in septic shock. Decompress with a stent or a nephrostomy and give antibiotics. Do not laser the stone, shock it, or alkalinize it in the acute hour.",
+  "learning_point": "Sepsis plus obstruction means decompress now. The stone waits.",
+  "key_facts": [
+   "Stent and nephrostomy are both acceptable.",
+   "Voided urine can miss the organism. Stone culture is better later.",
+   "Hypotension is not a reason to watch."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1219"
+ },
+ {
+  "topic": "Neurogenic Bladder",
+  "question": "A 34-year-old man with a C6 complete injury develops a pounding headache and blood pressure of 210/120 mmHg while his catheter bag is being changed. His usual pressure is 100/60 mmHg. The first move is:",
+  "options": {
+   "A": "lay him flat and give a fluid bolus.",
+   "B": "sit him up and look for a blocked catheter, full bag, or bowel distention.",
+   "C": "sphincterotomy in the next hour.",
+   "D": "a beta blocker before the bladder is emptied.",
+   "E": "bladder augmentation the same day."
+  },
+  "answer": "B",
+  "rationale": "Autonomic dysreflexia occurs at or above T6. A stimulus below the lesion, usually a full bladder or bowel, drives malignant hypertension. Sit him up, empty the bladder, check the tubing, and loosen tight clothes. An antihypertensive is for pressure that stays high after the trigger is gone. Beta blockade is not the opening move.",
+  "learning_point": "Dysreflexia: sit up and remove the stimulus. Drugs come second.",
+  "key_facts": [
+   "The level is T6 or higher.",
+   "Facial flushing can appear above the lesion.",
+   "Nifedipine or nitropaste is used if emptying does not drop the pressure."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1220"
+ },
+ {
+  "topic": "Neurogenic Bladder",
+  "question": "Urodynamics in a man with T4 paraplegia show detrusor contractions against a closing sphincter, a detrusor leak-point pressure of 62 cm H2O, and compliance of 8 mL/cm H2O. He empties by Crede. The safe plan is:",
+  "options": {
+   "A": "continue Crede and add only an alpha blocker.",
+   "B": "intermittent catheterization plus a drug that relaxes the detrusor, and stop Crede.",
+   "C": "observation, because leak-point pressure under 80 is safe.",
+   "D": "a chronic indwelling Foley as preferred first therapy.",
+   "E": "bilateral nephrectomy."
+  },
+  "answer": "B",
+  "rationale": "Dyssynergia with a leak-point pressure over 40 cm H2O and poor compliance threatens the kidneys. Crede pushes on a closed sphincter. Intermittent catheterization plus an anticholinergic or a beta-3 agonist keeps storage pressure down. The danger threshold is 40, not 80. A Foley is a last resort.",
+  "learning_point": "Leak-point pressure above 40 cm H2O is unsafe. CIC plus storage medication replaces Crede.",
+  "key_facts": [
+   "Sphincterotomy is only if he will not catheterize and accepts leakage.",
+   "Do not augment a patient who will not catheterize.",
+   "Compliance under 20 mL/cm H2O is another danger sign."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1221"
+ },
+ {
+  "topic": "Neurogenic Bladder",
+  "question": "A 22-year-old woman with a T10 injury wants augmentation. She refuses catheterization and plans to empty by straining. You should:",
+  "options": {
+   "A": "augment and add a sling.",
+   "B": "not augment until she commits to catheterization.",
+   "C": "tell her augmentation is never done in women.",
+   "D": "inject botulinum toxin into the sphincter.",
+   "E": "start lifelong prophylactic antibiotics and observe."
+  },
+  "answer": "B",
+  "rationale": "An augmented bladder does not empty by straining. Without catheterization she is left in retention with a mucus-forming reservoir and a risk of rupture. Commitment to catheterization is required before augmentation, and also before detrusor botulinum toxin.",
+  "learning_point": "No catheterization, no augmentation.",
+  "key_facts": [
+   "A conduit is the alternative when catheterization is impossible.",
+   "Sphincter botulinum toxin does not fix poor compliance.",
+   "Rupture of an augmented bladder presents as abdominal pain and low urine output."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1222"
+ },
+ {
+  "topic": "Voiding Dysfunction/Incontinence",
+  "question": "A 28-year-old woman has painless retention of 900 mL, polycystic ovaries, and sphincter EMG with complex repetitive discharges. She strains to void. The diagnosis and the treatment with the best evidence are:",
+  "options": {
+   "A": "Fowler syndrome, and sacral neuromodulation.",
+   "B": "spinal dyssynergia, and sphincterotomy.",
+   "C": "primary bladder neck obstruction, and bladder neck incision.",
+   "D": "diabetic atony, and bethanechol.",
+   "E": "interstitial cystitis, and bladder instillations."
+  },
+  "answer": "A",
+  "rationale": "Fowler syndrome is painless retention in young women, often with polycystic ovaries, from a sphincter that will not relax. The EMG shows complex repetitive discharges. Sacral neuromodulation is the treatment that restores voiding. Bethanechol does not open that sphincter, and sphincterotomy is not this operation.",
+  "learning_point": "Young woman, painless retention, abnormal sphincter EMG: Fowler syndrome, treated with sacral neuromodulation.",
+  "key_facts": [
+   "The detrusor is often quiet.",
+   "Catheterization is the bridge.",
+   "This is not spinal detrusor-sphincter dyssynergia."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1223"
+ },
+ {
+  "topic": "Female Urology/Pelvic Floor",
+  "question": "A 63-year-old woman leaks with coughing. Valsalva leak-point pressure is 48 cm H2O and the urethra does not move. Pelvic floor therapy has failed. The incontinence is best described as:",
+  "options": {
+   "A": "hypermobility that a suspension without urethral support will fix.",
+   "B": "intrinsic sphincter deficiency, for which a sling is appropriate.",
+   "C": "detrusor overactivity, so a sling is contraindicated.",
+   "D": "a fistula that must be repaired tonight.",
+   "E": "overflow from retention."
+  },
+  "answer": "B",
+  "rationale": "Leak at low abdominal pressure with a urethra that does not move is intrinsic sphincter deficiency. A sling coapts that urethra. An operation aimed only at mobility will not fix a poor sphincter. Overactivity and fistula are different findings.",
+  "learning_point": "Low leak-point pressure and a fixed urethra mean intrinsic sphincter deficiency. Use a sling.",
+  "key_facts": [
+   "Under about 60 cm H2O is the classic deficient range.",
+   "Hypermobility and deficiency can occur together.",
+   "Urodynamics help most when the exam and the story do not match."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1224"
+ },
+ {
+  "topic": "Oncology-Prostate",
+  "question": "Eighteen months after prostatectomy the PSA was undetectable. Two separate values are now 0.3 ng/mL. He has no pain. This is:",
+  "options": {
+   "A": "biochemical recurrence, and salvage radiation is discussed while the PSA is still low.",
+   "B": "a fluctuation to ignore until PSA exceeds 10.",
+   "C": "an indication for immediate docetaxel.",
+   "D": "proof of a positive bone scan, so radiation cannot help.",
+   "E": "an indication for orchiectomy the same week."
+  },
+  "answer": "A",
+  "rationale": "A confirmed PSA of 0.2 ng/mL or higher after prostatectomy is biochemical recurrence. Salvage radiation works better at a low PSA. Chemotherapy and immediate surgical castration are not the first step for an asymptomatic low-level relapse. A bone scan is low yield at this PSA. PSMA PET is the scan that can find a site when conventional imaging is negative.",
+  "learning_point": "PSA 0.2 ng/mL after prostatectomy is recurrence. Do not wait for a high PSA to discuss salvage radiation.",
+  "key_facts": [
+   "Adjuvant radiation is for adverse pathology while PSA is still undetectable.",
+   "Doubling time changes the tempo.",
+   "PSMA PET is reasonable at a low PSA."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1225"
+ },
+ {
+  "topic": "Oncology-Bladder/Urothelial",
+  "question": "A man completed adequate BCG, including induction and maintenance. Six months later a new high-grade Ta tumor is resected. Muscle is present and uninvolved. The correct label is:",
+  "options": {
+   "A": "BCG naive disease, so give another induction only.",
+   "B": "BCG-unresponsive disease, and cystectomy is the standard discussion.",
+   "C": "a low-grade recurrence for office fulguration.",
+   "D": "muscle-invasive cancer by definition.",
+   "E": "a reason to stop cystoscopy."
+  },
+  "answer": "B",
+  "rationale": "Adequate BCG is at least five of six induction doses and at least two of three maintenance doses, or a second induction. High-grade papillary recurrence within six months of that, or CIS within twelve months, is BCG-unresponsive. More BCG is unlikely to work. Cystectomy is standard. Trials of bladder-sparing drugs are for patients who cannot or will not have cystectomy.",
+  "learning_point": "High-grade recurrence within six months of adequate BCG is BCG-unresponsive disease.",
+  "key_facts": [
+   "CIS within twelve months is also unresponsive.",
+   "Inadequate BCG is not called unresponsive.",
+   "A solitary low-grade Ta after BCG is a milder problem."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1226"
+ },
+ {
+  "topic": "Oncology-Bladder/Urothelial",
+  "question": "Complete resection of a 3 cm bladder tumor shows micropapillary urothelial carcinoma into the lamina propria. Muscle is present and uninvolved. Counseling should emphasize that:",
+  "options": {
+   "A": "this histology is managed like low-grade Ta disease.",
+   "B": "variant histology usually leads to a discussion of early cystectomy.",
+   "C": "BCG is mandatory and cystectomy is prohibited.",
+   "D": "chemotherapy without bladder removal is the standard.",
+   "E": "the next cystoscopy can wait two years."
+  },
+  "answer": "B",
+  "rationale": "Micropapillary, plasmacytoid, and sarcomatoid variants are understaged and behave aggressively. Early cystectomy is the usual recommendation once micropapillary tumor is invasive. BCG is not the default the way it is for ordinary high-grade papillary disease. Uninvolved muscle means the resection was adequate for staging. It does not make the variant safe to watch.",
+  "learning_point": "Micropapillary bladder cancer is counseled toward early cystectomy, not toward a routine course of BCG.",
+  "key_facts": [
+   "Plasmacytoid histology is treated just as aggressively.",
+   "Absent muscle still requires a restaging resection.",
+   "Metastatic workup is appropriate before cystectomy."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1227"
+ },
+ {
+  "topic": "Oncology-Testis",
+  "question": "Orchiectomy shows a 3 cm pure seminoma. Chest, abdomen, and pelvis CT are normal. AFP and beta-hCG are normal. Sperm banking was offered. Preferred management of clinical stage I disease is:",
+  "options": {
+   "A": "surveillance.",
+   "B": "primary retroperitoneal lymph node dissection.",
+   "C": "three cycles of BEP now.",
+   "D": "radiation limited to the supraclavicular field.",
+   "E": "radiation plus chemotherapy."
+  },
+  "answer": "A",
+  "rationale": "Stage I seminoma relapses in a minority and salvage chemotherapy cures nearly all of those relapses. Surveillance avoids treating every man with carboplatin or radiation. Node dissection is not the adjuvant operation for seminoma. Three cycles of BEP treats good-risk metastatic disease, not stage I.",
+  "learning_point": "Clinical stage I seminoma is managed with surveillance after a normal staging evaluation.",
+  "key_facts": [
+   "An elevated AFP means the tumor is not pure seminoma.",
+   "One cycle of carboplatin is an alternative, not the preference.",
+   "Relapse is usually retroperitoneal."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1228"
+ },
+ {
+  "topic": "Oncology-Kidney",
+  "question": "A 48-year-old man with tuberous sclerosis has bilateral angiomyolipomas. The largest grew from 3.2 cm to 5.1 cm. He has not bled. The drug that can shrink these tumors is:",
+  "options": {
+   "A": "sunitinib.",
+   "B": "everolimus.",
+   "C": "pembrolizumab.",
+   "D": "cisplatin.",
+   "E": "leuprolide."
+  },
+  "answer": "B",
+  "rationale": "Angiomyolipoma in tuberous sclerosis responds to mTOR inhibition. Everolimus is used for growing, large, or symptomatic lesions when you want to avoid losing kidney tissue. Acute bleeding is embolized. Sunitinib and checkpoint inhibitors treat renal cell carcinoma, not AML.",
+  "learning_point": "Tuberous sclerosis AML can be treated with everolimus. Growth past 4 cm is a reason to intervene.",
+  "key_facts": [
+   "Bleeding is an embolization problem.",
+   "Sporadic AML is usually observed or treated locally, not with an mTOR drug.",
+   "Fat-poor AML can look like cancer."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1229"
+ },
+ {
+  "topic": "Oncology-Adrenal",
+  "question": "A 50-year-old man has a 3 cm adrenal mass, headaches, and paroxysmal hypertension. Plasma metanephrines are four times the upper limit. Before any operation he needs:",
+  "options": {
+   "A": "alpha blockade, with a beta blocker only after that if the pulse requires it.",
+   "B": "a beta blocker first.",
+   "C": "spironolactone only.",
+   "D": "percutaneous biopsy of the adrenal.",
+   "E": "dexamethasone suppression as the only next test."
+  },
+  "answer": "A",
+  "rationale": "Markedly elevated metanephrines and spells mean pheochromocytoma. Start an alpha blocker and restore volume. A beta blocker comes only after alpha blockade. Blocking the heart rate first leaves unopposed vasoconstriction and can cause a crisis. Do not biopsy a pheochromocytoma. Spironolactone is for aldosteronism.",
+  "learning_point": "Pheochromocytoma: alpha blockade before beta blockade, and no biopsy.",
+  "key_facts": [
+   "Phenoxybenzamine or doxazosin is the usual alpha drug.",
+   "Volume expansion is part of preparation.",
+   "The treatment is adrenalectomy after blockade."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1230"
+ },
+ {
+  "topic": "Oncology-Adrenal",
+  "question": "A 45-year-old woman has hypertension, hypokalemia, a high aldosterone-renin ratio, and aldosterone that does not suppress with saline. CT shows a 1 cm nodule in each adrenal. The study that decides which side secretes is:",
+  "options": {
+   "A": "adrenal venous sampling.",
+   "B": "a random renal biopsy.",
+   "C": "FDG PET alone.",
+   "D": "empiric right adrenalectomy.",
+   "E": "observation, because bilateral nodules exclude an adenoma."
+  },
+  "answer": "A",
+  "rationale": "Primary aldosteronism is confirmed by the ratio and by failure of suppression. When both adrenals have nodules, or the patient is older than about 35, CT cannot tell which side is secreting. Adrenal vein sampling compares aldosterone, corrected for cortisol, from each side. Removing the wrong gland leaves the disease in place.",
+  "learning_point": "Bilateral nodules in confirmed aldosteronism need adrenal vein sampling before surgery.",
+  "key_facts": [
+   "A young patient with a single clear nodule can sometimes skip sampling.",
+   "Spironolactone or eplerenone treats patients who do not have surgery.",
+   "Hypokalemia is not required to diagnose aldosteronism."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1231"
+ },
+ {
+  "topic": "Trauma/Reconstruction",
+  "question": "A man is crushed in a motor vehicle crash. The cystogram shows contrast outlining loops of bowel. He is stable after resuscitation. The next step is:",
+  "options": {
+   "A": "urethral catheter drainage alone for ten days.",
+   "B": "operative repair of an intraperitoneal bladder rupture.",
+   "C": "bilateral percutaneous nephrostomy only.",
+   "D": "observation without a catheter.",
+   "E": "immediate continent diversion."
+  },
+  "answer": "B",
+  "rationale": "Contrast around bowel is an intraperitoneal bladder rupture. Urine in the peritoneal cavity needs operative closure. Catheter drainage alone is the treatment for an uncomplicated extraperitoneal rupture. Nephrostomy tubes do not fix the bladder hole.",
+  "learning_point": "Intraperitoneal bladder rupture is repaired. Uncomplicated extraperitoneal rupture is drained.",
+  "key_facts": [
+   "A cystogram must include a drainage film.",
+   "A pelvic fracture more often causes an extraperitoneal leak.",
+   "Bladder neck and rectal injury change the extraperitoneal plan toward repair."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1232"
+ },
+ {
+  "topic": "Trauma/Reconstruction",
+  "question": "Blood is at the meatus after a straddle injury. A retrograde urethrogram shows a complete bulbar disruption. He can void only drops. The acute management is:",
+  "options": {
+   "A": "one gentle attempt at a catheter, then a suprapubic tube if it fails, and delayed repair.",
+   "B": "immediate primary realignment in every case, with no drainage option.",
+   "C": "end-to-end urethroplasty tonight in a stable patient as the only choice.",
+   "D": "observation with no tube.",
+   "E": "perineal urethrostomy as the first operation."
+  },
+  "answer": "A",
+  "rationale": "Blood at the meatus means you do not blindly instrument the urethra until a urethrogram is done. A complete anterior disruption in a stable patient is managed with a suprapubic tube, or a single gentle catheter attempt by a urologist, and delayed urethroplasty after the hematoma resolves. Immediate suture repair of a traumatized bulbar urethra is not the default.",
+  "learning_point": "Blood at the meatus: urethrogram before a catheter. Complete anterior disruption is usually diverted and repaired later.",
+  "key_facts": [
+   "A pelvic-fracture posterior urethral injury is also usually diverted, then reconstructed months later.",
+   "Partial disruptions that take a catheter can heal over that catheter.",
+   "A rectal injury found with a posterior urethral injury needs attention at the first operation."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1233"
+ },
+ {
+  "topic": "Pediatrics",
+  "question": "A newborn boy has bilateral hydroureteronephrosis and a thick bladder on ultrasound. He has not voided a strong stream. The first intervention is:",
+  "options": {
+   "A": "a urethral catheter, then a voiding cystourethrogram when he is stable.",
+   "B": "immediate bilateral pyeloplasty.",
+   "C": "circumcision only.",
+   "D": "observation until age five.",
+   "E": "chemotherapy for presumed Wilms tumor."
+  },
+  "answer": "A",
+  "rationale": "Bilateral hydronephrosis, a thick bladder, and a poor stream in a boy is posterior urethral valves until the cystourethrogram says otherwise. Drain the bladder with a small catheter first. The cystogram is done after he is stable, and it shows the dilated posterior urethra and the valve leaflets. Valve ablation comes after drainage and treatment of any infection or renal failure. Pyeloplasty does not treat the obstruction, which is in the urethra.",
+  "learning_point": "A boy with bilateral hydronephrosis and a thick bladder needs a catheter and a voiding cystourethrogram for valves.",
+  "key_facts": [
+   "Creatinine after drainage tells you the renal prognosis better than the first newborn value.",
+   "Circumcision lowers later infection risk but is not the emergency.",
+   "A catheter that will not pass may mean a different urethral problem."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1234"
+ },
+ {
+  "topic": "Pediatrics",
+  "question": "A 6-year-old has prenatal left hydronephrosis that persisted. MAG3 shows 45% function on the left and a diuretic half-time of 30 minutes, with pain episodes. The finding that makes repair reasonable is:",
+  "options": {
+   "A": "an obstructing ureteropelvic junction with symptoms and a prolonged half-time.",
+   "B": "a half-time under 10 minutes.",
+   "C": "vesicoureteral reflux as the cause of a prolonged half-time.",
+   "D": "a multicystic dysplastic kidney with no function.",
+   "E": "a ureterocele seen on the MAG3 washout curve."
+  },
+  "answer": "A",
+  "rationale": "A diuretic half-time over 20 minutes is obstructed, under 10 is not, and 10 to 20 is equivocal. Pain plus a half-time of 30 minutes and preserved function is a ureteropelvic junction obstruction worth repairing with pyeloplasty. A half-time under 10 minutes is not an indication. Reflux is diagnosed on a cystogram, not on the MAG3 washout. A multicystic kidney has essentially no function and is not repaired with a pyeloplasty.",
+  "learning_point": "MAG3 half-time over 20 minutes means obstruction. Symptoms plus obstruction justify pyeloplasty.",
+  "key_facts": [
+   "Falling function on serial scans is another reason to operate.",
+   "A half-time under 10 minutes is drainage, not obstruction.",
+   "The cystogram, not the renal scan, diagnoses reflux."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1235"
+ },
+ {
+  "topic": "Oncology-Penis/Urethra",
+  "question": "A 64-year-old man has a 2 cm glans lesion. Biopsy is squamous carcinoma invading the corpus spongiosum. The penis shaft is otherwise normal and the groins have no palpable nodes. The local treatment is:",
+  "options": {
+   "A": "partial penectomy with a negative margin, and a plan for inguinal staging because invasion of spongiosum is intermediate or high risk.",
+   "B": "topical imiquimod only.",
+   "C": "circumcision and discharge from follow-up.",
+   "D": "bilateral pelvic lymph node dissection without treating the penis.",
+   "E": "radiation to the chest."
+  },
+  "answer": "A",
+  "rationale": "Invasion of the corpus spongiosum is at least T2. Organ-sparing or partial penectomy must clear the tumor. Palpable nodes are excised. Nonpalpable nodes in intermediate- and high-risk disease are staged with dynamic sentinel biopsy or an inguinal dissection, because cure depends on the groins. Imiquimod is for carcinoma in situ, not an invasive glans cancer.",
+  "learning_point": "Invasive glans cancer needs a margin-negative resection and a groin plan. Nonpalpable nodes in higher-risk disease are still staged.",
+  "key_facts": [
+   "Carcinoma in situ can be treated with topical therapy or local excision.",
+   "Pelvic nodes are treated when the inguinal nodes are involved, not instead of the penis.",
+   "A positive margin requires further resection."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1236"
+ },
+ {
+  "topic": "Urinary Diversion",
+  "question": "A man with an ileal conduit has chloride of 115 mEq/L and bicarbonate of 16 mEq/L three months after surgery. He is not volume depleted on exam. The mechanism is:",
+  "options": {
+   "A": "absorption of ammonium and chloride by the ileal segment, producing a hyperchloremic metabolic acidosis.",
+   "B": "primary respiratory alkalosis.",
+   "C": "distal renal tubular acidosis from the conduit.",
+   "D": "loss of bicarbonate in the stomach.",
+   "E": "a lab error, because bowel segments do not move electrolytes."
+  },
+  "answer": "A",
+  "rationale": "Ileum and colon in contact with urine reabsorb ammonium and chloride and can give up bicarbonate. The result is hyperchloremic metabolic acidosis. A long or slow-draining segment makes it worse. Treat with alkali. A gastric segment does the opposite and can cause hypochloremic metabolic alkalosis.",
+  "learning_point": "Ileal conduits can cause hyperchloremic metabolic acidosis. Give alkali if it is symptomatic or the bicarbonate is low.",
+  "key_facts": [
+   "A gastric augmentation causes alkalosis, not this acidosis.",
+   "Chronic acidosis leaches bone.",
+   "Obstruction of the conduit worsens the absorption."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1237"
+ },
+ {
+  "topic": "Transplant/Renal Physiology",
+  "question": "Four months after a kidney transplant the creatinine rises from 1.2 to 2.1 mg/dL. Urine microscopy shows decoy cells, and blood BK virus PCR is high. The first change in treatment is:",
+  "options": {
+   "A": "reduce immunosuppression.",
+   "B": "increase the calcineurin inhibitor.",
+   "C": "start high-dose steroids for rejection without checking the virus.",
+   "D": "remove the transplant the same day.",
+   "E": "add another antimetabolite."
+  },
+  "answer": "A",
+  "rationale": "BK virus nephropathy is a disease of too much immunosuppression. Decoy cells and viremia are the clues, and a rising creatinine with this picture should not be treated as rejection until BK is addressed. The first move is to lower immunosuppression so the host can clear the virus. Adding more suppression makes it worse. Graft removal is not the opening step.",
+  "learning_point": "BK nephropathy: lower immunosuppression first. Do not treat it like rejection.",
+  "key_facts": [
+   "Screening is with urine or blood PCR.",
+   "Leflunomide or cidofovir are later options, not the first move.",
+   "Biopsy shows viral inclusions and can look like rejection."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1238"
+ },
+ {
+  "topic": "Infection/Inflammation",
+  "question": "A 68-year-old diabetic woman has fever, vomiting, and a CT that shows gas in the left renal parenchyma and collecting system. She is not in shock after fluids. The treatment is:",
+  "options": {
+   "A": "antibiotics, glucose control, and relief of any obstruction.",
+   "B": "observation without antibiotics because the gas is bowel.",
+   "C": "shock-wave lithotripsy.",
+   "D": "immediate bilateral nephrectomy.",
+   "E": "BCG instillation."
+  },
+  "answer": "A",
+  "rationale": "Gas in the kidney of a diabetic is emphysematous pyelonephritis until proven otherwise. Resuscitate, give antibiotics that cover gas-forming gram-negative rods, control glucose, and drain obstruction or a collection. Nephrectomy is for a patient who fails that or who has a dead kidney and ongoing sepsis. It is not automatic in a patient who stabilizes.",
+  "learning_point": "Emphysematous pyelonephritis: antibiotics, sugar control, and drainage. Nephrectomy is for failure, not the first order.",
+  "key_facts": [
+   "Gas confined to the collecting system is a milder, related problem.",
+   "Urinary obstruction must be relieved.",
+   "Most patients are diabetic."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1239"
+ },
+ {
+  "topic": "Pharmacology",
+  "question": "A man has taken finasteride 5 mg daily for a year. His PSA today is 2.1 ng/mL. For decisions about biopsy, that value should be interpreted as:",
+  "options": {
+   "A": "about twice the measured number, because finasteride lowers PSA by roughly half.",
+   "B": "unchanged, because finasteride does not affect PSA.",
+   "C": "falsely high, so divide by two.",
+   "D": "meaningless, so never biopsy a man on finasteride.",
+   "E": "a sign that he has prostatitis only."
+  },
+  "answer": "A",
+  "rationale": "Daily finasteride or dutasteride lowers PSA by about half after months of use. A measured PSA of 2.1 behaves like a PSA near 4 for cancer risk. You multiply by about two. You do not divide. A rise from the nadir on the drug is also a reason to look harder, even if the absolute number looks low.",
+  "learning_point": "On a 5-alpha reductase inhibitor, double the PSA before you decide it is reassuring.",
+  "key_facts": [
+   "The fall takes several months.",
+   "A rising PSA on the drug is suspicious.",
+   "The drug also shrinks the gland and is used for enlarged prostates and for risk reduction."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1240"
+ },
+ {
+  "topic": "Imaging/Radiation Safety",
+  "question": "During fluoroscopy for a percutaneous stone procedure, the change that most reduces the urologist's dose is:",
+  "options": {
+   "A": "stepping back, because dose falls with the square of distance, and using pulsed fluoro and shielding.",
+   "B": "standing closer so the beam is sharper.",
+   "C": "removing the lead apron to move faster.",
+   "D": "increasing frame rate for the entire case.",
+   "E": "placing a hand in the beam to steady the needle for long periods."
+  },
+  "answer": "A",
+  "rationale": "Radiation intensity falls with the square of distance. Doubling the distance cuts the dose to a quarter. Pulsed fluoroscopy, last-image hold, collimation, and lead shielding cut the rest. A hand in the beam and a high frame rate do the opposite. The apron stays on.",
+  "learning_point": "Distance, time, and shielding. Dose falls with the square of distance.",
+  "key_facts": [
+   "The beam entrance side of the patient gets the highest skin dose.",
+   "Pulsed fluoro lowers frames and dose.",
+   "Lead glasses matter for scatter to the lens."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1241"
+ },
+ {
+  "topic": "Laparoscopy/Robotics/Perioperative",
+  "question": "On day three after a laparoscopic nephrectomy the patient has shoulder pain, a fever of 38.8 C, and a rising white count. The abdomen is more tender than expected. The injury to look for is:",
+  "options": {
+   "A": "an unrecognized bowel injury.",
+   "B": "ordinary capnoperitoneum pain, which causes fever and peritonitis.",
+   "C": "a reaction to the Foley balloon.",
+   "D": "adductor compartment syndrome.",
+   "E": "isolated atelectasis as the full explanation of peritonitis."
+  },
+  "answer": "A",
+  "rationale": "Residual carbon dioxide causes shoulder pain, but not fever and peritonitis. Worsening abdominal pain, fever, and leukocytosis in the first days after laparoscopy are an unrecognized bowel injury until imaging and exam say otherwise. These injuries present late because the hole can be small. Do not send the patient home on that story.",
+  "learning_point": "Fever and peritonitis after laparoscopy are a bowel injury until proven otherwise. Shoulder pain alone is often just retained gas.",
+  "key_facts": [
+   "Trocar injury and thermal injury both do this.",
+   "CT and an early return to the operating room save lives.",
+   "Atelectasis does not cause peritonitis."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1242"
+ },
+ {
+  "topic": "Sexual Dysfunction",
+  "question": "A 41-year-old man has a painful erection that has lasted six hours. Cavernosal blood gas is dark, pH is 7.05, and oxygen is low. He has not been injured. After pain control, the next steps in order are:",
+  "options": {
+   "A": "aspiration and irrigation, then dilute phenylephrine, and a shunt only if that fails.",
+   "B": "ice and observation for another twelve hours.",
+   "C": "arterial embolization as the first move.",
+   "D": "a winter shunt before any aspiration.",
+   "E": "testosterone gel."
+  },
+  "answer": "A",
+  "rationale": "Pain plus dark, acid, hypoxic blood is ischemic priapism. It is a compartment syndrome of the penis. Aspirate and irrigate, then inject dilute phenylephrine. A surgical shunt is for failure of that sequence, not the first cut. High-flow priapism is the opposite blood gas, is painless, and is the one that may need embolization. Ice and delay cause fibrosis.",
+  "learning_point": "Ischemic priapism: aspirate, then phenylephrine, then a shunt if it will not detumesce.",
+  "key_facts": [
+   "The blood gas looks like venous blood.",
+   "High-flow priapism is bright red and usually follows trauma.",
+   "Phenylephrine is diluted. Watch the blood pressure."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1243"
+ },
+ {
+  "topic": "Female Urology/Pelvic Floor",
+  "question": "Ten days after a hysterectomy a woman has continuous vaginal leakage. A tampon dye test turns the tampon blue after the bladder is filled with dye, and she did not void. The fistula is fresh. The usual timing of repair is:",
+  "options": {
+   "A": "delay the repair for weeks to months unless the tissues are clearly healthy, and divert the urine now.",
+   "B": "mesh midurethral sling tonight.",
+   "C": "cystectomy.",
+   "D": "observation with no catheter because fresh fistulas always close.",
+   "E": "pelvic radiation."
+  },
+  "answer": "A",
+  "rationale": "Blue dye on the vaginal tampon after bladder filling is a vesicovaginal fistula. In the first days the tissues are inflamed. Unless an experienced surgeon finds clean tissue for an immediate repair, the standard is catheter drainage and a delayed repair once the inflammation settles, often several weeks to a few months later. A sling does not close a fistula. Most fresh fistulas do not close with a catheter alone, but the catheter protects the skin and the ureters while you wait.",
+  "learning_point": "A new post-hysterectomy vesicovaginal fistula is usually diverted and repaired after the tissues quiet down.",
+  "key_facts": [
+   "The dye test separates a bladder fistula from a ureteral one. Give oral dye as well if you need that distinction.",
+   "Continuous leakage is the history.",
+   "Unrecognized ureteral injury can coexist."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1244"
+ },
+ {
+  "topic": "Ethics/Professionalism/Statistics",
+  "question": "A trial reports that a drug lowers the risk of a complication from 10% to 5%. The number needed to treat to prevent one complication is:",
+  "options": {
+   "A": "20.",
+   "B": "5.",
+   "C": "2.",
+   "D": "50.",
+   "E": "10."
+  },
+  "answer": "A",
+  "rationale": "Absolute risk reduction is 10% minus 5%, which is 0.05. Number needed to treat is 1 divided by that absolute reduction, which is 20. The relative reduction is 50%, and that number is not the NNT. A common trap is to invert the relative risk or to use the control event rate alone.",
+  "learning_point": "Number needed to treat is 1 divided by the absolute risk reduction. Here that is 1 / 0.05 = 20.",
+  "key_facts": [
+   "Relative risk reduction is not the NNT.",
+   "A smaller absolute benefit means a larger NNT.",
+   "NNT is rounded up to a whole patient."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1245"
+ },
+ {
+  "topic": "BPH/LUTS",
+  "question": "A 74-year-old man in retention has a large median lobe on cystoscopy. He failed an alpha blocker and a voiding trial. His PSA is stable and his creatinine is normal. The operation that removes that lobe is:",
+  "options": {
+   "A": "a transurethral resection or an equivalent enucleation, aimed at the obstructing lobe.",
+   "B": "a midurethral sling.",
+   "C": "bladder botulinum toxin as the only option.",
+   "D": "urethral dilation for a fossa navicularis stricture.",
+   "E": "orchiectomy."
+  },
+  "answer": "A",
+  "rationale": "A median lobe acts like a ball-valve at the bladder neck. Medicines often fail. Resection or enucleation of the prostate, including the median lobe, is the operation. A sling is for female stress incontinence. Botulinum toxin treats overactivity and can worsen emptying. Dilation does not remove a lobe.",
+  "learning_point": "An obstructing median lobe that has failed medication is treated by resection or enucleation, not by a sling or by botulinum toxin.",
+  "key_facts": [
+   "Aquablation, enucleation, and TURP can all address the lobe when used properly.",
+   "Prostate artery embolization is an alternative discussion, not the classic definitive answer.",
+   "Check for cancer when the PSA or the exam says to, but the retention is from the lobe."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1246"
+ },
+ {
+  "topic": "Oncology-Testis",
+  "question": "A man finishes chemotherapy for nonseminoma. Markers were normal. On schedule they rise again and CT shows a new retroperitoneal node. The markers rising after a documented complete marker response mean:",
+  "options": {
+   "A": "relapse, and he needs a new plan, not observation of a rising marker.",
+   "B": "a lab effect of the last dose of bleomycin that can be ignored.",
+   "C": "proof that surveillance is over and no further treatment exists.",
+   "D": "that the original orchiectomy specimen must have been lymphoma.",
+   "E": "that radiation to the chest is the next standard step."
+  },
+  "answer": "A",
+  "rationale": "Markers that normalize and then rise are relapse. A growing node plus a rising AFP or hCG is not a residual teratoma, because teratoma does not make those markers. He needs restaging and a treatment plan, which may be further chemotherapy or surgery depending on the site and the marker. Ignoring a rising marker is how curative windows are lost.",
+  "learning_point": "A marker that falls to normal and then climbs is relapse. Teratoma does not make AFP or hCG.",
+  "key_facts": [
+   "Residual mass with normal markers can be teratoma and is a surgical question.",
+   "Bleomycin does not create a false marker rise.",
+   "Brain imaging is considered when the course is atypical."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1247"
+ },
+ {
+  "topic": "Infection/Inflammation",
+  "question": "A 24-year-old man has fever, a tender swollen prostate, and dysuria. Urine culture grows E. coli. He can void. The treatment duration that matches acute bacterial prostatitis is:",
+  "options": {
+   "A": "about two to four weeks of an antibiotic that enters prostate tissue, longer if he is slow to clear.",
+   "B": "a single dose of fosfomycin and no follow-up.",
+   "C": "BCG instillation.",
+   "D": "six hours of antibiotics only.",
+   "E": "antifungals for six months."
+  },
+  "answer": "A",
+  "rationale": "Acute bacterial prostatitis is a tissue infection, not a one-dose cystitis. Fluoroquinolones or trimethoprim-sulfamethoxazole, chosen from the culture, are given for several weeks because the prostate is hard to penetrate. A very short course relapses. Do not massage an acutely inflamed prostate. Retention is drained, preferably with a suprapubic tube if a catheter is intolerable, but he is voiding.",
+  "learning_point": "Acute prostatitis needs weeks of an antibiotic that reaches the prostate, guided by the culture.",
+  "key_facts": [
+   "Do not massage the prostate while it is acutely infected.",
+   "A prostatic abscess that fails antibiotics is drained.",
+   "Chronic bacterial prostatitis is a longer, different course."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1248"
+ },
+ {
+  "topic": "Trauma/Reconstruction",
+  "question": "CT in a stable adult shows a deep renal laceration into the collecting system, a small urinoma, and no vascular blush. The injury is managed at first by:",
+  "options": {
+   "A": "bed rest, serial exams, and a ureteral stent if the leak persists.",
+   "B": "immediate nephrectomy because any urine leak requires it.",
+   "C": "shock-wave lithotripsy.",
+   "D": "BCG.",
+   "E": "partial nephrectomy the same night in a stable patient with no blush."
+  },
+  "answer": "A",
+  "rationale": "Most blunt renal injuries, including urine leaks without hemodynamic instability or a vascular injury, are managed without an operation. A persistent leak or a growing urinoma is drained with a stent, and sometimes a drain. Nephrectomy is for a shattered kidney or an unstable patient, not for a contained leak in someone who is stable.",
+  "learning_point": "A stable urine leak from the kidney is observed, and stented if it does not dry up. It is not an automatic nephrectomy.",
+  "key_facts": [
+   "A vascular blush in an unstable patient is an embolization or operative problem.",
+   "Delayed bleeding can still occur.",
+   "The grading system goes up when urine or a vessel is involved."
+  ],
+  "source_ref": "Hard set",
+  "hard": true,
+  "id": "UQB-1249"
  }
 ]

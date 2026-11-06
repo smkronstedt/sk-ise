@@ -8,6 +8,7 @@ export type BankItem = {
   learning_point: string;
   key_facts: string[];
   source_ref: string;
+  hard?: boolean;
 };
 
 export type BankAnswer = { choice: string; correct: boolean };
@@ -21,7 +22,7 @@ export type BankProgress = {
 const KEY = "callroom-original-bank-v1";
 
 /** Items in public/bank/questions.json. The desk's 57 vignettes are separate. */
-export const BANK_TOTAL = 1214;
+export const BANK_TOTAL = 1249;
 
 export const letters = ["A", "B", "C", "D", "E"] as const;
 
