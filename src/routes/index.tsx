@@ -518,13 +518,16 @@ const citySpots: Record<string, { x: number; y: number }> = {
   obstruction: { x: 64, y: 78 },
 };
 const leagueSpot = { x: 90, y: 14 };
-const trees = [
-  { x: 8, y: 30 },
-  { x: 40, y: 70 },
-  { x: 52, y: 12 },
-  { x: 78, y: 74 },
-  { x: 30, y: 84 },
-];
+const roofs: Record<string, string> = {
+  Rock: "#a07848",
+  Water: "#3d7ec9",
+  Electric: "#e2b400",
+  Grass: "#3d9a32",
+  Poison: "#8d4d9a",
+  Psychic: "#d56aa0",
+  Fire: "#d44832",
+  Ground: "#b88848",
+};
 
 function mix(a: { x: number; y: number }, b: { x: number; y: number }, t: number) {
   return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
@@ -547,24 +550,58 @@ function FieldMap({
   startRoute: (name: string, blueprintId: BlueprintId, count: number, gym: boolean) => void;
   startChampionship: () => void;
 }) {
+  const [inside, setInside] = useState(false);
   const path = [{ x: 8, y: 88 }, ...cities.map((city) => citySpots[city.id]), leagueSpot];
   const chosen =
     picked === "league"
       ? null
       : stops.find((stop) => (stop.kind === "trainer" ? stop.name === picked : stop.city.id === picked && stop.kind === "gym"));
+  const inGym = inside && (picked === "league" || chosen?.kind === "gym");
+  const hall = picked === "league" || !chosen || chosen.kind !== "gym" ? "/field/league.jpg" : chosen.city.hall;
+  const lockedHall = picked === "league" ? badges < cities.length : chosen?.kind === "gym" ? !chosen.open && !chosen.done : false;
+
+  if (inGym) {
+    return (
+      <div className="relative min-h-[40rem] overflow-hidden bg-black">
+        <img src={hall} alt="" className={`absolute inset-0 h-full w-full object-cover ${lockedHall ? "grayscale" : ""}`} />
+        <button
+          type="button"
+          onClick={() => setInside(false)}
+          className="absolute top-3 left-3 min-h-11 border-4 border-black bg-[#fff4a8] px-3 text-sm font-bold text-black"
+        >
+          Map
+        </button>
+        <div className="absolute inset-x-0 bottom-0 border-t-4 border-black bg-[#fff4a8] p-4 text-black">
+          <GymDialog
+            picked={picked}
+            chosen={chosen}
+            badges={badges}
+            champion={champion}
+            startRoute={startRoute}
+            startChampionship={startChampionship}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid gap-3 p-3 lg:grid-cols-[minmax(0,1.5fr)_18rem]">
+    <div className="bg-[#2c2416] p-2">
       <div
-        className="relative min-h-[34rem] overflow-hidden rounded border border-field-ink/30"
-        style={{ backgroundImage: "url(/trail/grass.png)", backgroundSize: "180px" }}
+        className="relative min-h-[40rem] overflow-hidden"
+        style={{
+          backgroundColor: "#c6e15a",
+          backgroundImage:
+            "linear-gradient(rgba(70,110,20,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(70,110,20,.18) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
       >
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <polyline points={path.map((spot) => `${spot.x},${spot.y}`).join(" ")} fill="none" stroke="#c4a574" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points={path.map((spot) => `${spot.x},${spot.y}`).join(" ")} fill="none" stroke="#8d6740" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          <ellipse cx="18" cy="28" rx="14" ry="8" fill="#48a0e0" stroke="#183048" strokeWidth="0.6" />
+          <ellipse cx="78" cy="84" rx="16" ry="7" fill="#48a0e0" stroke="#183048" strokeWidth="0.6" />
+          <polyline points={path.map((spot) => `${spot.x},${spot.y}`).join(" ")} fill="none" stroke="#241c10" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={path.map((spot) => `${spot.x},${spot.y}`).join(" ")} fill="none" stroke="#fff4a8" strokeWidth="3.1" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {trees.map((tree) => (
-          <img key={`${tree.x}-${tree.y}`} src="/trail/tree.png" alt="" className="pointer-events-none absolute h-12 w-12 -translate-x-1/2 -translate-y-1/2" style={{ left: `${tree.x}%`, top: `${tree.y}%` }} />
-        ))}
         {cities.map((city, index) => {
           const from = index === 0 ? { x: 8, y: 88 } : citySpots[cities[index - 1].id];
           const to = citySpots[city.id];
@@ -576,54 +613,69 @@ function FieldMap({
                 key={trainer.name}
                 type="button"
                 aria-label={trainer.name}
-                onClick={() => onPick(trainer.name)}
+                onClick={() => {
+                  onPick(trainer.name);
+                  setInside(false);
+                }}
                 style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
-                className={`absolute z-10 h-11 w-11 -translate-x-1/2 -translate-y-1/2 ${picked === trainer.name ? "ring-4 ring-field-stamp" : ""}`}
-              >
-                <img src={stop?.done ? "/trail/sign.png" : "/trail/tent.png"} alt="" className={`h-11 w-11 object-contain ${stop?.open || stop?.done ? "" : "opacity-40"}`} />
-              </button>
+                className={`absolute z-10 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-black ${stop?.done ? "bg-[#3d9a32]" : "bg-[#fff4a8]"} ${stop?.open || stop?.done ? "" : "opacity-40"} ${picked === trainer.name ? "ring-4 ring-black" : ""}`}
+              />
             );
           });
         })}
         {cities.map((city) => {
           const gym = stops.find((stop) => stop.kind === "gym" && stop.city.id === city.id);
-          const ace = DEX.find((creature) => creature.gym === city.id);
           const spot = citySpots[city.id];
           return (
             <button
               key={city.id}
               type="button"
-              onClick={() => onPick(city.id)}
+              onClick={() => {
+                onPick(city.id);
+                setInside(true);
+              }}
               style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
-              className={`absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center ${picked === city.id ? "scale-110" : ""}`}
+              className={`absolute z-20 flex -translate-x-1/2 -translate-y-full flex-col items-center ${gym?.open || gym?.done ? "" : "opacity-50"}`}
             >
-              <img
-                src={gym?.done && ace ? portraitFor(ace.number, true) : city.hall}
-                alt=""
-                className={`h-16 w-16 rounded-full border-4 object-cover ${picked === city.id ? "border-field-stamp" : "border-white"} ${gym?.open || gym?.done ? "" : "grayscale"}`}
-              />
-              <span className="mt-1 rounded bg-white/90 px-1 text-[10px] font-semibold">{city.city}</span>
+              <span className="block h-0 w-0 border-x-[16px] border-b-[12px] border-x-transparent" style={{ borderBottomColor: roofs[city.element] ?? "#d44832" }} />
+              <span className="block h-5 w-8 border-2 border-black bg-[#fff8e0]" />
+              <span className="mt-0.5 bg-black px-1 text-[10px] font-bold text-[#fff4a8]">{city.city}</span>
             </button>
           );
         })}
-        <button type="button" onClick={() => onPick("league")} style={{ left: `${leagueSpot.x}%`, top: `${leagueSpot.y}%` }} className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
-          <img src="/field/league.jpg" alt="" className={`h-16 w-16 rounded-full border-4 object-cover ${picked === "league" ? "border-field-stamp" : "border-white"} ${badges < cities.length ? "grayscale" : ""}`} />
-          <span className="mt-1 rounded bg-white/90 px-1 text-[10px] font-semibold">Championship</span>
+        <button
+          type="button"
+          onClick={() => {
+            onPick("league");
+            setInside(true);
+          }}
+          style={{ left: `${leagueSpot.x}%`, top: `${leagueSpot.y}%` }}
+          className={`absolute z-20 flex -translate-x-1/2 -translate-y-full flex-col items-center ${badges < cities.length ? "opacity-50" : ""}`}
+        >
+          <span className="block h-0 w-0 border-x-[18px] border-b-[14px] border-x-transparent border-b-[#f0c020]" />
+          <span className="block h-6 w-10 border-2 border-black bg-[#fff8e0]" />
+          <span className="mt-0.5 bg-black px-1 text-[10px] font-bold text-[#fff4a8]">League</span>
         </button>
+        {chosen?.kind === "trainer" ? (
+          <div className="absolute inset-x-0 bottom-0 border-t-4 border-black bg-[#fff4a8] p-4 text-black">
+            <GymDialog
+              picked={picked}
+              chosen={chosen}
+              badges={badges}
+              champion={champion}
+              startRoute={startRoute}
+              startChampionship={startChampionship}
+            />
+          </div>
+        ) : (
+          <p className="absolute bottom-3 left-3 bg-black px-2 py-1 text-xs font-bold text-[#fff4a8]">Walk up to a gym to go inside.</p>
+        )}
       </div>
-      <MapCard
-        picked={picked}
-        chosen={chosen}
-        badges={badges}
-        champion={champion}
-        startRoute={startRoute}
-        startChampionship={startChampionship}
-      />
     </div>
   );
 }
 
-function MapCard({
+function GymDialog({
   picked,
   chosen,
   badges,
@@ -640,65 +692,53 @@ function MapCard({
 }) {
   if (picked === "league" || !chosen) {
     return (
-      <div className="overflow-hidden rounded border border-field-ink/20 bg-white">
-        <img src="/field/league.jpg" alt="" className={`h-36 w-full object-cover ${badges < cities.length ? "grayscale" : ""}`} />
-        <div className="p-4">
-          <p className="text-xs font-semibold tracking-wide uppercase">After the eight badges</p>
-          <h2 className="font-serif text-2xl">The Championship</h2>
-          <p className="mt-1 text-sm">Twenty harder questions. You need 80%. Badges {badges}/{cities.length}.</p>
-          {champion ? <p className="mt-3 text-sm font-semibold text-field-fern">Champion</p> : null}
-          {!champion && badges === cities.length ? (
-            <button type="button" onClick={startChampionship} className="mt-3 min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white">
-              Enter the Championship
-            </button>
-          ) : null}
-          {!champion && badges < cities.length ? <p className="mt-3 text-sm">The hall stays shut until every badge is earned.</p> : null}
-        </div>
+      <div>
+        <p className="text-xs font-bold tracking-wide uppercase">Championship</p>
+        <h2 className="font-serif text-2xl">The hall</h2>
+        <p className="mt-1 text-sm">Twenty harder questions. You need 80%. Badges {badges}/{cities.length}.</p>
+        {champion ? <p className="mt-2 text-sm font-bold">Champion</p> : null}
+        {!champion && badges === cities.length ? (
+          <button type="button" onClick={startChampionship} className="mt-3 min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
+            Enter the Championship
+          </button>
+        ) : null}
+        {!champion && badges < cities.length ? <p className="mt-2 text-sm">The doors stay shut until every badge is earned.</p> : null}
       </div>
     );
   }
   if (chosen.kind === "trainer") {
     return (
-      <div className="rounded border border-field-ink/20 bg-white p-4">
-        <img src={chosen.done ? "/trail/sign.png" : "/trail/tent.png"} alt="" className="h-16 w-16 object-contain" />
-        <h2 className="mt-2 font-serif text-2xl">{chosen.name}</h2>
-        <p className="text-sm">Trainer on the road to {chosen.city.city}.</p>
-        <p className="mt-1 text-sm text-field-ink/70">{chosen.count} questions. Need 60%.</p>
+      <div>
+        <p className="text-xs font-bold tracking-wide uppercase">Trainer</p>
+        <h2 className="font-serif text-2xl">{chosen.name}</h2>
+        <p className="text-sm">On the road to {chosen.city.city}. {chosen.count} questions. Need 60%.</p>
         {chosen.open && !chosen.done ? (
-          <button type="button" onClick={() => startRoute(`Route: ${chosen.name}`, chosen.city.id, chosen.count, false)} className="mt-3 min-h-11 rounded bg-field-stamp px-3 text-sm font-semibold text-white">
+          <button type="button" onClick={() => startRoute(`Route: ${chosen.name}`, chosen.city.id, chosen.count, false)} className="mt-3 min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
             Battle {chosen.name}
           </button>
         ) : null}
-        {chosen.done ? <p className="mt-3 text-sm font-semibold text-field-fern">Beaten</p> : null}
-        {!chosen.open && !chosen.done ? <p className="mt-3 text-sm">The road is closed.</p> : null}
+        {chosen.done ? <p className="mt-2 text-sm font-bold">Beaten</p> : null}
+        {!chosen.open && !chosen.done ? <p className="mt-2 text-sm">The road is closed.</p> : null}
       </div>
     );
   }
   const ace = DEX.find((creature) => creature.gym === chosen.city.id);
   return (
-    <div className="overflow-hidden rounded border border-field-ink/20 bg-white">
-      <img src={chosen.city.hall} alt="" className={`h-36 w-full object-cover ${chosen.open || chosen.done ? "" : "grayscale"}`} />
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="text-xs font-semibold tracking-wide uppercase">{chosen.city.element} city</p>
-            <h2 className="font-serif text-2xl">{chosen.city.city}</h2>
-            <p className="text-sm">Gym leader {chosen.city.leader}</p>
-            <p className="text-sm text-field-ink/70">{chosen.city.subject} · {chosen.city.gymCount} questions · need 60%</p>
-          </div>
-          <Badge element={chosen.city.element} earned={chosen.done} />
-        </div>
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <p className="text-xs font-bold tracking-wide uppercase">{chosen.city.element} gym</p>
+        <h2 className="font-serif text-2xl">{chosen.city.leader}</h2>
+        <p className="text-sm">{chosen.city.city}. {chosen.city.subject}. {chosen.city.gymCount} questions. Need 60%.</p>
+        {!chosen.open ? <p className="mt-1 text-sm">Beat the trainers on the road first.</p> : null}
+        {chosen.done && ace ? <p className="mt-1 text-sm font-bold">{ace.name} is with you.</p> : null}
+      </div>
+      <div className="flex items-center gap-3">
+        <Badge element={chosen.city.element} earned={chosen.done} />
+        {chosen.done && ace ? <img src={portraitFor(ace.number, true)} alt="" className="h-14 w-14 rounded-full border-4 border-black object-cover" /> : null}
         {chosen.open && !chosen.done ? (
-          <button type="button" onClick={() => startRoute(`Gym: ${chosen.city.element}`, chosen.city.id, chosen.city.gymCount, true)} className="mt-3 min-h-11 rounded bg-field-stamp px-3 text-sm font-semibold text-white">
+          <button type="button" onClick={() => startRoute(`Gym: ${chosen.city.element}`, chosen.city.id, chosen.city.gymCount, true)} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
             Challenge {chosen.city.leader}
           </button>
-        ) : null}
-        {!chosen.open ? <p className="mt-3 text-sm">Beat the trainers on the road first.</p> : null}
-        {chosen.done && ace ? (
-          <div className="mt-3 flex items-center gap-3">
-            <img src={portraitFor(ace.number, true)} alt="" className="h-14 w-14 rounded-full object-cover" />
-            <p className="text-sm">{ace.name} is with you.</p>
-          </div>
         ) : null}
       </div>
     </div>
