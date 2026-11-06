@@ -1,0 +1,9 @@
+node_modules
+.vercel
+attachments
+screenshots
+artifacts
+*.pdf
+*.docx
+*.pptx
+*.xlsx
