@@ -22,7 +22,7 @@ function LoginPage() {
         const { error: err } = await authClient.signUp.email({ email, password, name: email.split("@")[0] });
         if (err) throw new Error(err.message ?? "Sign up failed");
       } else {
-        const { error: err } = await authClient.signIn.email({ email, password });
+        const { error: err } = await authClient.signIn.email({ email, password, rememberMe: true });
         if (err) throw new Error(err.message ?? "Sign in failed");
       }
       window.location.href = "/";

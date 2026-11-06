@@ -30,25 +30,36 @@ function BankPage() {
   const [progress, setProgress] = useState<BankProgress>(emptyBankProgress);
   const [ready, setReady] = useState(false);
 
+  const [attempt, setAttempt] = useState(0);
+
   useEffect(() => {
     setProgress(loadBankProgress());
     setReady(true);
+    setFailed(false);
     let cancel = false;
+    const timer = window.setTimeout(() => {
+      if (!cancel) setFailed(true);
+    }, 20000);
     fetch("/bank/questions.json")
       .then((response) => {
         if (!response.ok) throw new Error("missing");
         return response.json() as Promise<BankItem[]>;
       })
       .then((data) => {
-        if (!cancel) setItems(data);
+        if (!cancel) {
+          setItems(data);
+          setFailed(false);
+        }
       })
       .catch(() => {
         if (!cancel) setFailed(true);
-      });
+      })
+      .finally(() => window.clearTimeout(timer));
     return () => {
       cancel = true;
+      window.clearTimeout(timer);
     };
-  }, []);
+  }, [attempt]);
 
   const topics = useMemo(() => {
     const counts = new Map<string, number>();
@@ -87,7 +98,12 @@ function BankPage() {
   if (!items) {
     return (
       <Shell>
-        <p>{failed ? "The question bank did not load." : "Opening the original bank…"}</p>
+        <p>{failed ? "The question bank did not load. Your other progress is still saved on this device." : "Opening the original bank…"}</p>
+        {failed ? (
+          <button type="button" onClick={() => setAttempt((value) => value + 1)} className="mt-3 min-h-11 rounded bg-navy px-4 font-semibold text-white">
+            Try again
+          </button>
+        ) : null}
       </Shell>
     );
   }
