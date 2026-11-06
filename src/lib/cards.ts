@@ -51,7 +51,7 @@ export function createCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto'):
     sourceQuestionId: q.id,
     topic: q.topic || 'Uncategorized',
     front: q.learning_point || q.statement || (q.question || '').slice(0, 200),
-    back: `${q.answer || ''}\n\n${q.rationale || ''}\n\n${q.key_facts || ''}`,
+    back: `${q.answer || ''}\n\n${q.rationale || ''}\n\n${(q.key_facts || []).join('\n')}`,
     due: Date.now(),
     interval: 0,
     ease: 2.5,
@@ -79,7 +79,7 @@ export function saveCards(cards: Card[]) {
 
 export function addCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto') {
   const cards = loadCards();
-  if (cards.some((c) => c.sourceQuestionId === q.id)) return;
+  if (cards.some((c) => c.sourceQuestionId === q.id && c.source !== 'full')) return;
   cards.push(createCard(q, source));
   saveCards(cards);
 }
