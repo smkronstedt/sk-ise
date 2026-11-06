@@ -14,7 +14,6 @@ const links = [
   { to: "/guidelines", label: "Guidelines" },
   { to: "/booklets", label: "Booklets" },
   { to: "/cards", label: "Cards" },
-  { to: "/leaderboard", label: "Leaderboard" },
 ] as const;
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -130,6 +129,14 @@ export function Shell({ children }: { children: ReactNode }) {
                 {item.label}
               </button>
             ))}
+            <Link
+              to="/leaderboard"
+              className={`min-h-11 shrink-0 rounded px-3 text-sm font-semibold ${
+                path === "/leaderboard" ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"
+              }`}
+            >
+              Leaderboard
+            </Link>
           </div>
         </div>
       </header>

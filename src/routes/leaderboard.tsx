@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Shell } from "@/components/desk/shell";
+import { Badge } from "@/components/desk/badge";
 import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 
 export const Route = createFileRoute("/leaderboard")({
@@ -53,8 +54,13 @@ function LeaderboardPage() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-[#1d3557]">{leader.name}</p>
-                <p className="text-sm text-[#8a6418]">{titleFor(index, leader.score)}</p>
+                <p className="text-sm text-[#8a6418]">{titleFor(index, leader.score)}{leader.champion ? " · Champion" : ""}</p>
                 {leader.bio ? <p className="truncate text-sm text-[#1d3557]/80">{leader.bio}</p> : null}
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {leader.badges.map((element) => (
+                    <Badge key={element} element={element} earned />
+                  ))}
+                </div>
               </div>
               <p className="text-right text-sm font-semibold text-[#1d3557]">
                 {leader.score > 0 ? "⚡" : "☁"} {leader.score}
