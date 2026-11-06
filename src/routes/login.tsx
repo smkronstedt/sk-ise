@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { authClient, authEnabled } from "@/lib/auth/client";
+import { authClient, authEnabled, setBearerToken } from "@/lib/auth/client";
 import { Shell } from "@/components/desk/shell";
 
 export const Route = createFileRoute("/login")({
@@ -19,12 +19,18 @@ function LoginPage() {
     setPending(true);
     try {
       if (mode === "signup") {
-        const { error: err } = await authClient.signUp.email({ email, password, name: email.split("@")[0] });
+        const { data, error: err } = await authClient.signUp.email({ email, password, name: email.split("@")[0] });
         if (err) throw new Error(err.message ?? "Sign up failed");
+        const token = data && "token" in data ? data.token : null;
+        if (typeof token === "string") setBearerToken(token);
       } else {
-        const { error: err } = await authClient.signIn.email({ email, password, rememberMe: true });
+        const { data, error: err } = await authClient.signIn.email({ email, password, rememberMe: true });
         if (err) throw new Error(err.message ?? "Sign in failed");
+        const token = data && "token" in data ? data.token : null;
+        if (typeof token === "string") setBearerToken(token);
       }
+      const session = await authClient.getSession();
+      if (!session.data?.user) throw new Error("This browser did not keep the session. Try again.");
       window.location.href = "/";
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");

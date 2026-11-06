@@ -1,7 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { authClient, authEnabled, signOut } from "@/lib/auth/client";
-import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadCards } from "@/lib/cards";
 import { deskModes, loadMode, saveMode, type DeskMode } from "@/lib/desk/modes";
 import { syncDeviceProgress } from "@/lib/progress-sync";
@@ -23,7 +22,6 @@ export function Shell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const dueCount = typeof window !== "undefined" ? loadCards().filter((c) => c.due <= Date.now() && c.source !== "full").length : 0;
   const session = authClient.useSession();
-  const { user, isPending } = useCurrentUserState();
   const [syncNote, setSyncNote] = useState("Saved on this device");
   const [mode, setMode] = useState<DeskMode>("classic");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -31,11 +29,6 @@ export function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMode(loadMode());
   }, [path]);
-
-  useEffect(() => {
-    if (!authEnabled || isPending || user || path === "/login") return;
-    void navigate({ to: "/login" });
-  }, [isPending, navigate, path, user]);
 
   useEffect(() => {
     if (!authEnabled || !session.data?.user) return;
