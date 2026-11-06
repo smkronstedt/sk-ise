@@ -22,23 +22,24 @@ export const DEX: Creature[] = FIRST.flatMap((a) => SECOND.map((b) => `${a}${b}`
 
 const KEY = "callroom-field-caught-v1";
 
-type Save = { awarded: Record<string, number>; caught: number[] };
+type Save = { awarded: Record<string, number>; caught: number[]; rare: number[] };
 
 function load(): Save {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { awarded: {}, caught: [] };
+    if (!raw) return { awarded: {}, caught: [], rare: [] };
     const parsed = JSON.parse(raw) as Save;
-    return { awarded: parsed.awarded ?? {}, caught: parsed.caught ?? [] };
+    return { awarded: parsed.awarded ?? {}, caught: parsed.caught ?? [], rare: parsed.rare ?? [] };
   } catch {
-    return { awarded: {}, caught: [] };
+    return { awarded: {}, caught: [], rare: [] };
   }
 }
 
-export function syncCatches(tests: TestBlock[]): { caught: number[]; fresh: Creature[] } {
+export function syncCatches(tests: TestBlock[]): { caught: number[]; rare: number[]; fresh: Creature[] } {
   const save = load();
   const fresh: Creature[] = [];
   const have = new Set(save.caught);
+  const rare = new Set(save.rare);
   for (const test of tests) {
     if (test.status !== "done" || !test.name.startsWith("Battle:")) continue;
     if (save.awarded[test.id] != null) continue;
@@ -53,20 +54,40 @@ export function syncCatches(tests: TestBlock[]): { caught: number[]; fresh: Crea
       ...DEX.filter((creature) => creature.gym === gym && !have.has(creature.number)),
       ...DEX.filter((creature) => !have.has(creature.number)),
     ];
+    const perfect = right > 0 && right === test.questionIds.length;
     const picks = pool.slice(0, right);
     for (const creature of picks) {
       have.add(creature.number);
       save.caught.push(creature.number);
       fresh.push(creature);
     }
+    if (perfect && picks.length) {
+      const last = picks[picks.length - 1];
+      if (!rare.has(last.number)) {
+        rare.add(last.number);
+        save.rare.push(last.number);
+      }
+    }
     save.awarded[test.id] = picks.length;
   }
   localStorage.setItem(KEY, JSON.stringify(save));
-  return { caught: save.caught, fresh };
+  return { caught: save.caught, rare: save.rare, fresh };
 }
 
-const PORTRAITS = ["/field/stone.jpg", "/field/lantern.jpg", "/field/reed.jpg", "/field/crab.jpg"];
+const PORTRAITS = [
+  "/field/stone.jpg",
+  "/field/lantern.jpg",
+  "/field/reed.jpg",
+  "/field/crab.jpg",
+  "/field/sprout.jpg",
+  "/field/drop.jpg",
+  "/field/ember.jpg",
+  "/field/cloud.jpg",
+];
 
-export function portraitFor(number: number) {
+const RARE = ["/field/rare-stone.jpg", "/field/rare-lantern.jpg", "/field/rare-reed.jpg", "/field/rare-crab.jpg"];
+
+export function portraitFor(number: number, rare = false) {
+  if (rare) return RARE[(number - 1) % RARE.length];
   return PORTRAITS[(number - 1) % PORTRAITS.length];
 }

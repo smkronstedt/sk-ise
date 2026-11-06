@@ -1,6 +1,7 @@
 import { questionById, questions } from "./questions";
 import type { Question } from "./types";
 import type { BankItem } from "./original-bank";
+import { guideLinks, linksForBankTopic } from "./statements";
 
 export type CatalogTopic = {
   id: string;
@@ -41,6 +42,7 @@ function toQuestion(item: BankItem): Question {
     explanation: [item.rationale, facts].filter(Boolean).join(" "),
     wrong: choices.map(() => ""),
     objective: item.learning_point || item.source_ref || item.topic,
+    guide: Object.entries(guideLinks).find(([, link]) => link.href === linksForBankTopic(item.topic)[0]?.href)?.[0],
   };
 }
 

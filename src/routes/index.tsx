@@ -438,12 +438,15 @@ function FieldNotes({
   const desk = useDesk();
   const [view, setView] = useState<"gyms" | "collection">("gyms");
   const [caught, setCaught] = useState<number[]>([]);
+  const [rare, setRare] = useState<number[]>([]);
   const [fresh, setFresh] = useState<Creature[]>([]);
   const have = new Set(caught);
+  const rareSet = new Set(rare);
 
   useEffect(() => {
     const result = syncCatches(desk.state.tests);
     setCaught(result.caught);
+    setRare(result.rare);
     setFresh(result.fresh);
   }, [desk.state.tests]);
 
@@ -453,7 +456,7 @@ function FieldNotes({
         <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
         <h1 className="font-serif text-3xl tracking-tight">Field Notes</h1>
         <p className="mt-1 text-sm">
-          Eight gyms. Each question you get right in a win catches one original field creature. {have.size}/151 caught.
+          Eight gyms. Each right answer catches one creature. A perfect battle makes the last one rare. {have.size}/151 caught.
         </p>
         <div className="mt-4 flex gap-2">
           <button
@@ -529,23 +532,25 @@ function FieldNotes({
 
       {view === "collection" && (
         <div className="p-4">
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {DEX.map((creature) => {
               const isCaught = have.has(creature.number);
+              const isRare = rareSet.has(creature.number);
               return (
                 <div
                   key={creature.number}
-                  className={`rounded border p-2 text-center text-xs ${
-                    isCaught ? "border-field-fern bg-white" : "border-field-ink/15 bg-field-ink/5"
+                  className={`rounded border p-3 text-center ${
+                    isRare ? "border-mark bg-mark-bg" : isCaught ? "border-field-fern bg-white" : "border-field-ink/15 bg-field-ink/5"
                   }`}
                 >
                   <div className="font-mono text-[10px] opacity-70">#{String(creature.number).padStart(3, "0")}</div>
                   {isCaught ? (
-                    <img src={portraitFor(creature.number)} alt="" className="mx-auto mt-1 h-14 w-14 rounded-full object-cover" />
+                    <img src={portraitFor(creature.number, isRare)} alt={creature.name} className="mx-auto mt-2 h-28 w-28 rounded-full object-cover" />
                   ) : (
-                    <div className="mx-auto mt-1 h-14 w-14 rounded-full bg-field-ink/10" />
+                    <div className="mx-auto mt-2 h-28 w-28 rounded-full bg-field-ink/10" />
                   )}
-                  <div className="mt-1 truncate font-semibold">{isCaught ? creature.name : "???"}</div>
+                  <div className="mt-2 font-semibold">{isCaught ? creature.name : "???"}</div>
+                  {isRare ? <div className="text-xs font-semibold text-mark">Rare</div> : null}
                 </div>
               );
             })}

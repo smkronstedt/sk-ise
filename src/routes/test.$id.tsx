@@ -23,6 +23,7 @@ function TestPage() {
   const test = desk.state.tests.find((item) => item.id === id);
   const [bankReady, setBankReady] = useState(false);
   const [cardAdded, setCardAdded] = useState(false);
+  const [savedNote, setSavedNote] = useState("");
 
   useEffect(() => {
     void loadCatalog().finally(() => setBankReady(true));
@@ -151,10 +152,23 @@ function TestPage() {
         <Link to="/" className="min-h-11 rounded border border-line bg-paper px-3 text-sm font-semibold">
           Home
         </Link>
+        <Link to="/tests" className="min-h-11 rounded border border-line bg-paper px-3 text-sm font-semibold">
+          Tests
+        </Link>
+        {test.status === "open" ? (
+          <button
+            type="button"
+            onClick={() => setSavedNote("Saved on this device. Open Tests to resume this block.")}
+            className="min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white"
+          >
+            Save
+          </button>
+        ) : null}
         <button type="button" onClick={endBlock} className="min-h-11 rounded border border-line bg-paper px-3 text-sm font-semibold" disabled={test.status === "done"}>
           {test.status === "done" ? "Block ended" : "End block"}
         </button>
       </div>
+      {savedNote ? <p className="mb-3 text-sm font-semibold text-correct">{savedNote}</p> : null}
 
       {test.status === "done" ? (
         <div className="mb-3 rounded border border-line bg-obj px-3 py-2 text-sm">
@@ -344,14 +358,14 @@ function Explanation({ test, questionId }: { test: TestBlock; questionId: string
       {question.statement ? (
         <p className="mt-3 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
           <span className="font-semibold">Guideline statement. </span>
+          {question.guide ? `${question.guide}. ` : ""}
           {question.statement}
         </p>
-      ) : (
-        <p className="mt-3 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
-          <span className="font-semibold">Educational objective. </span>
-          {question.objective}
-        </p>
-      )}
+      ) : null}
+      <p className="mt-3 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
+        <span className="font-semibold">Teaching point. </span>
+        {question.objective}
+      </p>
       <GuidelineLinks question={question} />
     </div>
   );

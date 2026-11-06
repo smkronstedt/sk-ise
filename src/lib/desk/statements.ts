@@ -150,6 +150,28 @@ export const guideLinks: Record<string, { label: string; href: string }> = {
   },
 };
 
+export function linksForBankTopic(topic: string) {
+  const keys: Record<string, string[]> = {
+    "Oncology-Bladder/Urothelial": ["NMIBC", "MIBC", "UTUC"],
+    "Oncology-Prostate": ["Prostate early detection", "Localized prostate cancer", "Advanced prostate cancer"],
+    "Oncology-Kidney": ["Renal mass"],
+    "Oncology-Adrenal": ["Renal mass"],
+    "Oncology-Testis": ["Testicular cancer"],
+    "Oncology-Penis/Urethra": ["Urethral stricture"],
+    Stones: ["Medical stone management", "Surgical stone management"],
+    "BPH/LUTS": ["BPH / male LUTS"],
+    "Voiding Dysfunction/Incontinence": ["Overactive bladder", "Stress urinary incontinence", "Incontinence after prostate treatment"],
+    "Neurogenic Bladder": ["Neurogenic LUT dysfunction"],
+    "Female Urology/Pelvic Floor": ["Stress urinary incontinence", "Genitourinary syndrome of menopause", "IC / bladder pain syndrome"],
+    "Infertility/Andrology": ["Male infertility", "Testosterone deficiency"],
+    "Sexual Dysfunction": ["Erectile dysfunction", "Peyronie disease", "Disorders of ejaculation"],
+    "Trauma/Reconstruction": ["Urotrauma", "Urethral stricture"],
+    "Urinary Diversion": ["MIBC"],
+    Pediatrics: ["Cryptorchidism", "Vesicoureteral reflux"],
+  };
+  return (keys[topic] ?? []).map((key) => guideLinks[key]).filter(Boolean);
+}
+
 export const statementQuestions: Question[] = [
   q(
     "gs-nm-01",

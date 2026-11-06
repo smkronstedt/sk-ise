@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Shell } from "@/components/desk/shell";
 import { addCard } from "@/lib/cards";
+import { linksForBankTopic } from "@/lib/desk/statements";
 import {
   emptyBankProgress,
   letters,
@@ -332,6 +333,7 @@ function Practice({
             <span className="font-semibold">Learning point. </span>
             {item.learning_point}
           </p>
+          <GuidelineNote topic={item.topic} />
           {item.key_facts.length ? (
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
               {item.key_facts.map((fact) => (
@@ -352,6 +354,25 @@ function Practice({
         />
       </label>
     </article>
+  );
+}
+
+function GuidelineNote({ topic }: { topic: string }) {
+  const links = linksForBankTopic(topic);
+  if (!links.length) return null;
+  return (
+    <div className="mt-3 rounded border border-line bg-paper px-3 py-2 text-sm">
+      <p className="font-semibold">AUA guideline for this teaching point</p>
+      <ul className="mt-1 flex flex-col gap-1">
+        {links.map((link) => (
+          <li key={link.href}>
+            <a href={link.href} target="_blank" rel="noreferrer" className="font-semibold text-blue">
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
