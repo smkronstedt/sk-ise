@@ -107,30 +107,35 @@ function CardsPage() {
       )}
 
       {current && (
-        <div className="mt-6 rounded border border-line bg-paper p-4">
-          <p className="font-semibold">{current.front}</p>
-          {revealed && (
-            <pre className="mt-3 whitespace-pre-wrap text-sm">{current.back}</pre>
-          )}
+        <div className="mt-6 rounded border border-line bg-paper p-6 max-w-2xl">
+          <p className="text-lg font-semibold">{current.front}</p>
           {!revealed ? (
-            <button className="mt-4 px-4 py-2 border rounded" onClick={() => setRevealed(true)}>
-              Reveal
+            <button
+              className="mt-6 px-5 py-2.5 bg-navy text-white rounded font-semibold"
+              onClick={() => setRevealed(true)}
+            >
+              Show answer
             </button>
           ) : (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button className="bg-red-600 text-white px-3 py-2 rounded" onClick={() => rate('again')}>
-                Again 25m
-              </button>
-              <button className="bg-amber-500 text-white px-3 py-2 rounded" onClick={() => rate('hard')}>
-                Hard 12.2h
-              </button>
-              <button className="bg-green-600 text-white px-3 py-2 rounded" onClick={() => rate('good')}>
-                Good 1d
-              </button>
-              <button className="bg-blue-600 text-white px-3 py-2 rounded" onClick={() => rate('easy')}>
-                Easy 3d
-              </button>
-            </div>
+            <>
+              <div className="mt-4 border-t border-line pt-4 text-sm leading-relaxed whitespace-pre-wrap">
+                {current.back}
+              </div>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <button className="bg-red-600 text-white px-3 py-2 rounded" onClick={() => rate('again')}>
+                  Again 25m
+                </button>
+                <button className="bg-amber-500 text-white px-3 py-2 rounded" onClick={() => rate('hard')}>
+                  Hard 12.2h
+                </button>
+                <button className="bg-green-600 text-white px-3 py-2 rounded" onClick={() => rate('good')}>
+                  Good 1d
+                </button>
+                <button className="bg-blue-600 text-white px-3 py-2 rounded" onClick={() => rate('easy')}>
+                  Easy 3d
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
