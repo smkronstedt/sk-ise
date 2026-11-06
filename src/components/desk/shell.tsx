@@ -53,7 +53,10 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link to="/" className="font-blackletter text-[2rem] leading-none text-white">
             ISE Team Room
           </Link>
-          <p className="hidden text-sm text-white/70 sm:block">Team Guys only X</p>
+          <p className="hidden items-center gap-2 text-sm text-white/70 sm:flex">
+            Team Guys only X
+            <img src="/ops/bone-frog.jpg" alt="" className="h-8 w-8 rounded-full object-cover" />
+          </p>
           <nav className="ml-auto flex flex-wrap gap-1">
             {links.map((link) => {
               const on = link.to === "/tests" ? path === "/tests" || path.startsWith("/test/") : path === link.to;

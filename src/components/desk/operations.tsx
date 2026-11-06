@@ -57,6 +57,11 @@ export function Operations({ correct, total }: { correct: number; total: number 
   const cash = Math.max(0, correct - holdings - save.fees);
   const stats = statsFor(save.owned, save.equipped, level);
   const route = theaters.find((row) => row.id === theater) ?? theaters[0];
+  const maps: Record<TheaterId, string> = {
+    afghanistan: "/ops/afghanistan.jpg",
+    iraq: "/ops/iraq.jpg",
+    horn: "/ops/horn.jpg",
+  };
 
   const missionName = (town: Town) => `Op: ${town.name}`;
 
@@ -74,6 +79,9 @@ export function Operations({ correct, total }: { correct: number; total: number 
       const need = Math.min(10, test.questionIds.length);
       return answered >= need && right / answered >= 0.6;
     });
+
+  const theaterDone = (id: TheaterId) => theaters.find((row) => row.id === id)?.towns.every((town) => cleared(town)) ?? false;
+  const hornOpen = theaterDone("afghanistan") && theaterDone("iraq");
 
   const frontier = route.towns.findIndex((town) => !cleared(town));
   const openIndex = frontier === -1 ? route.towns.length - 1 : frontier;
@@ -143,23 +151,32 @@ export function Operations({ correct, total }: { correct: number; total: number 
   return (
     <section className="overflow-hidden rounded border border-ops bg-ops text-white">
       <div className="border-b border-white/10 px-4 py-4">
-        <p className="text-xs font-semibold tracking-wide text-ops-amber uppercase">Night ops</p>
-        <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <img src="/ops/operator.jpg" alt="Your operator" className="h-16 w-16 rounded-full border border-ops-amber object-cover object-top" />
-            <h1 className="font-serif text-3xl tracking-tight">Two routes. One camp.</h1>
-          </div>
-          <p className="text-sm text-ops-olive">
-            Lv {level}
-            <span className="mx-2 text-faint">·</span>
-            ${cash}
-            <span className="mx-2 text-faint">·</span>
-            {correct}/{total} correct
-          </p>
-        </div>
-        <p className="mt-2 max-w-2xl text-sm text-ops-olive">
-          Each town is a block from the bank. Start the town you are on. Clear it at 60% on at least 10 items, and the next town opens. Cash is still $1 per correct answer.
+        <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-ops-amber uppercase">
+          Night ops
+          <img src="/ops/trident-flag.png" alt="" className="h-8 w-8 rounded object-cover" />
         </p>
+        <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <img src="/ops/operator.jpg" alt="Your operator" className="h-16 w-16 rounded-full border border-ops-amber object-cover object-top" />
+            <div>
+              <h1 className="font-serif text-3xl tracking-tight">Two routes. One camp.</h1>
+              <p className="mt-2 max-w-xl text-sm text-ops-olive">
+                Each town is a block from the bank. Start the town you are on. Clear it at 60% on at least 10 items, and the next town opens. Cash is still $1 per correct answer.
+              </p>
+            </div>
+          </div>
+          <img src="/ops/task-unit.png" alt="Task unit" className="h-20 w-20 object-contain" />
+          <div className="text-right">
+            <img src="/ops/trident.png" alt="Trident" className="ml-auto h-10 w-auto" />
+            <p className="mt-1 text-sm text-ops-olive">
+              Lv {level}
+              <span className="mx-2 text-faint">·</span>
+              ${cash}
+              <span className="mx-2 text-faint">·</span>
+              {correct}/{total} correct
+            </p>
+          </div>
+        </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {(
             [
@@ -187,23 +204,27 @@ export function Operations({ correct, total }: { correct: number; total: number 
         <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(16rem,0.8fr)]">
           <div>
             <div className="mb-3 flex gap-2">
-              {theaters.map((row) => (
-                <button
-                  key={row.id}
-                  type="button"
-                  onClick={() => setTheater(row.id)}
-                  className={`min-h-11 rounded px-4 text-sm font-semibold ${theater === row.id ? "bg-ops-amber text-ops" : "border border-white/20 text-white"}`}
-                >
-                  {row.name}
-                </button>
-              ))}
+              {theaters.map((row) => {
+                const locked = row.id === "horn" && !hornOpen;
+                return (
+                  <button
+                    key={row.id}
+                    type="button"
+                    disabled={locked}
+                    onClick={() => {
+                      setTheater(row.id);
+                      setSelectedId(row.towns[0]?.id ?? "");
+                    }}
+                    className={`min-h-11 rounded px-4 text-sm font-semibold ${theater === row.id ? "bg-ops-amber text-ops" : "border border-white/20 text-white"} disabled:opacity-40`}
+                  >
+                    {row.name}
+                    {locked ? " · locked" : ""}
+                  </button>
+                );
+              })}
             </div>
             <div className="relative">
-              <img
-                src={theater === "afghanistan" ? "/ops/afghanistan.jpg" : "/ops/iraq.jpg"}
-                alt=""
-                className="w-full rounded border border-line object-cover"
-              />
+              <img src={maps[theater]} alt="" className="w-full rounded border border-line object-cover" />
               {route.towns.map((town) => {
                 const on = town.id === selectedId;
                 const done = cleared(town);
@@ -225,35 +246,6 @@ export function Operations({ correct, total }: { correct: number; total: number 
                   </button>
                 );
               })}
-              {(() => {
-                const town = route.towns.find((item) => item.id === selectedId) ?? route.towns[openIndex];
-                if (!town) return null;
-                const index = route.towns.findIndex((item) => item.id === town.id);
-                const done = cleared(town);
-                const open = index <= openIndex;
-                const resume = desk.state.tests.some((test) => test.status === "open" && test.name === missionName(town));
-                return (
-                  <div className="absolute inset-x-3 bottom-3 z-20 rounded border border-navy bg-paper p-3">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <h2 className="font-semibold">{town.name}</h2>
-                      <span className="text-sm text-muted">{done ? "Cleared" : open ? "Open" : "Locked"}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted">{town.note}</p>
-                    {open ? (
-                      <button
-                        type="button"
-                        onClick={() => void startTown(town)}
-                        disabled={busy === town.id}
-                        className="mt-2 min-h-11 rounded bg-ops-amber px-3 text-sm font-semibold text-ops disabled:opacity-50"
-                      >
-                        {busy === town.id ? "Opening…" : resume ? "Resume" : done ? "Run again" : "Start"}
-                      </button>
-                    ) : (
-                      <p className="mt-2 text-sm">Clear {route.towns[index - 1]?.name} first.</p>
-                    )}
-                  </div>
-                );
-              })()}
             </div>
             {flash ? <p className="mt-2 text-sm font-semibold">{flash}</p> : null}
           </div>
@@ -292,7 +284,10 @@ export function Operations({ correct, total }: { correct: number; total: number 
 
       {panel === "camp" && (
         <div className="grid gap-4 p-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
-          <img src="/ops/operator.jpg" alt="Your operator" className="max-h-96 w-full rounded border border-ops-amber object-cover object-top" />
+          <div>
+            <img src="/ops/operator.jpg" alt="Your operator" className="max-h-96 w-full rounded border border-ops-amber object-cover object-top" />
+            <img src="/ops/trident.png" alt="Trident" className="mt-3 h-16 w-auto" />
+          </div>
           <div>
             <h2 className="font-serif text-2xl">Camp</h2>
             <p className="mt-1 text-sm text-muted">One item per slot. Supplies stay on once you buy them.</p>

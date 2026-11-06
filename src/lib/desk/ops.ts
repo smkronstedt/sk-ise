@@ -1,6 +1,6 @@
 const KEY = "callroom-ops-v1";
 
-export type TheaterId = "afghanistan" | "iraq";
+export type TheaterId = "afghanistan" | "iraq" | "horn";
 export type Slot =
   | "eyes"
   | "head"
@@ -52,6 +52,18 @@ export const theaters: { id: TheaterId; name: string; towns: Town[] }[] = [
       { id: "ramadi", name: "Ramadi", note: "Testis, penis, and urethra.", x: 28, y: 44, topics: ["Oncology-Testis", "Oncology-Penis/Urethra"] },
       { id: "fallujah", name: "Fallujah", note: "Pediatrics.", x: 42, y: 36, topics: ["Pediatrics"] },
       { id: "mosul", name: "Mosul", note: "Laparoscopy, transplant, and the rest. Last town.", x: 50, y: 16, topics: ["Laparoscopy/Robotics/Perioperative", "Transplant/Renal Physiology", "Other"] },
+    ],
+  },
+  {
+    id: "horn",
+    name: "Horn of Africa",
+    towns: [
+      { id: "lemonnier", name: "Camp Lemonnier", note: "Djibouti. The stones you still miss.", x: 30, y: 28, topics: ["Stones"] },
+      { id: "berbera", name: "Berbera", note: "Prostate, again, under a harder mix.", x: 52, y: 34, topics: ["Oncology-Prostate"] },
+      { id: "bosaso", name: "Bosaso", note: "Voiding and incontinence.", x: 74, y: 30, topics: ["BPH/LUTS", "Voiding Dysfunction/Incontinence"] },
+      { id: "mogadishu", name: "Mogadishu", note: "Trauma and reconstruction.", x: 68, y: 58, topics: ["Trauma/Reconstruction", "Urinary Diversion"] },
+      { id: "kismayo", name: "Kismayo", note: "Infection and sexual health.", x: 60, y: 76, topics: ["Infection/Inflammation", "Sexual Dysfunction"] },
+      { id: "manda", name: "Manda Bay", note: "Pediatrics and neurogenic bladder. Last town on this coast.", x: 28, y: 70, topics: ["Pediatrics", "Neurogenic Bladder"] },
     ],
   },
 ];
@@ -107,7 +119,7 @@ function emptySave(): OpsSave {
   return {
     owned: [],
     equipped: {},
-    here: { afghanistan: "bagram", iraq: "kuwait" },
+    here: { afghanistan: "bagram", iraq: "kuwait", horn: "lemonnier" },
     fees: 0,
   };
 }
