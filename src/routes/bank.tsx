@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Shell } from "@/components/desk/shell";
+import { addCard } from "@/lib/cards";
 import {
   emptyBankProgress,
   letters,
@@ -96,13 +97,15 @@ function BankPage() {
 
   const submit = () => {
     if (!item || !picked || saved) return;
+    const isCorrect = picked === item.answer;
     write({
       ...progress,
       answers: {
         ...progress.answers,
-        [item.id]: { choice: picked, correct: picked === item.answer },
+        [item.id]: { choice: picked, correct: isCorrect },
       },
     });
+    if (!isCorrect) addCard(item, "auto");
   };
 
   return (
@@ -278,6 +281,13 @@ function Practice({
         </button>
         <button type="button" onClick={onMark} className="min-h-11 rounded border border-line px-3 text-sm font-semibold">
           {marked ? "Unmark" : "Mark"}
+        </button>
+        <button
+          type="button"
+          onClick={() => addCard(item, "manual")}
+          className="min-h-11 rounded border border-line px-3 text-sm font-semibold"
+        >
+          Add to Cards
         </button>
         <button
           type="button"

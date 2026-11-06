@@ -26,32 +26,32 @@ export type Gear = {
   note: string;
 };
 
-export type Town = { id: string; name: string; note: string };
+export type Town = { id: string; name: string; note: string; topics: string[] };
 
 export const theaters: { id: TheaterId; name: string; towns: Town[] }[] = [
   {
     id: "afghanistan",
     name: "Afghanistan",
     towns: [
-      { id: "bagram", name: "Bagram", note: "The strip. Learn the routine before you roll." },
-      { id: "kabul", name: "Kabul", note: "Capital stop. The questions get longer here." },
-      { id: "jalalabad", name: "Jalalabad", note: "East corridor." },
-      { id: "kandahar", name: "Kandahar", note: "South. Don't skip the weak topics." },
-      { id: "helmand", name: "Lashkar Gah", note: "River valley. Endurance items start to matter." },
-      { id: "herat", name: "Herat", note: "Last town on this route." },
+      { id: "bagram", name: "Bagram", note: "The strip. Basics before you roll.", topics: ["Anatomy/Embryology", "Ethics/Professionalism/Statistics", "Pharmacology", "Imaging/Radiation Safety"] },
+      { id: "kabul", name: "Kabul", note: "Bladder and urothelial oncology.", topics: ["Oncology-Bladder/Urothelial"] },
+      { id: "jalalabad", name: "Jalalabad", note: "Prostate oncology.", topics: ["Oncology-Prostate"] },
+      { id: "kandahar", name: "Kandahar", note: "Kidney and adrenal.", topics: ["Oncology-Kidney", "Oncology-Adrenal"] },
+      { id: "helmand", name: "Lashkar Gah", note: "Stones.", topics: ["Stones"] },
+      { id: "herat", name: "Herat", note: "Trauma and diversion. Last town on this route.", topics: ["Trauma/Reconstruction", "Urinary Diversion"] },
     ],
   },
   {
     id: "iraq",
     name: "Iraq",
     towns: [
-      { id: "kuwait", name: "Kuwait staging", note: "Draw gear. Nothing is cleared yet." },
-      { id: "basra", name: "Basra", note: "Southern port." },
-      { id: "nasiriyah", name: "Nasiriyah", note: "River crossing on the map." },
-      { id: "baghdad", name: "Baghdad", note: "Center of the route." },
-      { id: "ramadi", name: "Ramadi", note: "West of the capital." },
-      { id: "fallujah", name: "Fallujah", note: "Short town. High question count to enter." },
-      { id: "mosul", name: "Mosul", note: "North. Last town on this route." },
+      { id: "kuwait", name: "Kuwait staging", note: "Infection and inflammation.", topics: ["Infection/Inflammation"] },
+      { id: "basra", name: "Basra", note: "BPH, LUTS, and incontinence.", topics: ["BPH/LUTS", "Voiding Dysfunction/Incontinence"] },
+      { id: "nasiriyah", name: "Nasiriyah", note: "Neurogenic bladder and pelvic floor.", topics: ["Neurogenic Bladder", "Female Urology/Pelvic Floor"] },
+      { id: "baghdad", name: "Baghdad", note: "Andrology and sexual dysfunction.", topics: ["Infertility/Andrology", "Sexual Dysfunction"] },
+      { id: "ramadi", name: "Ramadi", note: "Testis, penis, and urethra.", topics: ["Oncology-Testis", "Oncology-Penis/Urethra"] },
+      { id: "fallujah", name: "Fallujah", note: "Pediatrics.", topics: ["Pediatrics"] },
+      { id: "mosul", name: "Mosul", note: "Laparoscopy, transplant, and the rest. Last town.", topics: ["Laparoscopy/Robotics/Perioperative", "Transplant/Renal Physiology", "Other"] },
     ],
   },
 ];

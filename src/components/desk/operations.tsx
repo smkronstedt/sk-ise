@@ -1,5 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { latestResult } from "@/lib/desk/adapt";
+import { bankList, getQuestion, loadCatalog, topicSlug } from "@/lib/desk/catalog";
 import {
   gear,
   levelFor,
@@ -7,11 +9,12 @@ import {
   saveOps,
   statsFor,
   theaters,
-  townGate,
   type OpsSave,
   type Slot,
   type TheaterId,
+  type Town,
 } from "@/lib/desk/ops";
+import { useDesk } from "@/lib/desk/provider";
 
 const slots: { id: Slot; label: string }[] = [
   { id: "head", label: "Head" },
@@ -28,12 +31,16 @@ const slots: { id: Slot; label: string }[] = [
 ];
 
 export function Operations({ correct, total }: { correct: number; total: number }) {
+  const desk = useDesk();
+  const navigate = useNavigate();
   const [save, setSave] = useState<OpsSave | null>(null);
   const [theater, setTheater] = useState<TheaterId>("afghanistan");
   const [panel, setPanel] = useState<"map" | "camp" | "shop">("map");
+  const [busy, setBusy] = useState("");
 
   useEffect(() => {
     setSave(loadOps());
+    void loadCatalog();
   }, []);
 
   if (!save) return null;
@@ -48,8 +55,58 @@ export function Operations({ correct, total }: { correct: number; total: number 
   const cash = Math.max(0, correct - holdings - save.fees);
   const stats = statsFor(save.owned, save.equipped, level);
   const route = theaters.find((row) => row.id === theater) ?? theaters[0];
-  const here = save.here[theater];
-  const hereIndex = Math.max(0, route.towns.findIndex((town) => town.id === here));
+
+  const missionName = (town: Town) => `Op: ${town.name}`;
+
+  const cleared = (town: Town) =>
+    desk.state.tests.some((test) => {
+      if (test.status !== "done" || test.name !== missionName(town)) return false;
+      let answered = 0;
+      let right = 0;
+      for (const id of test.questionIds) {
+        const answer = test.answers[id];
+        if (!answer?.submitted || answer.choice == null) continue;
+        answered += 1;
+        if (answer.choice === getQuestion(id)?.answer) right += 1;
+      }
+      const need = Math.min(10, test.questionIds.length);
+      return answered >= need && right / answered >= 0.6;
+    });
+
+  const frontier = route.towns.findIndex((town) => !cleared(town));
+  const openIndex = frontier === -1 ? route.towns.length - 1 : frontier;
+
+  const startTown = async (town: Town) => {
+    const existing = desk.state.tests.find((test) => test.status === "open" && test.name === missionName(town));
+    if (existing) {
+      void navigate({ to: "/test/$id", params: { id: existing.id } });
+      return;
+    }
+    setBusy(town.id);
+    await loadCatalog();
+    const wanted = new Set(town.topics.map((topic) => topicSlug(topic)));
+    const pool = bankList().filter((question) => wanted.has(question.topicId));
+    const unused = pool.filter((question) => latestResult(desk.state, question.id) === "unused");
+    const source = unused.length >= 10 ? unused : pool;
+    const shuffled = [...source];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const ids = shuffled.slice(0, 15).map((question) => question.id);
+    setBusy("");
+    if (!ids.length) return;
+    const id = desk.createTest({
+      name: missionName(town),
+      mode: "tutor",
+      adaptive: false,
+      topicIds: [],
+      pool: "all",
+      count: ids.length,
+      questionIds: ids,
+    });
+    if (id) void navigate({ to: "/test/$id", params: { id } });
+  };
 
   const buy = (id: string) => {
     const item = gear.find((row) => row.id === id);
@@ -81,12 +138,6 @@ export function Operations({ correct, total }: { correct: number; total: number 
     commit({ ...save, equipped: { ...save.equipped, [item.slot]: id } });
   };
 
-  const moveTo = (townId: string) => {
-    const index = route.towns.findIndex((town) => town.id === townId);
-    if (index < 0 || correct < townGate(index, route.towns.length, total)) return;
-    commit({ ...save, here: { ...save.here, [theater]: townId } });
-  };
-
   return (
     <section className="overflow-hidden rounded border border-line bg-paper">
       <div className="border-b border-line px-4 py-4">
@@ -102,7 +153,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
           </p>
         </div>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Each correct answer on the Bank or the guideline trainer is a dollar and a step. Towns open on that count. The figure at camp is a drawn operator, not a photo.
+          Each town is a block from the bank. Start the town you are on. Clear it at 60% on at least 10 items, and the next town opens. Cash is still $1 per correct answer.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {(
@@ -150,23 +201,29 @@ export function Operations({ correct, total }: { correct: number; total: number 
           </div>
           <ol className="flex flex-col gap-2">
             {route.towns.map((town, index) => {
-              const need = townGate(index, route.towns.length, total);
-              const open = correct >= need;
-              const current = town.id === here;
+              const done = cleared(town);
+              const open = index <= openIndex;
+              const current = index === openIndex && !done;
+              const resume = desk.state.tests.some((test) => test.status === "open" && test.name === missionName(town));
               return (
                 <li key={town.id} className={`rounded border px-3 py-3 ${current ? "border-navy bg-blue-soft" : "border-line"}`}>
                   <div className="flex items-baseline justify-between gap-2">
                     <h2 className="font-semibold">{town.name}</h2>
-                    <span className="text-sm text-muted">{open ? (current ? "You are here" : "Open") : `${need} correct`}</span>
+                    <span className="text-sm text-muted">{done ? "Cleared" : current ? "You are here" : open ? "Open" : "Locked"}</span>
                   </div>
                   <p className="mt-1 text-sm text-muted">{town.note}</p>
-                  {open && !current && (
-                    <button type="button" onClick={() => moveTo(town.id)} className="mt-2 min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white">
-                      Move here
+                  <p className="mt-1 text-sm text-muted">{town.topics.join(" · ")}</p>
+                  {open ? (
+                    <button
+                      type="button"
+                      onClick={() => void startTown(town)}
+                      disabled={busy === town.id}
+                      className="mt-2 min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white disabled:opacity-50"
+                    >
+                      {busy === town.id ? "Opening…" : resume ? "Resume" : done ? "Run again" : "Start"}
                     </button>
-                  )}
-                  {!open && index === hereIndex + 1 && (
-                    <p className="mt-2 text-sm">Need {need - correct} more correct to leave {route.towns[hereIndex]?.name}.</p>
+                  ) : (
+                    <p className="mt-2 text-sm">Clear {route.towns[index - 1]?.name} first.</p>
                   )}
                 </li>
               );

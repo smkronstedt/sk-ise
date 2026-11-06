@@ -9,6 +9,7 @@ import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
 import { guideLinks } from "@/lib/desk/statements";
 import { topicById } from "@/lib/desk/topics";
 import type { TestBlock } from "@/lib/desk/types";
+import { addCard } from "@/lib/cards";
 
 export const Route = createFileRoute("/test/$id")({
   component: TestPage,
@@ -21,6 +22,7 @@ function TestPage() {
   const desk = useDesk();
   const test = desk.state.tests.find((item) => item.id === id);
   const [bankReady, setBankReady] = useState(false);
+  const [cardAdded, setCardAdded] = useState(false);
 
   useEffect(() => {
     void loadCatalog().finally(() => setBankReady(true));
@@ -107,6 +109,7 @@ function TestPage() {
 
   const jump = (index: number) => {
     desk.patchTest(test.id, (current) => ({ ...current, index }));
+    setCardAdded(false);
   };
 
   const endBlock = () => {
@@ -115,6 +118,21 @@ function TestPage() {
       status: "done",
       finishedAt: Date.now(),
     }));
+  };
+
+  const flagToCards = () => {
+    addCard(
+      {
+        id: question.id,
+        topic: guide?.short ?? question.topicId,
+        learning_point: question.statement || question.objective,
+        answer: question.choices[question.answer],
+        rationale: question.explanation,
+        key_facts: question.wrong.filter(Boolean),
+      },
+      "manual",
+    );
+    setCardAdded(true);
   };
 
   return (
@@ -130,6 +148,9 @@ function TestPage() {
         {test.mode === "timed" && test.status === "open" ? (
           <p className="rounded bg-navy px-3 py-2 font-semibold text-white">{formatTime(test.secondsLeft)}</p>
         ) : null}
+        <Link to="/" className="min-h-11 rounded border border-line bg-paper px-3 text-sm font-semibold">
+          Home
+        </Link>
         <button type="button" onClick={endBlock} className="min-h-11 rounded border border-line bg-paper px-3 text-sm font-semibold" disabled={test.status === "done"}>
           {test.status === "done" ? "Block ended" : "End block"}
         </button>
@@ -140,6 +161,11 @@ function TestPage() {
           <p>
             Score {score.correct} / {score.answered} answered ({score.total} in the block). This test stays under Tests.
           </p>
+          <div className="mt-3">
+            <Link to="/" className="inline-flex min-h-11 items-center rounded bg-navy px-4 text-sm font-semibold text-white">
+              Home
+            </Link>
+          </div>
           <ul className="mt-2 flex flex-col gap-1">
             {test.questionIds.map((itemId, index) => {
               const itemAnswer = test.answers[itemId];
@@ -237,6 +263,14 @@ function TestPage() {
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={() => desk.toggleMark(question.id)} className="min-h-11 rounded border border-line px-3 text-sm font-semibold">
               {desk.state.marks[question.id] ? "Unmark" : "Mark"}
+            </button>
+            <button
+              type="button"
+              onClick={flagToCards}
+              disabled={cardAdded}
+              className="min-h-11 rounded border border-amber-500 bg-amber-50 px-3 text-sm font-semibold text-amber-800 disabled:opacity-50"
+            >
+              {cardAdded ? "Added to Cards" : "Add to Cards"}
             </button>
             {test.mode === "tutor" && test.status === "open" ? (
               <button
