@@ -11,7 +11,7 @@ export const Route = createFileRoute("/leaderboard")({
 const titles = ["Olympian", "Hero", "Champion", "Argonaut", "Hoplite"];
 
 function titleFor(index: number, score: number) {
-  if (score <= 0) return "Unranked";
+  if (score <= 0) return "No bank score yet";
   return titles[index] ?? "Hoplite";
 }
 

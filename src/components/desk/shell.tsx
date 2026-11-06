@@ -138,13 +138,7 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               Leaderboard
             </Link>
-            <span className="font-greek inline-flex h-11 shrink-0 items-center gap-1.5 px-1 text-lg leading-none font-bold tracking-wide text-[#e23b2f]" title="Molon labe">
-              <svg viewBox="0 0 32 32" aria-hidden="true" className="h-7 w-7">
-                <circle cx="16" cy="16" r="14" fill="none" stroke="#e23b2f" strokeWidth="1.5" />
-                <path d="M10 22 L16 8 L22 22 M12.5 17.5 H19.5" fill="none" stroke="#e23b2f" strokeWidth="1.6" />
-              </svg>
-              μολὼν λαβέ
-            </span>
+            <img src="/molon-labe.png" alt="Molon labe" title="Molon labe" className="h-11 w-auto shrink-0 rounded" />
           </div>
         </div>
       </header>
