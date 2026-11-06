@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Figure } from "@/components/desk/figure";
 import { Shell } from "@/components/desk/shell";
 import { scoreTest } from "@/lib/desk/adapt";
@@ -8,6 +8,7 @@ import { questionById } from "@/lib/desk/questions";
 import { guideLinks } from "@/lib/desk/statements";
 import { topicById } from "@/lib/desk/topics";
 import type { TestBlock } from "@/lib/desk/types";
+import { addCard } from "@/lib/cards";
 
 export const Route = createFileRoute("/test/$id")({
   component: TestPage,
@@ -19,6 +20,7 @@ function TestPage() {
   const { id } = Route.useParams();
   const desk = useDesk();
   const test = desk.state.tests.find((item) => item.id === id);
+  const [cardAdded, setCardAdded] = useState(false);
 
   useEffect(() => {
     if (!test || test.status !== "open" || test.mode !== "timed") return;
@@ -93,6 +95,7 @@ function TestPage() {
 
   const jump = (index: number) => {
     desk.patchTest(test.id, (current) => ({ ...current, index }));
+    setCardAdded(false);
   };
 
   const endBlock = () => {
@@ -101,6 +104,21 @@ function TestPage() {
       status: "done",
       finishedAt: Date.now(),
     }));
+  };
+
+  const flagToCards = () => {
+    addCard(
+      {
+        id: question.id,
+        topic: guide?.short ?? question.topicId,
+        learning_point: question.statement || question.objective,
+        answer: question.choices[question.answer],
+        rationale: question.explanation,
+        key_facts: question.wrong.filter(Boolean),
+      },
+      "manual",
+    );
+    setCardAdded(true);
   };
 
   return (
@@ -223,6 +241,14 @@ function TestPage() {
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={() => desk.toggleMark(question.id)} className="min-h-11 rounded border border-line px-3 text-sm font-semibold">
               {desk.state.marks[question.id] ? "Unmark" : "Mark"}
+            </button>
+            <button
+              type="button"
+              onClick={flagToCards}
+              disabled={cardAdded}
+              className="min-h-11 rounded border border-amber-500 bg-amber-50 px-3 text-sm font-semibold text-amber-800 disabled:opacity-50"
+            >
+              {cardAdded ? "Added to Cards" : "Add to Cards"}
             </button>
             {test.mode === "tutor" && test.status === "open" ? (
               <button
