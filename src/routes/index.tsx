@@ -33,15 +33,23 @@ const fieldCreatures = topics.map((t, i) => ({
 }));
 
 const gyms = [
-  { id: "oncology", name: "Oncology Gym", leader: "Dr. Oncology" },
-  { id: "stones", name: "Stone Gym", leader: "Dr. Lithiasis" },
-  { id: "andrology", name: "Andrology Gym", leader: "Dr. Andro" },
-  { id: "obstruction", name: "Obstruction Gym", leader: "Dr. Flow" },
-  { id: "urogyn", name: "Urogyn Gym", leader: "Dr. Continence" },
-  { id: "peds", name: "Peds Gym", leader: "Dr. Pediatric" },
-  { id: "core", name: "Core Gym", leader: "Dr. Trauma" },
-  { id: "basic", name: "Physiology Gym", leader: "Dr. Physio" },
-];
+  { id: "stones", name: "Rock Gym", element: "Rock", leader: "Petra Vale", subject: "Stones", hall: "/field/gym-rock.jpg" },
+  { id: "urogyn", name: "Water Gym", element: "Water", leader: "Maris Calder", subject: "Urogyn", hall: "/field/gym-water.jpg" },
+  { id: "andrology", name: "Electric Gym", element: "Electric", leader: "Ives Harlan", subject: "Andrology", hall: "/field/gym-electric.jpg" },
+  { id: "peds", name: "Grass Gym", element: "Grass", leader: "Lina Grove", subject: "Peds", hall: "/field/gym-grass.jpg" },
+  { id: "basic", name: "Poison Gym", element: "Poison", leader: "Vesper Quill", subject: "Physiology", hall: "/field/gym-poison.jpg" },
+  { id: "core", name: "Psychic Gym", element: "Psychic", leader: "Nima Sol", subject: "Core", hall: "/field/gym-psychic.jpg" },
+  { id: "oncology", name: "Fire Gym", element: "Fire", leader: "Sera Voss", subject: "Oncology", hall: "/field/gym-fire.jpg" },
+  { id: "obstruction", name: "Ground Gym", element: "Ground", leader: "Holt Barrow", subject: "Obstruction", hall: "/field/gym-ground.jpg" },
+] as const;
+
+function leagueCleared(state: DeskState) {
+  return state.tests.some((test) => {
+    if (test.status !== "done" || test.name !== "Championship") return false;
+    const score = scoreTest(state, test.id);
+    return score.total > 0 && score.correct / score.total >= 0.8;
+  });
+}
 
 function completedBattleTopics(state: DeskState): Set<string> {
   const done = new Set<string>();
@@ -68,6 +76,11 @@ function Home() {
   const pct = attempted ? Math.round((correct / attempted) * 100) : 0;
   const mastered = stats.filter((s) => s.attempted > 5 && s.correct / s.attempted >= 0.7).length;
   const battleDone = completedBattleTopics(desk.state);
+  const badges = gyms.filter((gym) => {
+    const gymTopics = topics.filter((topic) => topic.blueprintId === gym.id);
+    return gymTopics.length > 0 && gymTopics.every((topic) => battleDone.has(topic.id));
+  }).length;
+  const champion = leagueCleared(desk.state);
 
   useEffect(() => {
     const sync = () => setMode(loadMode());
@@ -96,6 +109,18 @@ function Home() {
       pool: "all",
       count: 5,
       name: `Battle: ${topics.find((t) => t.id === topicId)?.short ?? topicId}`,
+    });
+    if (id) void navigate({ to: "/test/$id", params: { id } });
+  };
+
+  const startChampionship = () => {
+    const id = desk.createTest({
+      mode: "tutor",
+      adaptive: true,
+      topicIds: topics.map((topic) => topic.id),
+      pool: "all",
+      count: 20,
+      name: "Championship",
     });
     if (id) void navigate({ to: "/test/$id", params: { id } });
   };
@@ -152,7 +177,15 @@ function Home() {
         <TrailGame cleared={battleDone} done={attempted} right={correct} onEnter={startTopicBattle} />
       )}
       {mode === "encounter" && <Encounter pct={pct} top={top} startAdaptive={startAdaptive} />}
-      {mode === "notes" && <FieldNotes battleDone={battleDone} startTopicBattle={startTopicBattle} />}
+      {mode === "notes" && (
+        <FieldNotes
+          battleDone={battleDone}
+          startTopicBattle={startTopicBattle}
+          startChampionship={startChampionship}
+          badges={badges}
+          champion={champion}
+        />
+      )}
       {mode === "rpg" && <RpgMode battleDone={battleDone} startTopicBattle={startTopicBattle} />}
       {mode === "ops" && <Operations correct={experience} total={experienceTotal} />}
     </Shell>
@@ -388,6 +421,29 @@ function HomeBase({
   );
 }
 
+function Badge({ element, earned }: { element: string; earned: boolean }) {
+  const mark: Record<string, string> = {
+    Rock: "🪨",
+    Water: "💧",
+    Electric: "⚡",
+    Grass: "🍃",
+    Poison: "🟣",
+    Psychic: "🔮",
+    Fire: "🔥",
+    Ground: "⛰️",
+  };
+  return (
+    <div
+      className={`flex h-12 w-12 items-center justify-center rounded-full border-2 text-lg ${
+        earned ? "border-amber-500 bg-amber-100" : "border-field-ink/20 bg-field-ink/10 grayscale"
+      }`}
+      title={earned ? `${element} badge` : `${element} badge locked`}
+    >
+      {mark[element] ?? "•"}
+    </div>
+  );
+}
+
 function Encounter({
   pct,
   top,
@@ -431,9 +487,15 @@ function Encounter({
 function FieldNotes({
   battleDone,
   startTopicBattle,
+  startChampionship,
+  badges,
+  champion,
 }: {
   battleDone: Set<string>;
   startTopicBattle: (topicId: string) => void;
+  startChampionship: () => void;
+  badges: number;
+  champion: boolean;
 }) {
   const desk = useDesk();
   const [view, setView] = useState<"gyms" | "collection">("gyms");
@@ -490,6 +552,18 @@ function FieldNotes({
 
       {view === "gyms" && (
         <div className="p-4">
+          <div className="mb-4 flex gap-2 overflow-x-auto">
+            {gyms.map((gym) => {
+              const gymTopics = topics.filter((topic) => topic.blueprintId === gym.id);
+              const earned = gymTopics.length > 0 && gymTopics.every((topic) => battleDone.has(topic.id));
+              return (
+                <div key={gym.id} className="w-16 shrink-0 text-center">
+                  <Badge element={gym.element} earned={earned} />
+                  <p className="mt-1 text-[10px] font-semibold">{gym.element}</p>
+                </div>
+              );
+            })}
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {gyms.map((gym) => {
               const gymTopics = topics.filter((t) => t.blueprintId === gym.id);
@@ -497,37 +571,70 @@ function FieldNotes({
               const nextTopic = gymTopics.find((t) => !battleDone.has(t.id));
               const cleared = gymCaught === gymTopics.length && gymTopics.length > 0;
               return (
-                <div key={gym.id} className="rounded border border-field-ink/15 bg-white/70 p-4">
-                  <div className="flex items-baseline justify-between">
-                    <h2 className="font-semibold">{gym.name}</h2>
-                    <span className="text-sm text-field-fern">{gymCaught}/{gymTopics.length}</span>
-                  </div>
-                  <p className="mt-1 text-sm">Leader: {gym.leader}</p>
-                  <div className="mt-3 flex flex-wrap gap-1">
-                    {gymTopics.map((t) => (
-                      <span
-                        key={t.id}
-                        className={`rounded px-2 py-0.5 text-xs ${
-                          battleDone.has(t.id) ? "bg-field-fern text-white" : "bg-field text-field-ink/70"
-                        }`}
+                <div key={gym.id} className="overflow-hidden rounded border border-field-ink/15 bg-white/70">
+                  <img src={gym.hall} alt="" className="h-36 w-full object-cover" />
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold tracking-wide uppercase">{gym.element}</p>
+                        <h2 className="font-semibold">{gym.name}</h2>
+                        <p className="text-sm">Leader {gym.leader}</p>
+                        <p className="text-sm text-field-ink/70">{gym.subject}</p>
+                      </div>
+                      <Badge element={gym.element} earned={cleared} />
+                    </div>
+                    <p className="mt-2 text-sm text-field-fern">
+                      {gymCaught}/{gymTopics.length} topics
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {gymTopics.map((t) => (
+                        <span
+                          key={t.id}
+                          className={`rounded px-2 py-0.5 text-xs ${
+                            battleDone.has(t.id) ? "bg-field-fern text-white" : "bg-field text-field-ink/70"
+                          }`}
+                        >
+                          {battleDone.has(t.id) ? t.short : "???"}
+                        </span>
+                      ))}
+                    </div>
+                    {nextTopic && !cleared && (
+                      <button
+                        type="button"
+                        onClick={() => startTopicBattle(nextTopic.id)}
+                        className="mt-3 min-h-11 rounded bg-field-stamp px-3 text-sm font-semibold text-white"
                       >
-                        {battleDone.has(t.id) ? t.short : "???"}
-                      </span>
-                    ))}
+                        Battle {gym.leader}
+                      </button>
+                    )}
+                    {cleared && <p className="mt-3 text-sm font-semibold text-field-fern">Badge earned</p>}
                   </div>
-                  {nextTopic && !cleared && (
-                    <button
-                      type="button"
-                      onClick={() => startTopicBattle(nextTopic.id)}
-                      className="mt-3 min-h-11 rounded bg-field-stamp px-3 text-sm font-semibold text-white"
-                    >
-                      Battle {nextTopic.short}
-                    </button>
-                  )}
-                  {cleared && <p className="mt-3 text-sm font-semibold text-field-fern">Gym cleared</p>}
                 </div>
               );
             })}
+          </div>
+          <div className="mt-4 overflow-hidden rounded border border-field-ink/15 bg-white/80">
+            <img src="/field/league.jpg" alt="" className={`h-40 w-full object-cover ${badges < gyms.length ? "grayscale" : ""}`} />
+            <div className="p-4">
+              <p className="text-xs font-semibold tracking-wide uppercase">After the eight badges</p>
+              <h2 className="font-serif text-2xl">The Championship</h2>
+              <p className="mt-1 text-sm">
+                Twenty questions, weighted toward ones you have missed. You need 80% to take the cup. Badges {badges}/{gyms.length}.
+              </p>
+              {champion ? <p className="mt-3 text-sm font-semibold text-field-fern">Champion</p> : null}
+              {!champion && badges === gyms.length ? (
+                <button
+                  type="button"
+                  onClick={startChampionship}
+                  className="mt-3 min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white"
+                >
+                  Enter the Championship
+                </button>
+              ) : null}
+              {!champion && badges < gyms.length ? (
+                <p className="mt-3 text-sm">Clear every gym to unlock it.</p>
+              ) : null}
+            </div>
           </div>
         </div>
       )}
