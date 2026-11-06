@@ -134,6 +134,9 @@ function TestPage() {
         {test.mode === "timed" && test.status === "open" ? (
           <p className="rounded bg-navy px-3 py-2 font-semibold text-white">{formatTime(test.secondsLeft)}</p>
         ) : null}
+        <Link to="/" className="min-h-11 rounded border border-line bg-paper px-3 text-sm font-semibold">
+          Home
+        </Link>
         <button type="button" onClick={endBlock} className="min-h-11 rounded border border-line bg-paper px-3 text-sm font-semibold" disabled={test.status === "done"}>
           {test.status === "done" ? "Block ended" : "End block"}
         </button>
@@ -144,6 +147,11 @@ function TestPage() {
           <p>
             Score {score.correct} / {score.answered} answered ({score.total} in the block). This test stays under Tests.
           </p>
+          <div className="mt-3">
+            <Link to="/" className="inline-flex min-h-11 items-center rounded bg-navy px-4 text-sm font-semibold text-white">
+              Home
+            </Link>
+          </div>
           <ul className="mt-2 flex flex-col gap-1">
             {test.questionIds.map((itemId, index) => {
               const itemAnswer = test.answers[itemId];
