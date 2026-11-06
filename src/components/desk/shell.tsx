@@ -18,10 +18,10 @@ export function Shell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-20 border-b border-navy-2 bg-navy text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
           <Link to="/" className="font-serif text-2xl leading-none tracking-tight">
-            Call Room
+            ISE Team Room
           </Link>
           <p className="hidden text-sm text-white/70 sm:block">In-service desk</p>
-          <nav className="ml-auto flex gap-1">
+          <nav className="ml-auto flex flex-wrap gap-1">
             {links.map((link) => {
               const on = link.to === "/tests" ? path === "/tests" || path.startsWith("/test/") : path === link.to;
               return (

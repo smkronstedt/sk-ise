@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { pickQuestionIds } from "./adapt";
-import { questionById } from "./questions";
+import { getQuestion } from "./catalog";
 import { topicById } from "./topics";
 import type { BlueprintId, DeskState, Focus, Mode, Pool, TestBlock } from "./types";
 
@@ -40,6 +40,7 @@ type DeskApi = {
     topicIds: string[];
     pool: Pool;
     count: number;
+    questionIds?: string[];
   }) => string | null;
   createFromIds: (ids: string[], name: string) => string | null;
   patchTest: (id: string, recipe: (test: TestBlock) => TestBlock) => void;
@@ -77,11 +78,13 @@ export function DeskProvider({ children }: { children: ReactNode }) {
       commit((current) => ({ ...current, notes: { ...current.notes, [questionId]: note } })),
     createTest: (input) => {
       const base = state ?? load();
-      const ids = pickQuestionIds(base, input.topicIds, input.pool, input.count, input.adaptive);
+      const ids = input.questionIds?.length
+        ? input.questionIds.slice(0, input.count)
+        : pickQuestionIds(base, input.topicIds, input.pool, input.count, input.adaptive);
       if (!ids.length) return null;
       const seconds = input.mode === "timed" ? ids.length * 90 : 0;
       const labels = [
-        ...new Set(ids.map((id) => topicById[questionById[id]?.topicId ?? ""]?.short).filter(Boolean)),
+        ...new Set(ids.map((id) => topicById[getQuestion(id)?.topicId ?? ""]?.short).filter(Boolean)),
       ];
       const test: TestBlock = {
         id: crypto.randomUUID(),

@@ -20,10 +20,17 @@ export type BankProgress = {
 
 const KEY = "callroom-original-bank-v1";
 
+/** Items in public/bank/questions.json. The desk's 57 vignettes are separate. */
+export const BANK_TOTAL = 1214;
+
 export const letters = ["A", "B", "C", "D", "E"] as const;
 
 export function emptyBankProgress(): BankProgress {
   return { answers: {}, marks: {}, notes: {} };
+}
+
+export function countBankCorrect(): number {
+  return Object.values(loadBankProgress().answers).filter((row) => row.correct).length;
 }
 
 export function loadBankProgress(): BankProgress {

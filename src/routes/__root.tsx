@@ -4,7 +4,7 @@ import { DeskProvider } from "@/lib/desk/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "Call Room";
+const APP_NAME = "ISE Team Room";
 
 export const Route = createRootRoute({
   head: () => ({

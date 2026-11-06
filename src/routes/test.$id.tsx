@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Figure } from "@/components/desk/figure";
 import { Shell } from "@/components/desk/shell";
 import { scoreTest } from "@/lib/desk/adapt";
+import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
-import { questionById } from "@/lib/desk/questions";
+import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
 import { guideLinks } from "@/lib/desk/statements";
 import { topicById } from "@/lib/desk/topics";
 import type { TestBlock } from "@/lib/desk/types";
@@ -19,6 +20,11 @@ function TestPage() {
   const { id } = Route.useParams();
   const desk = useDesk();
   const test = desk.state.tests.find((item) => item.id === id);
+  const [bankReady, setBankReady] = useState(false);
+
+  useEffect(() => {
+    void loadCatalog().finally(() => setBankReady(true));
+  }, []);
 
   useEffect(() => {
     if (!test || test.status !== "open" || test.mode !== "timed") return;
@@ -54,11 +60,11 @@ function TestPage() {
   }
 
   const questionId = test.questionIds[test.index];
-  const question = questionById[questionId];
+  const question = getQuestion(questionId);
   if (!question) {
     return (
       <Shell>
-        <p>This item is missing.</p>
+        <p>{bankReady ? "This item is missing." : "Opening the block…"}</p>
       </Shell>
     );
   }
@@ -89,6 +95,14 @@ function TestPage() {
         [questionId]: { choice: answer.choice, submitted: true },
       },
     }));
+    if (questionId.startsWith("UQB-") && answer.choice != null) {
+      const progress = loadBankProgress();
+      progress.answers[questionId] = {
+        choice: letters[answer.choice],
+        correct: answer.choice === question.answer,
+      };
+      saveBankProgress(progress);
+    }
   };
 
   const jump = (index: number) => {
@@ -130,14 +144,14 @@ function TestPage() {
             {test.questionIds.map((itemId, index) => {
               const itemAnswer = test.answers[itemId];
               const submitted = Boolean(itemAnswer?.submitted && itemAnswer.choice != null);
-              const right = submitted && itemAnswer?.choice === questionById[itemId]?.answer;
+              const right = submitted && itemAnswer?.choice === getQuestion(itemId)?.answer;
               return (
                 <li key={itemId}>
                   <button type="button" onClick={() => jump(index)} className="text-left">
                     <span className={right ? "font-semibold text-correct" : submitted ? "font-semibold text-wrong" : "text-muted"}>
                       {index + 1}. {right ? "Correct" : submitted ? "Missed" : "Not answered"}
                     </span>
-                    <span className="text-muted"> · {questionById[itemId]?.stem[0].slice(0, 90)}</span>
+                    <span className="text-muted"> · {getQuestion(itemId)?.stem[0].slice(0, 90)}</span>
                   </button>
                 </li>
               );
@@ -155,7 +169,7 @@ function TestPage() {
           {test.questionIds.map((itemId, index) => {
             const itemAnswer = test.answers[itemId];
             const known = test.status === "done" || (test.mode === "tutor" && itemAnswer?.submitted);
-            const right = known && itemAnswer?.choice === questionById[itemId]?.answer;
+            const right = known && itemAnswer?.choice === getQuestion(itemId)?.answer;
             const wrong = known && itemAnswer?.submitted && itemAnswer.choice != null && !right;
             return (
               <li key={itemId}>
@@ -265,7 +279,7 @@ function TestPage() {
 }
 
 function Explanation({ test, questionId }: { test: TestBlock; questionId: string }) {
-  const question = questionById[questionId];
+  const question = getQuestion(questionId);
   if (!question) return null;
   const answer = test.answers[questionId];
   const picked = answer?.choice;
@@ -279,18 +293,20 @@ function Explanation({ test, questionId }: { test: TestBlock; questionId: string
       ) : null}
       <p className="mt-3 leading-relaxed">{question.explanation}</p>
       {question.figure ? <Figure id={question.figure} /> : null}
-      <div className="mt-3">
-        <p className="text-sm font-semibold">Why the others are wrong</p>
-        <ul className="mt-1 flex flex-col gap-1 text-sm">
-          {question.choices.map((choice, index) =>
-            index === question.answer ? null : (
-              <li key={choice}>
-                <span className="font-semibold">{letters[index]}.</span> {question.wrong[index]}
-              </li>
-            ),
-          )}
-        </ul>
-      </div>
+      {question.wrong.some((line) => line) ? (
+        <div className="mt-3">
+          <p className="text-sm font-semibold">Why the others are wrong</p>
+          <ul className="mt-1 flex flex-col gap-1 text-sm">
+            {question.choices.map((choice, index) =>
+              index === question.answer || !question.wrong[index] ? null : (
+                <li key={choice}>
+                  <span className="font-semibold">{letters[index]}.</span> {question.wrong[index]}
+                </li>
+              ),
+            )}
+          </ul>
+        </div>
+      ) : null}
       {question.statement ? (
         <p className="mt-3 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
           <span className="font-semibold">Guideline statement. </span>

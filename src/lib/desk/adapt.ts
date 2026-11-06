@@ -1,5 +1,6 @@
-import { blueprint, blueprintById } from "./blueprint";
-import { questionById, questions } from "./questions";
+import { blueprint } from "./blueprint";
+import { getQuestion } from "./catalog";
+import { questions } from "./questions";
 import { topicById } from "./topics";
 import type { BlueprintId, DeskState, Focus, Pool, Question } from "./types";
 
@@ -20,7 +21,7 @@ export function latestResult(
   for (let i = state.tests.length - 1; i >= 0; i--) {
     const answer = state.tests[i].answers[id];
     if (!answer?.submitted || answer.choice == null) continue;
-    const question = questionById[id];
+    const question = getQuestion(id);
     if (!question) return "unused";
     return answer.choice === question.answer ? "correct" : "incorrect";
   }
@@ -143,11 +144,36 @@ export function scoreTest(state: DeskState, id: string) {
     const answer = test.answers[questionId];
     if (!answer?.submitted || answer.choice == null) continue;
     answered += 1;
-    if (answer.choice === questionById[questionId]?.answer) correct += 1;
+    if (answer.choice === getQuestion(questionId)?.answer) correct += 1;
   }
   return { correct, answered, total: test.questionIds.length };
 }
 
-export function bucketName(id: BlueprintId) {
-  return blueprintById[id].short;
+export function filterPool(state: DeskState, list: Question[], topicIds: string[], pool: Pool): Question[] {
+  const allowed = new Set(topicIds);
+  return list.filter((question) => {
+    if (!allowed.has(question.topicId)) return false;
+    const result = latestResult(state, question.id);
+    if (pool === "unused") return result === "unused";
+    if (pool === "incorrect") return result === "incorrect";
+    if (pool === "correct") return result === "correct";
+    if (pool === "marked") return Boolean(state.marks[question.id]);
+    return true;
+  });
+}
+
+export function pickFrom(
+  state: DeskState,
+  list: Question[],
+  topicIds: string[],
+  pool: Pool,
+  count: number,
+): string[] {
+  const poolQuestions = filterPool(state, list, topicIds, pool);
+  const shuffled = [...poolQuestions];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count).map((question) => question.id);
 }

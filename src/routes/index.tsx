@@ -1,9 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Operations } from "@/components/desk/operations";
 import { Shell } from "@/components/desk/shell";
+import { TrailGame } from "@/components/desk/trail-game";
 import { bucketStats, scoreTest } from "@/lib/desk/adapt";
 import { ise2025 } from "@/lib/desk/ise";
+import { BANK_TOTAL, countBankCorrect } from "@/lib/desk/original-bank";
 import { questions } from "@/lib/desk/questions";
 import { useDesk } from "@/lib/desk/provider";
+import { careerRank } from "@/lib/desk/ranks";
 import type { BlueprintId, Focus } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
 
@@ -40,9 +45,93 @@ function Home() {
   };
 
   const applyPlan = () => desk.setFocusMap(ise2025.focus);
+  const [mode, setMode] = useState<"desk" | "trail" | "ops">("desk");
+  const [bankCorrect, setBankCorrect] = useState(0);
+  useEffect(() => {
+    setBankCorrect(countBankCorrect());
+  }, []);
+  const experience = bankCorrect + correct;
+  const experienceTotal = BANK_TOTAL + questions.length;
+  const rank = careerRank(experience, experienceTotal);
+  const cleared = new Set(
+    topics
+      .filter((topic) => {
+        return desk.state.tests.some(
+          (test) => test.status === "done" && test.topicIds.length === 1 && test.topicIds[0] === topic.id,
+        );
+      })
+      .map((topic) => topic.id),
+  );
+
+  const startTopic = (topicId: string) => {
+    const topic = topics.find((row) => row.id === topicId);
+    const id = desk.createTest({
+      mode: "tutor",
+      adaptive: false,
+      topicIds: [topicId],
+      pool: "all",
+      count: 5,
+      name: `Battle: ${topic?.short ?? topicId}`,
+    });
+    if (id) void navigate({ to: "/test/$id", params: { id } });
+  };
 
   return (
     <Shell>
+      <div className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1.4fr)_auto]">
+        <section className="rounded border border-line bg-paper px-4 py-3">
+          <p className="text-xs font-semibold tracking-wide text-muted uppercase">Rank</p>
+          <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
+            <h1 className="font-serif text-2xl tracking-tight">{rank.title}</h1>
+            <p className="text-sm text-muted">
+              {experience}/{experienceTotal} correct
+              <span className="mx-2 text-faint">·</span>
+              Bank {bankCorrect}/{BANK_TOTAL}
+              <span className="mx-2 text-faint">·</span>
+              Trainer {correct}/{questions.length}
+              <span className="mx-2 text-faint">·</span>
+              <span className="font-semibold text-ink">${experience}</span>
+            </p>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded bg-chip">
+            <div className="h-full bg-navy" style={{ width: `${Math.round((experience / experienceTotal) * 100)}%` }} />
+          </div>
+          <p className="mt-2 text-sm text-muted">
+            {rank.next
+              ? `${rank.left} more correct to ${rank.next}. The last title needs every Bank item and every guideline item.`
+              : "Every item in the bank is correct."}
+          </p>
+        </section>
+        <div className="flex gap-2 sm:flex-col">
+          <button
+            type="button"
+            onClick={() => setMode("desk")}
+            className={`min-h-11 rounded px-4 text-sm font-semibold ${mode === "desk" ? "bg-navy text-white" : "border border-line bg-paper"}`}
+          >
+            Desk
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("trail")}
+            className={`min-h-11 rounded px-4 text-sm font-semibold ${mode === "trail" ? "bg-navy text-white" : "border border-line bg-paper"}`}
+          >
+            Trail
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("ops")}
+            className={`min-h-11 rounded px-4 text-sm font-semibold ${mode === "ops" ? "bg-navy text-white" : "border border-line bg-paper"}`}
+          >
+            Ops
+          </button>
+        </div>
+      </div>
+
+      {mode === "ops" ? (
+        <Operations correct={experience} total={experienceTotal} />
+      ) : mode === "trail" ? (
+        <TrailGame cleared={cleared} done={attempted} right={correct} onEnter={startTopic} />
+      ) : (
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.8fr)]">
         <section className="rounded border border-line bg-paper">
           <div className="border-b border-line px-4 py-4">
@@ -197,8 +286,28 @@ function Home() {
               </ul>
             )}
           </section>
+          <section className="rounded border border-line bg-paper p-4">
+            <h2 className="font-semibold">Ladder</h2>
+            <p className="mt-1 text-sm text-muted">Split evenly across {experienceTotal} items. The Bank holds {BANK_TOTAL}. The other {questions.length} are the guideline trainer on this desk. Only a perfect set reaches the last title.</p>
+            <ol className="mt-3 flex max-h-80 flex-col gap-1 overflow-auto text-sm">
+              {rank.gates.map((gate, index) => {
+                const on = index === rank.index;
+                const owned = index < rank.index;
+                return (
+                  <li
+                    key={gate.title}
+                    className={`flex min-w-0 items-baseline justify-between gap-3 rounded px-2 py-1 ${on ? "bg-navy text-white" : ""}`}
+                  >
+                    <span className={owned && !on ? "min-w-0 text-muted" : "min-w-0"}>{gate.title}</span>
+                    <span className={`shrink-0 ${on ? "text-white/80" : "text-muted"}`}>{gate.at}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
         </aside>
       </div>
+      )}
     </Shell>
   );
 }
