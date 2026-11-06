@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { HeatMap } from "@/components/desk/heat-map";
+import { PrizeLadder } from "@/components/desk/prizes";
 import { Operations } from "@/components/desk/operations";
 import { Shell } from "@/components/desk/shell";
 import { TrailGame } from "@/components/desk/trail-game";
@@ -191,6 +192,8 @@ function Home() {
             : "Every item in the bank is correct."}
         </p>
       </div>
+
+      <PrizeLadder />
 
       <HeatMap />
 

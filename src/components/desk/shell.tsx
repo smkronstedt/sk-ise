@@ -2,6 +2,10 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { authClient, authEnabled, signOut } from "@/lib/auth/client";
 import { loadCards } from "@/lib/cards";
+import { DAILY_GOAL, prizeStatus } from "@/lib/desk/activity";
+import { bucketStats } from "@/lib/desk/adapt";
+import { countBankCorrect } from "@/lib/desk/original-bank";
+import type { DeskState } from "@/lib/desk/types";
 import { deskModes, loadMode, saveMode, type DeskMode } from "@/lib/desk/modes";
 import { syncDeviceProgress } from "@/lib/progress-sync";
 
@@ -25,6 +29,26 @@ export function Shell({ children }: { children: ReactNode }) {
   const [syncNote, setSyncNote] = useState("Saved on this device");
   const [mode, setMode] = useState<DeskMode>("classic");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [tally, setTally] = useState({ correct: 0, money: 0, today: 0 });
+
+  useEffect(() => {
+    const read = () => {
+      const prizes = prizeStatus();
+      let trainer = 0;
+      try {
+        const raw = localStorage.getItem("callroom-desk-v1");
+        const parsed = raw ? (JSON.parse(raw) as DeskState) : { tests: [], marks: {}, notes: {}, focus: {} };
+        trainer = bucketStats(parsed).reduce((sum, item) => sum + item.correct, 0);
+      } catch {
+        trainer = 0;
+      }
+      const correct = countBankCorrect() + trainer;
+      setTally({ correct, money: correct + prizes.purse, today: prizes.today });
+    };
+    read();
+    window.addEventListener("ise-activity", read);
+    return () => window.removeEventListener("ise-activity", read);
+  }, []);
 
   useEffect(() => {
     setMode(loadMode());
@@ -72,6 +96,11 @@ export function Shell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
+          <div className="text-right text-xs leading-tight">
+            <p className="font-semibold">{tally.correct} correct</p>
+            <p className="font-semibold">${tally.money}</p>
+            <p className="text-white/70">Today {tally.today}/{DAILY_GOAL}</p>
+          </div>
           {authEnabled ? (
             session.data?.user ? (
               <div className="flex items-center gap-2">

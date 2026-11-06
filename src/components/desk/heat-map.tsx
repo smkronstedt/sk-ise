@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { dayKey, loadActivity, type DayLog } from "@/lib/desk/activity";
 
-const levels = ["#e7e5e1", "#d6e4f5", "#7aa2d4", "#1d3d66", "#c45c26"];
+const levels = ["#2d333b", "#0e4429", "#006d32", "#26a641", "#39d353"];
 
 function total(row?: DayLog) {
   return (row?.questions ?? 0) + (row?.cards ?? 0);
@@ -77,22 +77,22 @@ export function HeatMap() {
   const selected = days[picked];
 
   return (
-    <section className="mb-4 overflow-hidden rounded border border-line bg-paper">
+    <section className="mb-4 overflow-hidden rounded border border-[#30363d] bg-[#0d1117] text-[#c9d1d9]">
       <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4">
         <div>
-          <p className="text-xs font-semibold tracking-wide text-muted uppercase">Heat</p>
-          <h2 className="font-serif text-2xl tracking-tight">A year of work</h2>
+          <p className="text-xs font-semibold tracking-wide text-[#8b949e] uppercase">Activity</p>
+          <h2 className="font-serif text-2xl tracking-tight text-white">A year of work</h2>
         </div>
         <div className="flex flex-wrap gap-4 text-sm">
-          <p><span className="font-semibold">{current}</span> day streak</p>
-          <p><span className="font-semibold">{longest}</span> best</p>
-          <p><span className="font-semibold">{active}</span> days</p>
-          <p><span className="font-semibold">{questions}</span> q · <span className="font-semibold">{cards}</span> cards</p>
+          <p><span className="font-semibold text-white">{current}</span> day streak</p>
+          <p><span className="font-semibold text-white">{longest}</span> best</p>
+          <p><span className="font-semibold text-white">{active}</span> days</p>
+          <p><span className="font-semibold text-white">{questions}</span> q · <span className="font-semibold text-white">{cards}</span> cards</p>
         </div>
       </div>
       <div className="overflow-x-auto px-4 py-3">
         <div className="flex gap-2">
-          <div className="flex flex-col justify-between py-4 text-[10px] text-muted">
+          <div className="flex flex-col justify-between py-4 text-[10px] text-[#8b949e]">
             <span>Mon</span>
             <span>Wed</span>
             <span>Fri</span>
@@ -104,7 +104,7 @@ export function HeatMap() {
                 return (
                   <div key={index} className="relative h-3 w-3 shrink-0">
                     {firstOfMonth ? (
-                      <span className="absolute text-[9px] whitespace-nowrap text-muted">
+                      <span className="absolute text-[9px] whitespace-nowrap text-[#8b949e]">
                         {firstOfMonth.toLocaleString("en-US", { month: "short" })}
                       </span>
                     ) : null}
@@ -127,11 +127,10 @@ export function HeatMap() {
                         type="button"
                         title={`${key}: ${row?.questions ?? 0} questions, ${row?.cards ?? 0} cards`}
                         onClick={() => setPicked(key)}
-                        className="h-3 w-3 rounded-[2px]"
+                        className="h-[11px] w-[11px] rounded-[2px]"
                         style={{
                           background: color,
-                          outline: key === picked ? "1px solid #111" : key === todayKey ? "1px solid #1d3d66" : "none",
-                          boxShadow: row?.cards ? "inset 0 0 0 1.5px #f3c56b" : undefined,
+                          outline: key === picked || key === todayKey ? "1px solid #ffffff" : "none",
                         }}
                       />
                     );
