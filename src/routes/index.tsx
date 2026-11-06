@@ -6,6 +6,7 @@ import { Shell } from "@/components/desk/shell";
 import { TrailGame } from "@/components/desk/trail-game";
 import { bucketStats, scoreTest } from "@/lib/desk/adapt";
 import { ise2025 } from "@/lib/desk/ise";
+import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 import { BANK_TOTAL, countBankCorrect } from "@/lib/desk/original-bank";
 import { questions } from "@/lib/desk/questions";
 import { useDesk } from "@/lib/desk/provider";
@@ -53,6 +54,16 @@ function completedBattleTopics(state: DeskState): Set<string> {
     if (topic) done.add(topic.id);
   }
   return done;
+}
+
+function deskStanding(score: number, leaders: Leader[] | null) {
+  if (!leaders) return "Checking accounts on this desk.";
+  const scores = leaders.some((row) => row.score === score) ? leaders.map((row) => row.score) : [...leaders.map((row) => row.score), score];
+  if (scores.length < 2) return "You are the only account on this desk, so there is no peer percentile here yet.";
+  const below = scores.filter((value) => value < score).length;
+  const place = scores.filter((value) => value > score).length + 1;
+  const percentile = Math.round((below / (scores.length - 1)) * 100);
+  return `${place} of ${scores.length} on this desk, ${percentile}th percentile here.`;
 }
 
 function Home() {
@@ -128,8 +139,20 @@ function Home() {
 
   const applyPlan = () => desk.setFocusMap(ise2025.focus);
   const [bankCorrect, setBankCorrect] = useState(0);
+  const [leaders, setLeaders] = useState<Leader[] | null>(null);
   useEffect(() => {
     setBankCorrect(countBankCorrect());
+    let stop = false;
+    void listLeaders()
+      .then((result) => {
+        if (!stop) setLeaders(result.leaders);
+      })
+      .catch(() => {
+        if (!stop) setLeaders([]);
+      });
+    return () => {
+      stop = true;
+    };
   }, []);
   const experience = bankCorrect + correct;
   const experienceTotal = BANK_TOTAL + questions.length;
@@ -140,7 +163,15 @@ function Home() {
       <div className="mb-4 rounded border border-line bg-paper px-4 py-3">
         <p className="text-xs font-semibold tracking-wide text-muted uppercase">Rank</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
-          <h1 className="font-serif text-2xl tracking-tight">{rank.title}</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-serif text-2xl tracking-tight">{rank.title}</h1>
+            <div className="mt-1 max-w-xl text-sm text-muted">
+              <p>{deskStanding(bankCorrect, leaders)}</p>
+              <p>
+                Country: {ise2025.percentile}th percentile on the {ise2025.year} in-service, from {ise2025.prior[0].percentile}th in {ise2025.prior[0].year}. That is the national exam. This bank has no country-wide group.
+              </p>
+            </div>
+          </div>
           <p className="text-sm text-muted">
             {experience}/{experienceTotal} correct
             <span className="mx-2 text-faint">·</span>
