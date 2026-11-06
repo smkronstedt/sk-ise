@@ -50,7 +50,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-navy-2 bg-navy text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <Link to="/" className="font-blackletter text-[2rem] leading-none text-white">
+          <Link to="/" className="font-serif text-2xl leading-none tracking-tight">
             ISE Team Room
           </Link>
           <p className="hidden text-sm text-white/70 sm:block">In-service desk</p>
