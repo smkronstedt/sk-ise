@@ -44,6 +44,17 @@ const fieldCreatures = topics.map((t, i) => ({
   type: t.blueprintId,
 }));
 
+const gyms = [
+  { id: "oncology", name: "Oncology Gym", leader: "Dr. Oncology" },
+  { id: "stones", name: "Stone Gym", leader: "Dr. Lithiasis" },
+  { id: "andrology", name: "Andrology Gym", leader: "Dr. Andro" },
+  { id: "obstruction", name: "Obstruction Gym", leader: "Dr. Flow" },
+  { id: "urogyn", name: "Urogyn Gym", leader: "Dr. Continence" },
+  { id: "peds", name: "Peds Gym", leader: "Dr. Pediatric" },
+  { id: "core", name: "Core Gym", leader: "Dr. Trauma" },
+  { id: "basic", name: "Physiology Gym", leader: "Dr. Physio" },
+];
+
 function completedBattleTopics(state: DeskState): Set<string> {
   const done = new Set<string>();
   for (const test of state.tests) {
@@ -462,54 +473,107 @@ function FieldNotes({
   battleDone: Set<string>;
   startTopicBattle: (topicId: string) => void;
 }) {
-  const next = fieldCreatures.find((c) => !battleDone.has(c.id));
+  const [view, setView] = useState<"gyms" | "collection">("gyms");
+  const caughtCount = battleDone.size;
 
   return (
     <section className="rounded border border-line bg-paper overflow-hidden">
       <div className="bg-gradient-to-b from-amber-50 to-white px-6 py-6">
         <h1 className="font-serif text-3xl tracking-tight">Field Notes</h1>
         <p className="mt-1 text-sm text-muted">
-          Collect all {fieldCreatures.length} cases. Finish a battle to catch it.
+          Defeat gym trainers to collect cases. {caughtCount}/{fieldCreatures.length} caught.
         </p>
-        <div className="mt-4 flex items-center gap-4">
-          <div className="text-2xl font-bold text-amber-700">{battleDone.size}/{fieldCreatures.length}</div>
-          <div className="text-sm text-muted">caught</div>
-          {next && (
-            <button
-              type="button"
-              onClick={() => startTopicBattle(next.id)}
-              className="ml-auto min-h-11 rounded bg-amber-600 px-5 text-sm font-semibold text-white"
-            >
-              Battle {next.name}
-            </button>
-          )}
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setView("gyms")}
+            className={`min-h-9 rounded px-3 text-sm font-semibold ${
+              view === "gyms" ? "bg-amber-600 text-white" : "border border-line bg-paper"
+            }`}
+          >
+            Gyms
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("collection")}
+            className={`min-h-9 rounded px-3 text-sm font-semibold ${
+              view === "collection" ? "bg-amber-600 text-white" : "border border-line bg-paper"
+            }`}
+          >
+            Collection
+          </button>
         </div>
       </div>
 
-      <div className="p-4">
-        <h2 className="mb-3 text-sm font-semibold text-muted uppercase">Collection</h2>
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
-          {fieldCreatures.map((c) => {
-            const isCaught = battleDone.has(c.id);
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => !isCaught && startTopicBattle(c.id)}
-                disabled={isCaught}
-                className={`rounded border p-2 text-center text-xs ${
-                  isCaught
-                    ? "border-green-600 bg-green-50 text-green-800"
-                    : "border-line bg-paper hover:bg-amber-50"
-                }`}
-              >
-                <div className="font-mono text-[10px] text-muted">#{String(c.number).padStart(3, "0")}</div>
-                <div className="mt-1 font-semibold truncate">{isCaught ? c.name : "???"}</div>
-              </button>
-            );
-          })}
+      {view === "gyms" && (
+        <div className="p-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {gyms.map((gym) => {
+              const gymTopics = topics.filter((t) => t.blueprintId === gym.id);
+              const gymCaught = gymTopics.filter((t) => battleDone.has(t.id)).length;
+              const nextTopic = gymTopics.find((t) => !battleDone.has(t.id));
+              const cleared = gymCaught === gymTopics.length && gymTopics.length > 0;
+              return (
+                <div key={gym.id} className="rounded border border-line p-4">
+                  <div className="flex items-baseline justify-between">
+                    <h2 className="font-semibold">{gym.name}</h2>
+                    <span className="text-sm text-muted">{gymCaught}/{gymTopics.length}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">Leader: {gym.leader}</p>
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {gymTopics.map((t) => (
+                      <span
+                        key={t.id}
+                        className={`rounded px-2 py-0.5 text-xs ${
+                          battleDone.has(t.id) ? "bg-green-100 text-green-800" : "bg-chip text-muted"
+                        }`}
+                      >
+                        {t.short}
+                      </span>
+                    ))}
+                  </div>
+                  {nextTopic && !cleared && (
+                    <button
+                      type="button"
+                      onClick={() => startTopicBattle(nextTopic.id)}
+                      className="mt-3 min-h-9 rounded bg-amber-600 px-3 text-sm font-semibold text-white"
+                    >
+                      Battle {nextTopic.short}
+                    </button>
+                  )}
+                  {cleared && <p className="mt-3 text-sm font-semibold text-green-700">Gym cleared</p>}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
+
+      {view === "collection" && (
+        <div className="p-4">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
+            {fieldCreatures.map((c) => {
+              const isCaught = battleDone.has(c.id);
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => !isCaught && startTopicBattle(c.id)}
+                  disabled={isCaught}
+                  className={`rounded border p-2 text-center text-xs ${
+                    isCaught
+                      ? "border-green-600 bg-green-50 text-green-800"
+                      : "border-line bg-paper hover:bg-amber-50"
+                  }`}
+                >
+                  <div className="font-mono text-[10px] text-muted">#{String(c.number).padStart(3, "0")}</div>
+                  <div className="mt-1 font-semibold truncate">{isCaught ? c.name : "???"}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
