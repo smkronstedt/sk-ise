@@ -16,7 +16,7 @@ export const loadProgress = createServerFn({ method: "GET" })
 
 export const saveProgress = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .inputValidator((data: { payload: string }) => {
+  .validator((data: { payload: string }) => {
     if (typeof data?.payload !== "string" || data.payload.length > 4_000_000) {
       throw new Error("Progress payload is missing.");
     }

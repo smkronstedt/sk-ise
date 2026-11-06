@@ -21,7 +21,7 @@ export const loadProfile = createServerFn({ method: "GET" })
 
 export const saveProfile = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .inputValidator((data: { name: string; bio: string; image: string }) => {
+  .validator((data: { name: string; bio: string; image: string }) => {
     if (data.image && data.image.length > 500_000) throw new Error("Photo is too large. Use a smaller picture.");
     return {
       name: data.name.trim().slice(0, 80) || "Resident",
@@ -46,7 +46,7 @@ export const saveProfile = createServerFn({ method: "POST" })
 
 export const changeLoginEmail = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .inputValidator((data: { email: string }) => {
+  .validator((data: { email: string }) => {
     const email = data.email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Enter a valid email.");
     return { email };

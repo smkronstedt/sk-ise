@@ -13,7 +13,7 @@ import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
 import { DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
 import { MODE_EVENT, loadMode, type DeskMode } from "@/lib/desk/modes";
-import { RpgMode } from "./modes";
+import { RpgMode } from "@/components/desk/game-modes";
 
 export const Route = createFileRoute("/")({
   component: Home,
