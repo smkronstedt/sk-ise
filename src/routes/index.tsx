@@ -189,7 +189,7 @@ function Home() {
       )}
       {mode === "encounter" && <Encounter pct={pct} top={top} startAdaptive={startAdaptive} />}
       {mode === "notes" && <FieldNotes battleDone={battleDone} startTopicBattle={startTopicBattle} />}
-      {mode === "rpg" && <RpgMode pct={pct} mastered={mastered} battleDone={battleDone} startAdaptive={startAdaptive} />}
+      {mode === "rpg" && <RpgMode battleDone={battleDone} startTopicBattle={startTopicBattle} />}
       {mode === "ops" && <Operations correct={experience} total={experienceTotal} />}
     </Shell>
   );
@@ -435,8 +435,11 @@ function Encounter({
 }) {
   return (
     <section className="rounded border border-line bg-paper p-6">
-      <h1 className="font-serif text-3xl tracking-tight">Case Encounter</h1>
-      <p className="mt-1 text-sm text-muted">Face the next weak topic.</p>
+      <p className="text-xs font-semibold tracking-wide text-muted uppercase">Not a map</p>
+      <h1 className="font-serif text-3xl tracking-tight">Case encounter</h1>
+      <p className="mt-1 max-w-xl text-sm text-muted">
+        One weak bucket at a time. This is not a world to walk. It puts you against the outline area you are missing, then starts a block.
+      </p>
       <div className="mt-6 flex items-center justify-between rounded-lg border border-line bg-slate-50 p-5">
         <div className="text-center">
           <div className="text-lg font-semibold">You</div>
@@ -472,18 +475,19 @@ function FieldNotes({
   const caughtCount = battleDone.size;
 
   return (
-    <section className="rounded border border-line bg-paper overflow-hidden">
-      <div className="bg-gradient-to-b from-amber-50 to-white px-6 py-6">
+    <section className="overflow-hidden rounded border border-field-ink bg-field text-field-ink">
+      <div className="border-b border-field-ink/15 px-6 py-6">
+        <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
         <h1 className="font-serif text-3xl tracking-tight">Field Notes</h1>
-        <p className="mt-1 text-sm text-muted">
-          Defeat gym trainers to collect cases. {caughtCount}/{fieldCreatures.length} caught.
+        <p className="mt-1 text-sm">
+          Eight gyms. Beat the next case to catch it. {caughtCount}/{fieldCreatures.length} in the guide.
         </p>
         <div className="mt-4 flex gap-2">
           <button
             type="button"
             onClick={() => setView("gyms")}
-            className={`min-h-9 rounded px-3 text-sm font-semibold ${
-              view === "gyms" ? "bg-amber-600 text-white" : "border border-line bg-paper"
+            className={`min-h-11 rounded px-3 text-sm font-semibold ${
+              view === "gyms" ? "bg-field-stamp text-white" : "border border-field-ink/20 bg-field"
             }`}
           >
             Gyms
@@ -491,11 +495,11 @@ function FieldNotes({
           <button
             type="button"
             onClick={() => setView("collection")}
-            className={`min-h-9 rounded px-3 text-sm font-semibold ${
-              view === "collection" ? "bg-amber-600 text-white" : "border border-line bg-paper"
+            className={`min-h-11 rounded px-3 text-sm font-semibold ${
+              view === "collection" ? "bg-field-stamp text-white" : "border border-field-ink/20 bg-field"
             }`}
           >
-            Collection
+            Guide
           </button>
         </div>
       </div>
@@ -509,21 +513,21 @@ function FieldNotes({
               const nextTopic = gymTopics.find((t) => !battleDone.has(t.id));
               const cleared = gymCaught === gymTopics.length && gymTopics.length > 0;
               return (
-                <div key={gym.id} className="rounded border border-line p-4">
+                <div key={gym.id} className="rounded border border-field-ink/15 bg-white/70 p-4">
                   <div className="flex items-baseline justify-between">
                     <h2 className="font-semibold">{gym.name}</h2>
-                    <span className="text-sm text-muted">{gymCaught}/{gymTopics.length}</span>
+                    <span className="text-sm text-field-fern">{gymCaught}/{gymTopics.length}</span>
                   </div>
-                  <p className="mt-1 text-sm text-muted">Leader: {gym.leader}</p>
+                  <p className="mt-1 text-sm">Leader: {gym.leader}</p>
                   <div className="mt-3 flex flex-wrap gap-1">
                     {gymTopics.map((t) => (
                       <span
                         key={t.id}
                         className={`rounded px-2 py-0.5 text-xs ${
-                          battleDone.has(t.id) ? "bg-green-100 text-green-800" : "bg-chip text-muted"
+                          battleDone.has(t.id) ? "bg-field-fern text-white" : "bg-field text-field-ink/70"
                         }`}
                       >
-                        {t.short}
+                        {battleDone.has(t.id) ? t.short : "???"}
                       </span>
                     ))}
                   </div>
@@ -531,12 +535,12 @@ function FieldNotes({
                     <button
                       type="button"
                       onClick={() => startTopicBattle(nextTopic.id)}
-                      className="mt-3 min-h-9 rounded bg-amber-600 px-3 text-sm font-semibold text-white"
+                      className="mt-3 min-h-11 rounded bg-field-stamp px-3 text-sm font-semibold text-white"
                     >
                       Battle {nextTopic.short}
                     </button>
                   )}
-                  {cleared && <p className="mt-3 text-sm font-semibold text-green-700">Gym cleared</p>}
+                  {cleared && <p className="mt-3 text-sm font-semibold text-field-fern">Gym cleared</p>}
                 </div>
               );
             })}
@@ -557,12 +561,13 @@ function FieldNotes({
                   disabled={isCaught}
                   className={`rounded border p-2 text-center text-xs ${
                     isCaught
-                      ? "border-green-600 bg-green-50 text-green-800"
-                      : "border-line bg-paper hover:bg-amber-50"
+                      ? "border-field-fern bg-white text-field-fern"
+                      : "border-field-ink/15 bg-field-ink/5 text-field-ink"
                   }`}
                 >
-                  <div className="font-mono text-[10px] text-muted">#{String(c.number).padStart(3, "0")}</div>
-                  <div className="mt-1 font-semibold truncate">{isCaught ? c.name : "???"}</div>
+                  <div className="font-mono text-[10px] opacity-70">#{String(c.number).padStart(3, "0")}</div>
+                  <div className={`mx-auto mt-1 h-8 w-8 rounded-full ${isCaught ? "bg-field-fern" : "bg-field-ink/10"}`} />
+                  <div className="mt-1 truncate font-semibold">{isCaught ? c.name : "???"}</div>
                 </button>
               );
             })}

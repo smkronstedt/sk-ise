@@ -1,5 +1,3 @@
-import { bucketStats } from "@/lib/desk/adapt";
-import type { DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
 
 export function UroTrail({
@@ -64,62 +62,74 @@ export function UroTrail({
 }
 
 export function RpgMode({
-  pct,
-  mastered,
   battleDone,
-  startAdaptive,
+  startTopicBattle,
 }: {
-  pct: number;
-  mastered: number;
   battleDone: Set<string>;
-  startAdaptive: () => void;
+  startTopicBattle: (topicId: string) => void;
 }) {
-  const caught = battleDone.size;
-  const level = Math.min(caught + 1, 31);
-  const rank = caught >= 20 ? "Chief" : caught >= 12 ? "Senior" : caught >= 6 ? "Junior" : "Intern";
+  const rooms = [
+    { id: "basic", name: "Physio grove" },
+    { id: "core", name: "Trauma cave" },
+    { id: "stones", name: "Stone shrine" },
+    { id: "obstruction", name: "Flow gate" },
+    { id: "urogyn", name: "Pelvic ruins" },
+    { id: "andrology", name: "Andro keep" },
+    { id: "peds", name: "Peds woods" },
+    { id: "oncology", name: "Oncology citadel" },
+  ] as const;
+  const cleared = (id: string) => {
+    const mine = topics.filter((topic) => topic.blueprintId === id);
+    return mine.length > 0 && mine.every((topic) => battleDone.has(topic.id));
+  };
+  const frontier = Math.max(
+    0,
+    rooms.findIndex((room) => !cleared(room.id)),
+  );
+  const openIndex = frontier === -1 ? rooms.length - 1 : frontier;
 
   return (
-    <section className="rounded border border-line bg-paper overflow-hidden">
-      <div className="bg-gradient-to-b from-indigo-50 to-white px-6 py-6">
+    <section className="overflow-hidden rounded border border-world-deep bg-world-deep text-white">
+      <div className="px-6 py-5">
+        <p className="text-xs font-semibold tracking-wide text-stone uppercase">Overworld</p>
         <h1 className="font-serif text-3xl tracking-tight">RPG</h1>
-        <p className="mt-1 text-sm text-muted">Your character grows as you study.</p>
-
-        <div className="mt-5 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-line bg-white p-4 text-center">
-            <div className="text-3xl font-bold text-indigo-600">Lv {level}</div>
-            <div className="text-sm text-muted">Level</div>
-          </div>
-          <div className="rounded-lg border border-line bg-white p-4 text-center">
-            <div className="text-2xl font-bold text-navy">{rank}</div>
-            <div className="text-sm text-muted">Rank</div>
-          </div>
-          <div className="rounded-lg border border-line bg-white p-4 text-center">
-            <div className="text-3xl font-bold text-amber-600">{caught}</div>
-            <div className="text-sm text-muted">Cases caught</div>
-          </div>
-        </div>
-
-        <div className="mt-5">
-          <div className="mb-1 flex justify-between text-sm">
-            <span>Progress</span>
-            <span>{caught}/31</span>
-          </div>
-          <div className="h-3 overflow-hidden rounded bg-chip">
-            <div className="h-full bg-indigo-600" style={{ width: `${(caught / 31) * 100}%` }} />
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={startAdaptive}
-          className="mt-5 min-h-11 rounded bg-indigo-700 px-5 text-sm font-semibold text-white"
-        >
-          Train
-        </button>
+        <p className="mt-1 max-w-xl text-sm text-stone">
+          Walk the rooms in order. A cleared room opens the next door. Enter a room to battle its next case.
+        </p>
       </div>
-
-      <div className="h-40 bg-gradient-to-br from-indigo-100 to-purple-50 flex items-center justify-center text-sm text-muted">
-        Character scene — grows with level
+      <div className="grid gap-3 p-4 sm:grid-cols-2">
+        {rooms.map((room, index) => {
+          const mine = topics.filter((topic) => topic.blueprintId === room.id);
+          const done = mine.filter((topic) => battleDone.has(topic.id)).length;
+          const next = mine.find((topic) => !battleDone.has(topic.id));
+          const open = index <= openIndex;
+          const here = index === openIndex && !cleared(room.id);
+          return (
+            <div
+              key={room.id}
+              className={`rounded border p-4 ${here ? "border-stone bg-world" : open ? "border-world bg-world/80" : "border-world-deep bg-world-deep"}`}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 className={`font-semibold ${open ? "text-world-deep" : "text-stone"}`}>{open ? room.name : "????"}</h2>
+                <span className={`text-sm ${open ? "text-world-deep/80" : "text-stone"}`}>{done}/{mine.length}</span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded bg-world-deep/20">
+                <div className="h-full bg-world-deep" style={{ width: `${mine.length ? (done / mine.length) * 100 : 0}%` }} />
+              </div>
+              {open && next ? (
+                <button
+                  type="button"
+                  onClick={() => startTopicBattle(next.id)}
+                  className="mt-3 min-h-11 rounded bg-world-deep px-3 text-sm font-semibold text-white"
+                >
+                  Enter {next.short}
+                </button>
+              ) : null}
+              {cleared(room.id) ? <p className="mt-3 text-sm font-semibold text-world-deep">Room cleared</p> : null}
+              {!open ? <p className="mt-3 text-sm text-stone">The door ahead is shut.</p> : null}
+            </div>
+          );
+        })}
       </div>
     </section>
   );

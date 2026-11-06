@@ -141,12 +141,12 @@ export function Operations({ correct, total }: { correct: number; total: number 
   };
 
   return (
-    <section className="overflow-hidden rounded border border-line bg-paper">
-      <div className="border-b border-line px-4 py-4">
-        <p className="text-xs font-semibold tracking-wide text-muted uppercase">Operations</p>
+    <section className="overflow-hidden rounded border border-ops bg-ops text-white">
+      <div className="border-b border-white/10 px-4 py-4">
+        <p className="text-xs font-semibold tracking-wide text-ops-amber uppercase">Night ops</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
           <h1 className="font-serif text-3xl tracking-tight">Two routes. One camp.</h1>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-ops-olive">
             Lv {level}
             <span className="mx-2 text-faint">·</span>
             ${cash}
@@ -154,7 +154,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
             {correct}/{total} correct
           </p>
         </div>
-        <p className="mt-2 max-w-2xl text-sm text-muted">
+        <p className="mt-2 max-w-2xl text-sm text-ops-olive">
           Each town is a block from the bank. Start the town you are on. Clear it at 60% on at least 10 items, and the next town opens. Cash is still $1 per correct answer.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -169,12 +169,12 @@ export function Operations({ correct, total }: { correct: number; total: number 
               key={id}
               type="button"
               onClick={() => setPanel(id)}
-              className={`min-h-11 rounded px-4 text-sm font-semibold ${panel === id ? "bg-navy text-white" : "border border-line bg-paper"}`}
+              className={`min-h-11 rounded px-4 text-sm font-semibold ${panel === id ? "bg-ops-amber text-ops" : "border border-white/20 text-white"}`}
             >
               {label}
             </button>
           ))}
-          <Link to="/bank" className="flex min-h-11 items-center rounded border border-line px-4 text-sm font-semibold">
+          <Link to="/bank" className="flex min-h-11 items-center rounded border border-white/20 px-4 text-sm font-semibold text-white">
             Study the bank
           </Link>
         </div>
@@ -189,7 +189,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
                   key={row.id}
                   type="button"
                   onClick={() => setTheater(row.id)}
-                  className={`min-h-11 rounded px-4 text-sm font-semibold ${theater === row.id ? "bg-navy text-white" : "border border-line"}`}
+                  className={`min-h-11 rounded px-4 text-sm font-semibold ${theater === row.id ? "bg-ops-amber text-ops" : "border border-white/20 text-white"}`}
                 >
                   {row.name}
                 </button>
@@ -241,7 +241,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
                         type="button"
                         onClick={() => void startTown(town)}
                         disabled={busy === town.id}
-                        className="mt-2 min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white disabled:opacity-50"
+                        className="mt-2 min-h-11 rounded bg-ops-amber px-3 text-sm font-semibold text-ops disabled:opacity-50"
                       >
                         {busy === town.id ? "Opening…" : resume ? "Resume" : done ? "Run again" : "Start"}
                       </button>
@@ -261,19 +261,19 @@ export function Operations({ correct, total }: { correct: number; total: number 
               const current = index === openIndex && !done;
               const resume = desk.state.tests.some((test) => test.status === "open" && test.name === missionName(town));
               return (
-                <li key={town.id} className={`rounded border px-3 py-3 ${town.id === selectedId ? "border-navy bg-blue-soft" : "border-line"}`}>
+                <li key={town.id} className={`rounded border px-3 py-3 ${town.id === selectedId ? "border-ops-amber bg-ops-panel" : "border-white/10 bg-ops-panel"}`}>
                   <div className="flex items-baseline justify-between gap-2">
                     <h2 className="font-semibold">{town.name}</h2>
-                    <span className="text-sm text-muted">{done ? "Cleared" : current ? "You are here" : open ? "Open" : "Locked"}</span>
+                    <span className="text-sm text-ops-olive">{done ? "Cleared" : current ? "You are here" : open ? "Open" : "Locked"}</span>
                   </div>
-                  <p className="mt-1 text-sm text-muted">{town.note}</p>
-                  <p className="mt-1 text-sm text-muted">{town.topics.join(" · ")}</p>
+                  <p className="mt-1 text-sm text-ops-olive">{town.note}</p>
+                  <p className="mt-1 text-sm text-ops-olive">{town.topics.join(" · ")}</p>
                   {open ? (
                     <button
                       type="button"
                       onClick={() => void startTown(town)}
                       disabled={busy === town.id}
-                      className="mt-2 min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white disabled:opacity-50"
+                      className="mt-2 min-h-11 rounded bg-ops-amber px-3 text-sm font-semibold text-ops disabled:opacity-50"
                     >
                       {busy === town.id ? "Opening…" : resume ? "Resume" : done ? "Run again" : "Start"}
                     </button>

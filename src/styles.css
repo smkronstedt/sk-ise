@@ -21,6 +21,17 @@
   --color-obj: #fff8e6;
   --color-obj-line: #e6c56a;
   --color-chip: #eef3f8;
+  --color-field: #f3ead4;
+  --color-field-ink: #2c2618;
+  --color-field-fern: #2c6b45;
+  --color-field-stamp: #a33b32;
+  --color-world: #8fbf6a;
+  --color-world-deep: #245c45;
+  --color-stone: #d9c7a4;
+  --color-ops: #141816;
+  --color-ops-panel: #1e2622;
+  --color-ops-amber: #e4b15a;
+  --color-ops-olive: #9aaf86;
   --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
   --font-serif: "Fraunces", Georgia, serif;
 }
