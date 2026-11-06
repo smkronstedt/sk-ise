@@ -50,7 +50,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-navy-2 bg-navy text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <Link to="/" className="font-serif text-2xl leading-none tracking-tight">
+          <Link to="/" className="font-blackletter text-[2rem] leading-none text-white">
             ISE Team Room
           </Link>
           <p className="hidden text-sm text-white/70 sm:block">In-service desk</p>
@@ -113,7 +113,7 @@ export function Shell({ children }: { children: ReactNode }) {
           )}
         </div>
         <div className="border-t border-white/10">
-          <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 py-2">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 overflow-x-auto px-4 py-2">
             {deskModes.map((item) => (
               <button
                 key={item.id}
@@ -123,7 +123,7 @@ export function Shell({ children }: { children: ReactNode }) {
                   setMode(item.id);
                   if (path !== "/") void navigate({ to: "/" });
                 }}
-                className={`min-h-11 shrink-0 rounded px-3 text-sm font-semibold ${
+                className={`inline-flex h-11 shrink-0 items-center rounded px-3 text-sm font-semibold ${
                   path === "/" && mode === item.id ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"
                 }`}
               >
@@ -132,12 +132,19 @@ export function Shell({ children }: { children: ReactNode }) {
             ))}
             <Link
               to="/leaderboard"
-              className={`min-h-11 shrink-0 rounded px-3 text-sm font-semibold ${
+              className={`inline-flex h-11 shrink-0 items-center rounded px-3 text-sm font-semibold ${
                 path === "/leaderboard" ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"
               }`}
             >
               Leaderboard
             </Link>
+            <span className="font-greek inline-flex h-11 shrink-0 items-center gap-1.5 px-1 text-lg leading-none font-bold tracking-wide text-[#e23b2f]" title="Molon labe">
+              <svg viewBox="0 0 32 32" aria-hidden="true" className="h-7 w-7">
+                <circle cx="16" cy="16" r="14" fill="none" stroke="#e23b2f" strokeWidth="1.5" />
+                <path d="M10 22 L16 8 L22 22 M12.5 17.5 H19.5" fill="none" stroke="#e23b2f" strokeWidth="1.6" />
+              </svg>
+              μολὼν λαβέ
+            </span>
           </div>
         </div>
       </header>

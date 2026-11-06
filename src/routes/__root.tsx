@@ -25,7 +25,7 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520;9..144,640&family=Source+Sans+3:ital,wght@0,400;0,560;0,680;1,400&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,700;1,700&family=UnifrakturMaguntia&display=swap",
       },
     ],
   }),

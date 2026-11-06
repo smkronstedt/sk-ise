@@ -32,8 +32,10 @@
   --color-ops-panel: #1e2622;
   --color-ops-amber: #e4b15a;
   --color-ops-olive: #9aaf86;
-  --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
-  --font-serif: "Fraunces", Georgia, serif;
+  --font-sans: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  --font-blackletter: "UnifrakturMaguntia", Georgia, serif;
+  --font-greek: "Gentium Plus", Georgia, serif;
 }
 
 @layer base {
@@ -62,6 +64,12 @@
 @layer utilities {
   .font-serif {
     font-family: var(--font-serif);
+  }
+  .font-blackletter {
+    font-family: var(--font-blackletter);
+  }
+  .font-greek {
+    font-family: var(--font-greek);
   }
 }
 
