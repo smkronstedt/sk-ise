@@ -16,7 +16,10 @@ import { Route as CardsRouteImport } from './routes/cards'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as ItemsRouteImport } from './routes/items'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TestsRouteImport } from './routes/tests'
 import { Route as TestIdRouteImport } from './routes/test.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -56,9 +59,24 @@ const ItemsRoute = ItemsRouteImport.update({
   path: '/items',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TestsRoute = TestsRouteImport.update({
@@ -85,7 +103,10 @@ export interface FileRoutesByFullPath {
   '/create': typeof CreateRoute
   '/guidelines': typeof GuidelinesRoute
   '/items': typeof ItemsRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
   '/test/$id': typeof TestIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -98,7 +119,10 @@ export interface FileRoutesByTo {
   '/create': typeof CreateRoute
   '/guidelines': typeof GuidelinesRoute
   '/items': typeof ItemsRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
   '/test/$id': typeof TestIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -112,7 +136,10 @@ export interface FileRoutesById {
   '/create': typeof CreateRoute
   '/guidelines': typeof GuidelinesRoute
   '/items': typeof ItemsRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
   '/test/$id': typeof TestIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -127,7 +154,10 @@ export interface FileRouteTypes {
     | '/create'
     | '/guidelines'
     | '/items'
+    | '/leaderboard'
     | '/login'
+    | '/profile'
+    | '/settings'
     | '/tests'
     | '/test/$id'
     | '/api/auth/$'
@@ -140,7 +170,10 @@ export interface FileRouteTypes {
     | '/create'
     | '/guidelines'
     | '/items'
+    | '/leaderboard'
     | '/login'
+    | '/profile'
+    | '/settings'
     | '/tests'
     | '/test/$id'
     | '/api/auth/$'
@@ -153,7 +186,10 @@ export interface FileRouteTypes {
     | '/create'
     | '/guidelines'
     | '/items'
+    | '/leaderboard'
     | '/login'
+    | '/profile'
+    | '/settings'
     | '/tests'
     | '/test/$id'
     | '/api/auth/$'
@@ -167,7 +203,10 @@ export interface RootRouteChildren {
   CreateRoute: typeof CreateRoute
   GuidelinesRoute: typeof GuidelinesRoute
   ItemsRoute: typeof ItemsRoute
+  LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
   TestsRoute: typeof TestsRoute
   TestIdRoute: typeof TestIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -224,11 +263,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItemsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tests': {
@@ -263,7 +323,10 @@ const rootRouteChildren: RootRouteChildren = {
   CreateRoute: CreateRoute,
   GuidelinesRoute: GuidelinesRoute,
   ItemsRoute: ItemsRoute,
+  LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
+  ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
   TestsRoute: TestsRoute,
   TestIdRoute: TestIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
