@@ -11,7 +11,7 @@ import { useDesk } from "@/lib/desk/provider";
 import { careerRank } from "@/lib/desk/ranks";
 import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
-import { DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
+import { CATCH_EVERY, DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
 import { MODE_EVENT, loadMode, type DeskMode } from "@/lib/desk/modes";
 import { RpgMode } from "@/components/desk/game-modes";
 
@@ -440,6 +440,7 @@ function FieldNotes({
   const [caught, setCaught] = useState<number[]>([]);
   const [rare, setRare] = useState<number[]>([]);
   const [fresh, setFresh] = useState<Creature[]>([]);
+  const [toward, setToward] = useState(0);
   const have = new Set(caught);
   const rareSet = new Set(rare);
 
@@ -448,6 +449,7 @@ function FieldNotes({
     setCaught(result.caught);
     setRare(result.rare);
     setFresh(result.fresh);
+    setToward(result.toward);
   }, [desk.state.tests]);
 
   return (
@@ -456,7 +458,7 @@ function FieldNotes({
         <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
         <h1 className="font-serif text-3xl tracking-tight">Field Notes</h1>
         <p className="mt-1 text-sm">
-          Eight gyms. Each right answer catches one creature. A perfect battle makes the last one rare. {have.size}/151 caught.
+          One creature for every {CATCH_EVERY} different questions you get right. That is the whole bank divided by 151. {toward}/{CATCH_EVERY} toward the next one. {have.size}/151 caught.
         </p>
         <div className="mt-4 flex gap-2">
           <button

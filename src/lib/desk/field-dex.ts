@@ -1,8 +1,10 @@
 import { getQuestion } from "./catalog";
-import { topics } from "./topics";
+import { BANK_TOTAL, loadBankProgress } from "./original-bank";
+import { questions } from "./questions";
 import type { TestBlock } from "./types";
 
 const GYMS = ["oncology", "stones", "andrology", "obstruction", "urogyn", "peds", "core", "basic"] as const;
+type Gym = (typeof GYMS)[number];
 
 const FIRST = [
   "Ash", "Brine", "Cairn", "Delta", "Ember", "Fern", "Gale", "Harbor", "Iris", "Juniper", "Kite", "Lumen", "Marrow",
@@ -10,7 +12,7 @@ const FIRST = [
 ];
 const SECOND = ["cap", "fin", "hop", "ling", "mite", "cub", "kit", "pup", "nix", "eel", "jay"];
 
-export type Creature = { number: number; name: string; gym: (typeof GYMS)[number] };
+export type Creature = { number: number; name: string; gym: Gym };
 
 export const DEX: Creature[] = FIRST.flatMap((a) => SECOND.map((b) => `${a}${b}`))
   .slice(0, 151)
@@ -20,58 +22,85 @@ export const DEX: Creature[] = FIRST.flatMap((a) => SECOND.map((b) => `${a}${b}`
     gym: GYMS[index % GYMS.length],
   }));
 
-const KEY = "callroom-field-caught-v1";
+/** Unique correct questions required for one creature. Full bank ÷ 151, and never fewer than 8. */
+export const CATCH_EVERY = Math.max(8, Math.floor((BANK_TOTAL + questions.length) / DEX.length));
 
-type Save = { awarded: Record<string, number>; caught: number[]; rare: number[] };
+const KEY = "callroom-field-caught-v2";
+
+type Save = { caught: number[]; rare: number[] };
 
 function load(): Save {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { awarded: {}, caught: [], rare: [] };
+    if (!raw) return { caught: [], rare: [] };
     const parsed = JSON.parse(raw) as Save;
-    return { awarded: parsed.awarded ?? {}, caught: parsed.caught ?? [], rare: parsed.rare ?? [] };
+    return { caught: parsed.caught ?? [], rare: parsed.rare ?? [] };
   } catch {
-    return { awarded: {}, caught: [], rare: [] };
+    return { caught: [], rare: [] };
   }
 }
 
-export function syncCatches(tests: TestBlock[]): { caught: number[]; rare: number[]; fresh: Creature[] } {
-  const save = load();
-  const fresh: Creature[] = [];
-  const have = new Set(save.caught);
-  const rare = new Set(save.rare);
+function gymFor(topicId: string): Gym {
+  const text = topicId.toLowerCase();
+  if (text.includes("stone")) return "stones";
+  if (/infer|androl|sex|testost|erect|peyron|ejacul/.test(text)) return "andrology";
+  if (/bph|obstruct|luts|stricture/.test(text)) return "obstruction";
+  if (/incont|urogyn|pelvic|oab|bladder-pain|menopause/.test(text)) return "urogyn";
+  if (text.includes("ped") || text.includes("reflux") || text.includes("crypt")) return "peds";
+  if (/oncol|nmibc|mibc|prostate|renal|testic|penile|utuc|hematuria/.test(text)) return "oncology";
+  if (/trauma|core|diversion/.test(text)) return "core";
+  return "basic";
+}
+
+function correctIds(tests: TestBlock[]) {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  const add = (id: string) => {
+    if (seen.has(id)) return;
+    seen.add(id);
+    ids.push(id);
+  };
   for (const test of tests) {
-    if (test.status !== "done" || !test.name.startsWith("Battle:")) continue;
-    if (save.awarded[test.id] != null) continue;
-    let right = 0;
     for (const id of test.questionIds) {
       const answer = test.answers[id];
-      if (answer?.submitted && answer.choice != null && answer.choice === getQuestion(id)?.answer) right += 1;
+      if (answer?.submitted && answer.choice != null && answer.choice === getQuestion(id)?.answer) add(id);
     }
-    const topic = topics.find((row) => row.short === test.name.replace("Battle: ", ""));
-    const gym = topic?.blueprintId;
-    const pool = [
-      ...DEX.filter((creature) => creature.gym === gym && !have.has(creature.number)),
-      ...DEX.filter((creature) => !have.has(creature.number)),
-    ];
-    const perfect = right > 0 && right === test.questionIds.length;
-    const picks = pool.slice(0, right);
-    for (const creature of picks) {
-      have.add(creature.number);
-      save.caught.push(creature.number);
-      fresh.push(creature);
-    }
-    if (perfect && picks.length) {
-      const last = picks[picks.length - 1];
-      if (!rare.has(last.number)) {
-        rare.add(last.number);
-        save.rare.push(last.number);
-      }
-    }
-    save.awarded[test.id] = picks.length;
   }
-  localStorage.setItem(KEY, JSON.stringify(save));
-  return { caught: save.caught, rare: save.rare, fresh };
+  for (const [id, row] of Object.entries(loadBankProgress().answers)) {
+    if (row.correct) add(id);
+  }
+  return ids;
+}
+
+export function syncCatches(tests: TestBlock[]): {
+  caught: number[];
+  rare: number[];
+  fresh: Creature[];
+  correct: number;
+  toward: number;
+} {
+  const previous = load();
+  const had = new Set(previous.caught);
+  const ids = correctIds(tests);
+  const earned = Math.min(DEX.length, Math.floor(ids.length / CATCH_EVERY));
+  const caught: number[] = [];
+  const rare: number[] = [];
+  const have = new Set<number>();
+  for (let n = 0; n < earned; n += 1) {
+    const chunk = ids.slice(n * CATCH_EVERY, (n + 1) * CATCH_EVERY);
+    const gym = gymFor(getQuestion(chunk[chunk.length - 1] ?? "")?.topicId ?? "");
+    const sameTopic = new Set(chunk.map((id) => getQuestion(id)?.topicId)).size === 1;
+    const pick =
+      DEX.find((creature) => creature.gym === gym && !have.has(creature.number)) ??
+      DEX.find((creature) => !have.has(creature.number));
+    if (!pick) break;
+    have.add(pick.number);
+    caught.push(pick.number);
+    if (sameTopic) rare.push(pick.number);
+  }
+  const fresh = caught.filter((number) => !had.has(number)).map((number) => DEX[number - 1]);
+  localStorage.setItem(KEY, JSON.stringify({ caught, rare }));
+  return { caught, rare, fresh, correct: ids.length, toward: ids.length % CATCH_EVERY };
 }
 
 const PORTRAITS = [
