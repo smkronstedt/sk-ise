@@ -19,17 +19,6 @@ type Actor = {
 
 type World = { tiles: Tile[][]; actors: Actor[]; start: { x: number; y: number } };
 
-const WASH: Record<string, string> = {
-  Rock: "rgba(110, 78, 40, 0.28)",
-  Water: "rgba(30, 90, 170, 0.22)",
-  Electric: "rgba(190, 150, 20, 0.2)",
-  Grass: "rgba(20, 110, 30, 0.08)",
-  Poison: "rgba(90, 30, 120, 0.28)",
-  Psychic: "rgba(170, 70, 130, 0.22)",
-  Fire: "rgba(170, 40, 20, 0.24)",
-  Ground: "rgba(130, 90, 40, 0.32)",
-};
-
 function buildTown(city: City | null): World {
   const tiles = Array.from({ length: ROWS }, () => Array<Tile>(COLS).fill(0));
   for (let y = 0; y < ROWS; y++) {
@@ -224,8 +213,8 @@ export function MonsterQuest({
       const tx = Math.floor((event.clientX - rect.left) / scale / TILE);
       const ty = Math.floor((event.clientY - rect.top) / scale / TILE);
       const hit =
-        map.actors.find((actor) => actor.kind !== "trainer" && Math.abs(actor.x - tx) <= 1 && Math.abs(actor.y - ty) <= 1) ??
-        map.actors.find((actor) => actor.x === tx && actor.y === ty);
+        map.actors.find((actor) => actor.kind === "trainer" && actor.x === tx && actor.y === ty) ??
+        (ty <= 3 && tx >= 3 && tx <= 10 ? map.actors.find((actor) => actor.kind !== "trainer") : undefined);
       if (hit) approach(hit);
     };
 
@@ -250,22 +239,11 @@ export function MonsterQuest({
     const observer = new ResizeObserver(resize);
     observer.observe(wrap);
 
-    void Promise.all([
-      loadImage("/field/quest/grass.jpg"),
-      loadImage("/field/quest/path.jpg"),
-      loadImage("/field/quest/tree.jpg"),
-      loadImage("/field/quest/tent.jpg"),
-      loadImage(hall),
-      loadImage("/field/quest/hero.jpg"),
-      loadImage("/field/quest/trainer.jpg"),
-    ]).then(([grass, path, tree, tent, hallImg, hero, trainer]) => {
+    const sceneSrc = city ? `/field/towns/${city.id}.jpg` : "/field/towns/league.jpg";
+    void Promise.all([loadImage(sceneSrc), loadImage("/field/towns/walker.jpg"), loadImage("/field/quest/trainer.jpg")]).then(([scene, walker, trainer]) => {
       if (!alive) return;
-      art.grass = grass;
-      art.path = path;
-      art.tree = tree ? cutGreen(tree) : null;
-      art.tent = tent ? cutGreen(tent) : null;
-      art.hall = hallImg;
-      art.hero = hero ? cutGreen(hero) : null;
+      art.scene = scene;
+      art.hero = walker ? cutGreen(walker) : null;
       art.trainer = trainer ? cutGreen(trainer) : null;
     });
 
@@ -290,50 +268,26 @@ export function MonsterQuest({
       const scale = canvas.width / (COLS * TILE);
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       ctx.clearRect(0, 0, COLS * TILE, ROWS * TILE);
-      for (let y = 0; y < ROWS; y++) {
-        for (let x = 0; x < COLS; x++) {
-          const tile = map.tiles[y][x];
-          const dx = x * TILE;
-          const dy = y * TILE;
-          if (tile === 3) {
-            ctx.fillStyle = "#3c8dbe";
-            ctx.fillRect(dx, dy, TILE, TILE);
-          } else if (tile === 1 && art.path) ctx.drawImage(art.path, dx, dy, TILE, TILE);
-          else if (art.grass) ctx.drawImage(art.grass, dx, dy, TILE, TILE);
-          else {
-            ctx.fillStyle = tile === 1 ? "#c4a574" : "#7dae45";
-            ctx.fillRect(dx, dy, TILE, TILE);
-          }
-          const prop = tile === 2 ? art.tree : tile === 4 ? art.tent : null;
-          if (prop) ctx.drawImage(prop, dx - 6, dy - TILE * 0.35, TILE + 12, TILE * 1.35);
-        }
-      }
-      ctx.fillStyle = WASH[city?.element ?? "Psychic"] ?? "rgba(0,0,0,0)";
-      ctx.fillRect(0, 0, COLS * TILE, ROWS * TILE);
-      const gym = map.actors.find((actor) => actor.kind !== "trainer");
-      if (gym && art.hall) {
-        ctx.drawImage(art.hall, (gym.x - 0.2) * TILE, (gym.y - 0.8) * TILE, TILE * 2.4, TILE * 1.8);
-        ctx.fillStyle = "#111";
-        ctx.fillRect(gym.x * TILE + 8, gym.y * TILE + TILE - 6, 72, 18);
-        ctx.fillStyle = "#fff4a8";
-        ctx.font = "bold 12px sans-serif";
-        ctx.fillText(gym.kind === "league" ? "HALL" : "GYM", gym.x * TILE + 28, gym.y * TILE + TILE + 7);
+      if (art.scene) {
+        const dw = COLS * TILE;
+        const dh = ROWS * TILE;
+        const image = art.scene as HTMLImageElement;
+        const ir = image.width / image.height;
+        const dr = dw / dh;
+        const sw = ir > dr ? image.height * dr : image.width;
+        const sh = ir > dr ? image.height : image.width / dr;
+        ctx.drawImage(image, (image.width - sw) / 2, (image.height - sh) / 2, sw, sh, 0, 0, dw, dh);
+      } else {
+        ctx.fillStyle = "#8fb56a";
+        ctx.fillRect(0, 0, COLS * TILE, ROWS * TILE);
       }
       for (const actor of map.actors) {
         if (actor.kind !== "trainer") continue;
         const dx = actor.x * TILE;
         const dy = actor.y * TILE;
-        if (art.trainer) ctx.drawImage(art.trainer, dx - 4, dy - TILE * 0.25, TILE + 8, TILE * 1.15);
-        else {
-          ctx.fillStyle = "#f3d48a";
-          ctx.fillRect(dx + 14, dy + 8, 24, 32);
-        }
+        if (art.trainer) ctx.drawImage(art.trainer, dx + 6, dy - 6, TILE * 0.7, TILE * 0.9);
       }
-      if (art.hero) ctx.drawImage(art.hero, drawX * TILE - 4, drawY * TILE - TILE * 0.25, TILE + 8, TILE * 1.15);
-      else {
-        ctx.fillStyle = "#f7f4ee";
-        ctx.fillRect(drawX * TILE + 14, drawY * TILE + 8, 24, 32);
-      }
+      if (art.hero) ctx.drawImage(art.hero, drawX * TILE - 6, drawY * TILE - TILE * 0.35, TILE * 1.15, TILE * 1.35);
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
