@@ -1,0 +1,148 @@
+export type HoustonStop = {
+  id: string;
+  name: string;
+  kind: "rest" | "gate" | "hospital";
+  photo: string;
+  note: string;
+  topics: string[];
+  count: number;
+};
+
+/** West to east: Rice loop, Hermann Park, then the medical center. */
+export const houstonStops: HoustonStop[] = [
+  {
+    id: "rice",
+    name: "Rice University",
+    kind: "rest",
+    photo: "/houston/rice.jpg",
+    note: "The outer loop. Lovett Hall is behind you. Run the dirt trail and recover before the medical center.",
+    topics: [],
+    count: 0,
+  },
+  {
+    id: "hermann",
+    name: "Hermann Park",
+    kind: "rest",
+    photo: "/houston/hermann-pool.webp",
+    note: "The reflection pool, then the zoo on the way south. Run here. This is the recharge before the hospitals.",
+    topics: [],
+    count: 0,
+  },
+  {
+    id: "helix",
+    name: "TMC3 Helix Park",
+    kind: "gate",
+    photo: "/houston/helix.png",
+    note: "You are in the Texas Medical Center. The trail of hospitals starts on the other side of the park.",
+    topics: [],
+    count: 0,
+  },
+  {
+    id: "bcm",
+    name: "Baylor College of Medicine",
+    kind: "hospital",
+    photo: "/houston/map.png",
+    note: "Anatomy and the core. Learn it here before the wards.",
+    topics: ["basic"],
+    count: 6,
+  },
+  {
+    id: "ut",
+    name: "UTHealth McGovern",
+    kind: "hospital",
+    photo: "/houston/map.png",
+    note: "Across the street from Baylor. Imaging and the core workup.",
+    topics: ["imaging"],
+    count: 5,
+  },
+  {
+    id: "tch",
+    name: "Texas Children's Hospital",
+    kind: "hospital",
+    photo: "/houston/map.png",
+    note: "All of pediatrics, including the childhood testis masses.",
+    topics: ["crypt", "vur", "peds-mass"],
+    count: 6,
+  },
+  {
+    id: "taub",
+    name: "Ben Taub Hospital",
+    kind: "hospital",
+    photo: "/houston/ben-taub.png",
+    note: "Trauma and testicular cancer. The bay doors face Holcombe.",
+    topics: ["trauma", "testis"],
+    count: 6,
+  },
+  {
+    id: "hermann-hospital",
+    name: "Memorial Hermann",
+    kind: "hospital",
+    photo: "/houston/map.png",
+    note: "Reconstruction. Stricture and the redo work.",
+    topics: ["stricture"],
+    count: 5,
+  },
+  {
+    id: "methodist",
+    name: "Houston Methodist",
+    kind: "hospital",
+    photo: "/houston/map.png",
+    note: "The adult hallway between the trauma center and the Luke's campus. Obstruction and BPH.",
+    topics: ["bph", "upper-obs"],
+    count: 5,
+  },
+  {
+    id: "lukes",
+    name: "Baylor St. Luke's",
+    kind: "hospital",
+    photo: "/houston/st-lukes.png",
+    note: "Benign kidney disease, laparoscopy, and robotic surgery.",
+    topics: ["stones-med", "stones-surg"],
+    count: 6,
+  },
+  {
+    id: "oquinn",
+    name: "O'Quinn Medical Tower",
+    kind: "hospital",
+    photo: "/houston/oquinn.png",
+    note: "Surgical andrology. Infertility operations and Peyronie.",
+    topics: ["infertility", "peyronie"],
+    count: 5,
+  },
+  {
+    id: "mcnair",
+    name: "Baylor Medicine at McNair",
+    kind: "hospital",
+    photo: "/houston/mcnair.jpg",
+    note: "Clinical andrology and sexual medicine. The glass building on Cambridge.",
+    topics: ["testosterone", "ed", "ejac"],
+    count: 6,
+  },
+  {
+    id: "kelsey",
+    name: "Kelsey-Seybold",
+    kind: "hospital",
+    photo: "/houston/map.png",
+    note: "Female urology. FPMRS, overactive bladder, and pelvic pain.",
+    topics: ["fsd", "nlutd", "oab", "ic"],
+    count: 6,
+  },
+  {
+    id: "va",
+    name: "Michael E. DeBakey VA",
+    kind: "hospital",
+    photo: "/houston/va.png",
+    note: "Prostate cancer, localized and advanced. The solar roofs mark the building.",
+    topics: ["pca", "pca-adv"],
+    count: 8,
+  },
+  {
+    id: "anderson",
+    name: "MD Anderson",
+    kind: "hospital",
+    photo: "/houston/map.png",
+    note: "The hard oncology and the urinary diversions. End of the trail.",
+    topics: ["nmibc", "mibc", "utuc", "mh", "renal", "adrenal", "penile", "diversion"],
+    count: 10,
+  },
+];

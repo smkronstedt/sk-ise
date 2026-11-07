@@ -6,7 +6,7 @@ import { MonsterQuest } from "@/components/desk/monster-quest";
 import { PrizeLadder } from "@/components/desk/prizes";
 import { Operations } from "@/components/desk/operations";
 import { Shell } from "@/components/desk/shell";
-import { TrailGame } from "@/components/desk/trail-game";
+import { HoustonTrail } from "@/components/desk/houston-trail";
 import { bucketStats, scoreTest } from "@/lib/desk/adapt";
 import { ise2025 } from "@/lib/desk/ise";
 import { listLeaders, type Leader } from "@/lib/leaderboard-api";
@@ -228,9 +228,7 @@ function Home() {
         />
       )}
       {mode === "base" && <HomeBase pct={pct} mastered={mastered} dueCards={0} startAdaptive={startAdaptive} />}
-      {mode === "trail" && (
-        <TrailGame cleared={battleDone} done={attempted} right={correct} onEnter={startTopicBattle} />
-      )}
+      {mode === "trail" && <HoustonTrail />}
       {mode === "encounter" && <Encounter pct={pct} top={top} startAdaptive={startAdaptive} />}
       {mode === "notes" && (
         <FieldNotes

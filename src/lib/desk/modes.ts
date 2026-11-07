@@ -3,7 +3,7 @@ export type DeskMode = "classic" | "base" | "trail" | "encounter" | "rpg" | "not
 export const deskModes: { id: DeskMode; label: string }[] = [
   { id: "classic", label: "Classic" },
   { id: "base", label: "Home Base" },
-  { id: "trail", label: "Uro Trail" },
+  { id: "trail", label: "Houston Trail" },
   { id: "encounter", label: "Encounter" },
   { id: "notes", label: "Monster Quest" },
   { id: "rpg", label: "RPG" },
