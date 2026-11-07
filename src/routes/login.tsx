@@ -4,13 +4,18 @@ import { authClient, authEnabled, setBearerToken } from "@/lib/auth/client";
 import { Shell } from "@/components/desk/shell";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    mode: search.mode === "signup" ? ("signup" as const) : ("signin" as const),
+  }),
   component: LoginPage,
 });
 
 function LoginPage() {
+  const search = Route.useSearch();
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup">(search.mode);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -19,7 +24,11 @@ function LoginPage() {
     setPending(true);
     try {
       if (mode === "signup") {
-        const { data, error: err } = await authClient.signUp.email({ email, password, name: email.split("@")[0] });
+        const { data, error: err } = await authClient.signUp.email({
+          email,
+          password,
+          name: name.trim() || email.split("@")[0],
+        });
         if (err) throw new Error(err.message ?? "Sign up failed");
         const token = data && "token" in data ? data.token : null;
         if (typeof token === "string") setBearerToken(token);
@@ -43,7 +52,11 @@ function LoginPage() {
     <Shell>
       <div className="mx-auto max-w-sm">
         <h1 className="font-serif text-2xl">{mode === "signin" ? "Sign in" : "Create account"}</h1>
-        <p className="mt-1 text-sm text-muted">Sign in so this browser and your other devices share one account. If the sync fails, this device still keeps its own copy.</p>
+        <p className="mt-1 text-sm text-muted">
+          {mode === "signin"
+            ? "Sign in so this browser and your other devices share one account."
+            : "Use your name. The desk stays closed until the account is approved. Your questions and prizes stay on that profile."}
+        </p>
         {!authEnabled ? (
           <p className="mt-4 text-sm text-muted">Sign-in is not enabled on this deployment yet.</p>
         ) : (
@@ -54,6 +67,17 @@ function LoginPage() {
               void submit();
             }}
           >
+            {mode === "signup" ? (
+              <label className="text-sm font-semibold">
+                Name
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="mt-1 w-full rounded border border-line px-3 py-2"
+                />
+              </label>
+            ) : null}
             <label className="text-sm font-semibold">
               Email
               <input

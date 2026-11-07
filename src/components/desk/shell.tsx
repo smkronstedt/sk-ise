@@ -1,7 +1,9 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { authClient, authEnabled, signOut } from "@/lib/auth/client";
+import { myAccess, type AccessStatus } from "@/lib/access-api";
 import { loadCards } from "@/lib/cards";
+import { Cover, Waiting } from "@/components/desk/cover";
 import { DAILY_GOAL, prizeStatus } from "@/lib/desk/activity";
 import { bucketStats } from "@/lib/desk/adapt";
 import { countBankCorrect } from "@/lib/desk/original-bank";
@@ -30,6 +32,8 @@ export function Shell({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<DeskMode>("classic");
   const [menuOpen, setMenuOpen] = useState(false);
   const [tally, setTally] = useState({ correct: 0, money: 0, today: 0 });
+  const [access, setAccess] = useState<AccessStatus | "unknown">("unknown");
+  const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
     const read = () => {
@@ -55,10 +59,32 @@ export function Shell({ children }: { children: ReactNode }) {
   }, [path]);
 
   useEffect(() => {
-    if (!authEnabled || !session.data?.user) return;
+    if (!authEnabled || !session.data?.user) {
+      setAccess("unknown");
+      setAdmin(false);
+      return;
+    }
     let stop = false;
+    void myAccess()
+      .then((result) => {
+        if (stop) return;
+        setAccess(result.status);
+        setAdmin(result.admin);
+      })
+      .catch(() => {
+        if (!stop) setAccess("approved");
+      });
+    return () => {
+      stop = true;
+    };
+  }, [session.data?.user?.id]);
+
+  useEffect(() => {
+    if (!authEnabled || !session.data?.user || access !== "approved") return;
+    let stop = false;
+    const userId = session.data.user.id;
     const run = () => {
-      void syncDeviceProgress().then((result) => {
+      void syncDeviceProgress(userId).then((result) => {
         if (!stop) setSyncNote(result === "synced" ? "Synced to your account" : "Saved on this device");
       });
     };
@@ -68,7 +94,13 @@ export function Shell({ children }: { children: ReactNode }) {
       stop = true;
       window.clearInterval(timer);
     };
-  }, [session.data?.user?.id]);
+  }, [session.data?.user?.id, access]);
+
+  const signedIn = Boolean(session.data?.user);
+  const open = !authEnabled || (signedIn && access === "approved");
+  const waiting = authEnabled && signedIn && access === "pending";
+  const denied = authEnabled && signedIn && access === "denied";
+  const loadingGate = authEnabled && signedIn && access === "unknown";
 
   return (
     <div className="min-h-screen">
@@ -81,7 +113,7 @@ export function Shell({ children }: { children: ReactNode }) {
             Team Guys only X
             <img src="/ops/bone-frog.png" alt="" className="h-8 w-14 object-contain" />
           </p>
-          <nav className="ml-auto flex flex-wrap gap-1">
+          <nav className={`ml-auto flex flex-wrap gap-1 ${open ? "" : "hidden"}`}>
             {links.map((link) => {
               const on = link.to === "/tests" ? path === "/tests" || path.startsWith("/test/") : path === link.to;
               return (
@@ -96,11 +128,13 @@ export function Shell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
+          {open ? (
           <div className="text-right text-xs leading-tight">
             <p className="font-semibold">{tally.correct} correct</p>
             <p className="font-semibold">${tally.money}</p>
             <p className="text-white/70">Today {tally.today}/{DAILY_GOAL}</p>
           </div>
+          ) : null}
           {authEnabled ? (
             session.data?.user ? (
               <div className="flex items-center gap-2">
@@ -126,6 +160,11 @@ export function Shell({ children }: { children: ReactNode }) {
                     <Link to="/settings" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold hover:bg-chip">
                       Settings
                     </Link>
+                    {admin ? (
+                      <Link to="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold hover:bg-chip">
+                        Admin
+                      </Link>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => void signOut("/login")}
@@ -139,7 +178,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 <img src="/molon-labe.png" alt="" className="h-10 w-auto rounded" />
               </div>
             ) : (
-              <Link to="/login" className="rounded px-3 py-2 text-sm font-semibold text-white/85 hover:bg-white/10">
+              <Link to="/login" search={{ mode: "signin" }} className="rounded px-3 py-2 text-sm font-semibold text-white/85 hover:bg-white/10">
                 Sign in
               </Link>
             )
@@ -147,6 +186,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <p className="text-xs text-white/70">Saved on this device</p>
           )}
         </div>
+        {open ? (
         <div className="border-t border-white/10">
           <div className="mx-auto flex max-w-6xl items-center gap-2 overflow-x-auto px-4 py-2">
             {deskModes.map((item) => (
@@ -189,8 +229,21 @@ export function Shell({ children }: { children: ReactNode }) {
             </svg>
           </div>
         </div>
+        ) : null}
       </header>
-      <main className="mx-auto w-full max-w-6xl px-4 py-5">{children}</main>
+      <main className="mx-auto w-full max-w-6xl px-4 py-5">
+        {path === "/login" && !signedIn
+          ? children
+          : loadingGate
+            ? <p>Opening…</p>
+            : waiting
+              ? <Waiting name={session.data?.user?.name ?? ""} />
+              : denied
+                ? <p>This account is closed.</p>
+                : open
+                  ? children
+                  : <Cover />}
+      </main>
     </div>
   );
 }

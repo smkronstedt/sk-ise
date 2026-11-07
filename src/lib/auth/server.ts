@@ -35,7 +35,8 @@ import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
-import { ensureDbReady, getPglite } from "../db";
+import { ensureDbReady, getPglite, getSql } from "../db";
+import { isAdminEmail } from "../admin-email";
 import { emailAndPasswordEnabled } from "./email-password";
 import { GATE_PROVIDER_ID, gateIdentitySessions } from "./gate-session.server";
 import { GROK_PROVIDERS } from "./providers";
@@ -218,6 +219,22 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 60,
     updateAge: 60 * 60 * 24,
     cookieCache: { enabled: true, maxAge: 60 * 60 * 24 },
+  },
+
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          const sql = await getSql();
+          const status = isAdminEmail(String(user.email ?? "")) ? "approved" : "pending";
+          await sql`
+            insert into account_access (user_id, status)
+            values (${user.id}, ${status})
+            on conflict (user_id) do nothing
+          `;
+        },
+      },
+    },
   },
 
   // Local email/password — toggled only via `./email-password` (not a plugin).
