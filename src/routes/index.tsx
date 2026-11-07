@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { DayPlan } from "@/components/desk/day-plan";
 import { HeatMap } from "@/components/desk/heat-map";
 import { PrizeLadder } from "@/components/desk/prizes";
 import { Operations } from "@/components/desk/operations";
@@ -192,6 +193,22 @@ function Home() {
             : "Every item in the bank is correct."}
         </p>
       </div>
+
+      <DayPlan
+        stats={stats}
+        onStart={(blueprintId) => {
+          const topicIds = topics.filter((topic) => topic.blueprintId === blueprintId).map((topic) => topic.id);
+          const id = desk.createTest({
+            mode: "tutor",
+            adaptive: true,
+            topicIds: topicIds.length ? topicIds : topics.map((topic) => topic.id),
+            pool: "all",
+            count: 10,
+            name: "Today's plan",
+          });
+          if (id) void navigate({ to: "/test/$id", params: { id } });
+        }}
+      />
 
       <PrizeLadder />
 

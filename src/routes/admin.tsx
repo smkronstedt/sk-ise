@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Shell } from "@/components/desk/shell";
-import { listPeople, setAccess, type Person } from "@/lib/access-api";
+import { listPeople, setAccess, setBlackOpsAccess, setBlackOpsPassword, type Person } from "@/lib/access-api";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -11,6 +11,8 @@ function AdminPage() {
   const [people, setPeople] = useState<Person[] | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  const [password, setPassword] = useState("");
+  const [saved, setSaved] = useState("");
 
   const load = () => {
     setError("");
@@ -45,6 +47,31 @@ function AdminPage() {
         </button>
       </div>
       {error ? <p className="mb-3 text-sm text-wrong">{error}</p> : null}
+      <section className="mb-4 rounded border border-line bg-paper p-4">
+        <h2 className="font-semibold">Black Ops password</h2>
+        <p className="mt-1 text-sm text-muted">Changing it closes the undisclosed routes until each allowed account enters the new password.</p>
+        <form
+          className="mt-3 flex flex-wrap gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSaved("");
+            void setBlackOpsPassword({ data: { password } })
+              .then(() => setSaved("Password updated."))
+              .catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not set the password."));
+          }}
+        >
+          <input
+            type="text"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="min-h-11 flex-1 rounded border border-line px-3"
+          />
+          <button type="submit" className="min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white">
+            Set password
+          </button>
+        </form>
+        {saved ? <p className="mt-2 text-sm">{saved}</p> : null}
+      </section>
       <section className="rounded border border-line bg-paper">
         <h2 className="border-b border-line px-4 py-3 font-semibold">Waiting ({waiting.length})</h2>
         {people === null ? <p className="px-4 py-3 text-sm text-muted">Loading…</p> : null}
@@ -80,14 +107,30 @@ function AdminPage() {
                 </p>
               </div>
               {person.status !== "pending" ? (
-                <button
-                  type="button"
-                  disabled={busy === person.id}
-                  onClick={() => decide(person.id, person.status === "approved" ? "denied" : "approved")}
-                  className="min-h-11 rounded border border-line px-3 text-sm font-semibold disabled:opacity-50"
-                >
-                  {person.status === "approved" ? "Close access" : "Approve"}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={busy === person.id}
+                    onClick={() => decide(person.id, person.status === "approved" ? "denied" : "approved")}
+                    className="min-h-11 rounded border border-line px-3 text-sm font-semibold disabled:opacity-50"
+                  >
+                    {person.status === "approved" ? "Close access" : "Approve"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy === person.id}
+                    onClick={() => {
+                      setBusy(person.id);
+                      void setBlackOpsAccess({ data: { userId: person.id, allowed: !person.blackops } })
+                        .then(() => load())
+                        .catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not update Black Ops."))
+                        .finally(() => setBusy(""));
+                    }}
+                    className="min-h-11 rounded border border-line px-3 text-sm font-semibold disabled:opacity-50"
+                  >
+                    {person.blackops ? "Close Black Ops" : "Allow Black Ops"}
+                  </button>
+                </div>
               ) : null}
             </li>
           ))}

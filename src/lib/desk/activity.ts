@@ -58,11 +58,11 @@ export function studyStreak(days: Record<string, DayLog>) {
   return count;
 }
 
-export const DAILY_GOAL = 5;
+export const DAILY_GOAL = 10;
 export const DAILY_PRIZE = 10;
-export const WEEK_GOAL = 5;
+export const WEEK_GOAL = 7;
 export const WEEK_PRIZE = 50;
-export const MONTH_GOAL = 20;
+export const MONTH_GOAL = 30;
 export const MONTH_PRIZE = 200;
 export const YEAR_GOAL = 200;
 export const YEAR_PRIZE = 1000;
@@ -101,10 +101,35 @@ export function prizeStatus(days = typeof window === "undefined" ? {} : loadActi
   const monthly = [...months.values()].filter((count) => count >= MONTH_GOAL).length;
   const yearly = [...years.values()].filter((count) => count >= YEAR_GOAL).length;
   const todayKey = dayKey();
+  const paid = (date: Date) => (days[dayKey(date)]?.questions ?? 0) >= DAILY_GOAL;
+  const cursor = new Date();
+  if (!paid(cursor)) cursor.setDate(cursor.getDate() - 1);
+  let paidStreak = 0;
+  while (paid(cursor)) {
+    paidStreak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  const monthKeys = [...months.entries()].filter(([, count]) => count >= MONTH_GOAL).map(([key]) => key).sort();
+  let monthStreak = 0;
+  const probe = new Date();
+  for (;;) {
+    const key = `${probe.getFullYear()}-${String(probe.getMonth() + 1).padStart(2, "0")}`;
+    if (!monthKeys.includes(key)) {
+      if (key === todayKey.slice(0, 7)) {
+        probe.setMonth(probe.getMonth() - 1);
+        continue;
+      }
+      break;
+    }
+    monthStreak += 1;
+    probe.setMonth(probe.getMonth() - 1);
+  }
   return {
     answered,
     today: days[todayKey]?.questions ?? 0,
     daily,
+    paidStreak,
+    monthStreak,
     weekDays: weeks.get(weekStart(new Date())) ?? 0,
     monthDays: months.get(todayKey.slice(0, 7)) ?? 0,
     yearDays: years.get(todayKey.slice(0, 4)) ?? 0,

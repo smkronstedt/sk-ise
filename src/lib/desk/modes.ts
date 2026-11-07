@@ -7,7 +7,7 @@ export const deskModes: { id: DeskMode; label: string }[] = [
   { id: "encounter", label: "Encounter" },
   { id: "notes", label: "Field Notes" },
   { id: "rpg", label: "RPG" },
-  { id: "ops", label: "Ops" },
+  { id: "ops", label: "Black Ops" },
 ];
 
 export const MODE_KEY = "callroom-desk-mode";

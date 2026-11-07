@@ -14,10 +14,12 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BankRouteImport } from './routes/bank'
 import { Route as BookletsRouteImport } from './routes/booklets'
 import { Route as CardsRouteImport } from './routes/cards'
+import { Route as ConnectionsRouteImport } from './routes/connections'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as ItemsRouteImport } from './routes/items'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as LecturesRouteImport } from './routes/lectures'
 import { Route as LogRouteImport } from './routes/log'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -51,6 +53,11 @@ const CardsRoute = CardsRouteImport.update({
   path: '/cards',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConnectionsRoute = ConnectionsRouteImport.update({
+  id: '/connections',
+  path: '/connections',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
   path: '/create',
@@ -69,6 +76,11 @@ const ItemsRoute = ItemsRouteImport.update({
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LecturesRoute = LecturesRouteImport.update({
+  id: '/lectures',
+  path: '/lectures',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LogRoute = LogRouteImport.update({
@@ -113,10 +125,12 @@ export interface FileRoutesByFullPath {
   '/bank': typeof BankRoute
   '/booklets': typeof BookletsRoute
   '/cards': typeof CardsRoute
+  '/connections': typeof ConnectionsRoute
   '/create': typeof CreateRoute
   '/guidelines': typeof GuidelinesRoute
   '/items': typeof ItemsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/lectures': typeof LecturesRoute
   '/log': typeof LogRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
@@ -131,10 +145,12 @@ export interface FileRoutesByTo {
   '/bank': typeof BankRoute
   '/booklets': typeof BookletsRoute
   '/cards': typeof CardsRoute
+  '/connections': typeof ConnectionsRoute
   '/create': typeof CreateRoute
   '/guidelines': typeof GuidelinesRoute
   '/items': typeof ItemsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/lectures': typeof LecturesRoute
   '/log': typeof LogRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
@@ -150,10 +166,12 @@ export interface FileRoutesById {
   '/bank': typeof BankRoute
   '/booklets': typeof BookletsRoute
   '/cards': typeof CardsRoute
+  '/connections': typeof ConnectionsRoute
   '/create': typeof CreateRoute
   '/guidelines': typeof GuidelinesRoute
   '/items': typeof ItemsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/lectures': typeof LecturesRoute
   '/log': typeof LogRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
@@ -170,10 +188,12 @@ export interface FileRouteTypes {
     | '/bank'
     | '/booklets'
     | '/cards'
+    | '/connections'
     | '/create'
     | '/guidelines'
     | '/items'
     | '/leaderboard'
+    | '/lectures'
     | '/log'
     | '/login'
     | '/profile'
@@ -188,10 +208,12 @@ export interface FileRouteTypes {
     | '/bank'
     | '/booklets'
     | '/cards'
+    | '/connections'
     | '/create'
     | '/guidelines'
     | '/items'
     | '/leaderboard'
+    | '/lectures'
     | '/log'
     | '/login'
     | '/profile'
@@ -206,10 +228,12 @@ export interface FileRouteTypes {
     | '/bank'
     | '/booklets'
     | '/cards'
+    | '/connections'
     | '/create'
     | '/guidelines'
     | '/items'
     | '/leaderboard'
+    | '/lectures'
     | '/log'
     | '/login'
     | '/profile'
@@ -225,10 +249,12 @@ export interface RootRouteChildren {
   BankRoute: typeof BankRoute
   BookletsRoute: typeof BookletsRoute
   CardsRoute: typeof CardsRoute
+  ConnectionsRoute: typeof ConnectionsRoute
   CreateRoute: typeof CreateRoute
   GuidelinesRoute: typeof GuidelinesRoute
   ItemsRoute: typeof ItemsRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  LecturesRoute: typeof LecturesRoute
   LogRoute: typeof LogRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
@@ -275,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CardsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/connections': {
+      id: '/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof ConnectionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/create': {
       id: '/create'
       path: '/create'
@@ -301,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lectures': {
+      id: '/lectures'
+      path: '/lectures'
+      fullPath: '/lectures'
+      preLoaderRoute: typeof LecturesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/log': {
@@ -361,10 +401,12 @@ const rootRouteChildren: RootRouteChildren = {
   BankRoute: BankRoute,
   BookletsRoute: BookletsRoute,
   CardsRoute: CardsRoute,
+  ConnectionsRoute: ConnectionsRoute,
   CreateRoute: CreateRoute,
   GuidelinesRoute: GuidelinesRoute,
   ItemsRoute: ItemsRoute,
   LeaderboardRoute: LeaderboardRoute,
+  LecturesRoute: LecturesRoute,
   LogRoute: LogRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,

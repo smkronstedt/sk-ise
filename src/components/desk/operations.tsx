@@ -14,6 +14,8 @@ import {
   type TheaterId,
   type Town,
 } from "@/lib/desk/ops";
+import { blackOpsStatus, unlockBlackOps } from "@/lib/access-api";
+import { addWorkout, loadTraining, trainingSummary, type Workout, type WorkoutKind } from "@/lib/desk/training";
 import { useDesk } from "@/lib/desk/provider";
 
 const MEDIC = 40;
@@ -37,7 +39,11 @@ export function Operations({ correct, total }: { correct: number; total: number 
   const navigate = useNavigate();
   const [save, setSave] = useState<OpsSave | null>(null);
   const [theater, setTheater] = useState<TheaterId>("afghanistan");
-  const [panel, setPanel] = useState<"map" | "camp" | "shop">("map");
+  const [panel, setPanel] = useState<"map" | "camp" | "shop" | "training">("map");
+  const [gate, setGate] = useState<{ admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean } | null>(null);
+  const [pastCover, setPastCover] = useState(false);
+  const [password, setPassword] = useState("");
+  const [gateError, setGateError] = useState("");
   const [busy, setBusy] = useState("");
   const [selectedId, setSelectedId] = useState("bagram");
   const [flash, setFlash] = useState("");
@@ -45,6 +51,12 @@ export function Operations({ correct, total }: { correct: number; total: number 
   useEffect(() => {
     setSave(loadOps());
     void loadCatalog();
+    if (sessionStorage.getItem("blackops-cover") === "1") setPastCover(true);
+    void blackOpsStatus()
+      .then((status) => {
+        setGate(status);
+      })
+      .catch(() => setGate({ admin: false, allowed: false, unlocked: false, hasPassword: false }));
   }, []);
 
   if (!save) return null;
@@ -183,6 +195,31 @@ export function Operations({ correct, total }: { correct: number; total: number 
     commit({ ...save, equipped: { ...save.equipped, [item.slot]: id } });
   };
 
+  if (!pastCover) {
+    return (
+      <BlackOpsCover
+        gate={gate}
+        password={password}
+        error={gateError}
+        onPassword={setPassword}
+        onEnter={() => {
+          sessionStorage.setItem("blackops-cover", "1");
+          setPastCover(true);
+        }}
+        onUnlock={() => {
+          setGateError("");
+          void unlockBlackOps({ data: { password } })
+            .then(() => {
+              setGate((current) => (current ? { ...current, unlocked: true, allowed: true } : current));
+              setPastCover(true);
+              sessionStorage.setItem("blackops-cover", "1");
+            })
+            .catch((err: unknown) => setGateError(err instanceof Error ? err.message : "Wrong password."));
+        }}
+      />
+    );
+  }
+
   return (
     <section className="overflow-hidden rounded border border-ops bg-ops text-white">
       <div className="border-b border-white/10 px-4 py-4">
@@ -194,7 +231,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
           <div className="flex min-w-0 items-center gap-3">
             <img src="/ops/operator.jpg" alt="Your operator" className="h-16 w-16 shrink-0 rounded-full border border-ops-amber object-cover object-top" />
             <div>
-              <h1 className="font-serif text-3xl tracking-tight">Two routes. One camp.</h1>
+              <h1 className="font-serif text-3xl tracking-tight">Black Ops</h1>
               <p className="mt-2 max-w-xl text-sm text-ops-olive">
                 Each town is a block from the bank. Start the town you are on. Clear it at 60% on at least 10 items, and the next town opens. Cash is still $1 per correct answer.
               </p>
@@ -218,6 +255,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
               ["map", "Map"],
               ["camp", "Camp"],
               ["shop", "Shop"],
+              ["training", "Training"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -255,7 +293,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
           <div>
             <div className="mb-3 flex flex-wrap gap-2">
               {theaters.map((row) => {
-                const locked = !theaterOpen(row.id);
+                const locked = !theaterOpen(row.id) || (Boolean(row.classified) && !gate?.unlocked);
                 return (
                   <button
                     key={row.id}
@@ -415,6 +453,133 @@ export function Operations({ correct, total }: { correct: number; total: number 
           })}
         </ul>
       )}
+
+      {panel === "training" && <TrainingPanel />}
     </section>
+  );
+}
+
+function BlackOpsCover({
+  gate,
+  password,
+  error,
+  onPassword,
+  onEnter,
+  onUnlock,
+}: {
+  gate: { admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean } | null;
+  password: string;
+  error: string;
+  onPassword: (value: string) => void;
+  onEnter: () => void;
+  onUnlock: () => void;
+}) {
+  return (
+    <section className="overflow-hidden rounded border border-ops bg-ops text-white">
+      <img src="/ops/afghanistan.jpg" alt="" className="h-56 w-full object-cover" />
+      <div className="p-5">
+        <p className="text-xs font-semibold tracking-wide text-ops-amber uppercase">Black Ops</p>
+        <h1 className="mt-1 font-serif text-4xl tracking-tight">The routes with no name.</h1>
+        <p className="mt-2 max-w-2xl text-sm text-ops-olive">
+          Afghanistan and Iraq stay on the map. The undisclosed routes stay shut until this account is allowed in and the password is right. The password is set from the account manager.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={onEnter} className="min-h-11 rounded bg-ops-amber px-4 text-sm font-semibold text-ops">
+            Enter the routes
+          </button>
+        </div>
+        {!gate ? <p className="mt-3 text-sm">Checking access…</p> : null}
+        {gate && !gate.admin && !gate.allowed ? <p className="mt-3 text-sm">Black Ops access is closed for this account.</p> : null}
+        {gate && (gate.admin || gate.allowed) ? (
+          <form
+            className="mt-4 flex max-w-md flex-col gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              onUnlock();
+            }}
+          >
+            <label className="text-sm font-semibold">
+              Undisclosed password
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => onPassword(event.target.value)}
+                className="mt-1 w-full rounded border border-white/20 bg-black/30 px-3 py-2 text-white"
+              />
+            </label>
+            {error ? <p className="text-sm text-ops-amber">{error}</p> : null}
+            {!gate.hasPassword ? <p className="text-sm text-ops-olive">No password is set yet. Set one in Admin.</p> : null}
+            <button type="submit" className="min-h-11 rounded border border-white/30 px-4 text-sm font-semibold">
+              Open undisclosed
+            </button>
+          </form>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function TrainingPanel() {
+  const [rows, setRows] = useState<Workout[]>([]);
+  const [kind, setKind] = useState<WorkoutKind>("run");
+  const [miles, setMiles] = useState("3");
+  const [source, setSource] = useState<Workout["source"]>("strava");
+  const [note, setNote] = useState("");
+  useEffect(() => {
+    setRows(loadTraining());
+  }, []);
+  const summary = trainingSummary(rows);
+  const save = () => {
+    const day = new Date();
+    const key = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+    addWorkout({ day: key, source, kind, miles: Number(miles) || 0, note });
+    setRows(loadTraining());
+    setNote("");
+  };
+  return (
+    <div className="p-4 text-ink">
+      <div className="grid gap-2 sm:grid-cols-4">
+        {[
+          ["Endurance", `${summary.miles.toFixed(1)} mi`],
+          ["Strength", `${summary.lifts} lifts`],
+          ["Mental", `${summary.mental}`],
+          ["Streak", `${summary.streak}d · $${summary.purse}`],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded border border-white/15 px-3 py-2 text-white">
+            <p className="text-xs uppercase text-ops-olive">{label}</p>
+            <p className="font-semibold">{value}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2 text-sm text-ops-olive">$1 a mile. A 7-day workout streak pays $25. Thirty days pays $100. A plunge, or a run of 5 miles or more, counts as mental toughness.</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <select value={kind} onChange={(event) => setKind(event.target.value as WorkoutKind)} className="min-h-11 rounded border border-white/20 bg-black/30 px-2 text-white">
+          <option value="run">Run</option>
+          <option value="lift">Lift</option>
+          <option value="plunge">Cold plunge</option>
+          <option value="other">Other</option>
+        </select>
+        <select value={source} onChange={(event) => setSource(event.target.value as Workout["source"])} className="min-h-11 rounded border border-white/20 bg-black/30 px-2 text-white">
+          <option value="strava">Strava</option>
+          <option value="garmin">Garmin</option>
+          <option value="trainingpeaks">TrainingPeaks</option>
+          <option value="apple">Apple Health</option>
+          <option value="log">Log</option>
+        </select>
+        <input value={miles} onChange={(event) => setMiles(event.target.value)} className="min-h-11 w-24 rounded border border-white/20 bg-black/30 px-2 text-white" />
+        <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Note" className="min-h-11 flex-1 rounded border border-white/20 bg-black/30 px-2 text-white" />
+        <button type="button" onClick={save} className="min-h-11 rounded bg-ops-amber px-3 text-sm font-semibold text-ops">
+          Add
+        </button>
+      </div>
+      <ul className="mt-3 divide-y divide-white/10">
+        {rows.slice(0, 12).map((row) => (
+          <li key={row.id} className="flex justify-between py-2 text-sm text-white">
+            <span>{row.day} · {row.kind} · {row.source}</span>
+            <span>{row.miles} mi</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

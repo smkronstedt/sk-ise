@@ -5,6 +5,7 @@ import { myAccess, type AccessStatus } from "@/lib/access-api";
 import { loadCards } from "@/lib/cards";
 import { Cover, Waiting } from "@/components/desk/cover";
 import { DAILY_GOAL, prizeStatus } from "@/lib/desk/activity";
+import { trainingSummary } from "@/lib/desk/training";
 import { bucketStats } from "@/lib/desk/adapt";
 import { countBankCorrect } from "@/lib/desk/original-bank";
 import type { DeskState } from "@/lib/desk/types";
@@ -19,6 +20,7 @@ const links = [
   { to: "/log", label: "Log" },
   { to: "/items", label: "Items" },
   { to: "/guidelines", label: "Guidelines" },
+  { to: "/lectures", label: "Lectures" },
   { to: "/booklets", label: "Booklets" },
   { to: "/cards", label: "Cards" },
 ] as const;
@@ -47,7 +49,7 @@ export function Shell({ children }: { children: ReactNode }) {
         trainer = 0;
       }
       const correct = countBankCorrect() + trainer;
-      setTally({ correct, money: correct + prizes.purse, today: prizes.today });
+      setTally({ correct, money: correct + prizes.purse + trainingSummary().purse, today: prizes.today });
     };
     read();
     window.addEventListener("ise-activity", read);
@@ -157,6 +159,9 @@ export function Shell({ children }: { children: ReactNode }) {
                     <Link to="/profile" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold hover:bg-chip">
                       Profile
                     </Link>
+                    <Link to="/connections" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold hover:bg-chip">
+                      Connections
+                    </Link>
                     <Link to="/settings" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold hover:bg-chip">
                       Settings
                     </Link>
@@ -175,7 +180,19 @@ export function Shell({ children }: { children: ReactNode }) {
                   </div>
                 ) : null}
                 </div>
-                <img src="/molon-labe.png" alt="" className="h-10 w-auto rounded" />
+                <svg viewBox="0 0 210 78" aria-label="Molon labe" className="h-10 w-auto shrink-0 rounded bg-[#f3efe6]">
+                  <g fill="none" stroke="#1a1814" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 30 L22 10 L30 26 L38 10 L46 30" />
+                    <circle cx="64" cy="20" r="10" />
+                    <path d="M82 30 L94 10 L106 30" />
+                    <path d="M116 16 C116 8 142 8 142 16 L142 24 M112 30 L120 22 M138 22 L146 30" />
+                    <path d="M156 10 L156 30 L176 10 L176 30" />
+                    <path d="M48 66 L60 46 L72 66" />
+                    <path d="M82 66 L94 46 L106 66 M86 58 H102" />
+                    <path d="M116 46 L116 66 M116 46 H128 L134 52 L128 56 H116 M116 56 H130 L136 61 L128 66 H116" />
+                    <path d="M148 46 H166 M148 46 V66 M148 56 H162 M148 66 H166" />
+                  </g>
+                </svg>
               </div>
             ) : (
               <Link to="/login" search={{ mode: "signin" }} className="rounded px-3 py-2 text-sm font-semibold text-white/85 hover:bg-white/10">
@@ -213,20 +230,7 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               Leaderboard
             </Link>
-            <svg viewBox="0 0 210 78" aria-label="Molon labe" className="h-11 w-auto shrink-0">
-              <rect width="210" height="78" rx="3" fill="#f3efe6" />
-              <g fill="none" stroke="#1a1814" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 30 L22 10 L30 26 L38 10 L46 30" />
-                <circle cx="64" cy="20" r="10" />
-                <path d="M82 30 L94 10 L106 30" />
-                <path d="M116 16 C116 8 142 8 142 16 L142 24 M112 30 L120 22 M138 22 L146 30" />
-                <path d="M156 10 L156 30 L176 10 L176 30" />
-                <path d="M48 66 L60 46 L72 66" />
-                <path d="M82 66 L94 46 L106 66 M86 58 H102" />
-                <path d="M116 46 L116 66 M116 46 H128 L134 52 L128 56 H116 M116 56 H130 L136 61 L128 66 H116" />
-                <path d="M148 46 H166 M148 46 V66 M148 56 H162 M148 66 H166" />
-              </g>
-            </svg>
+            <img src="/molon-labe.png" alt="Molon labe" className="h-11 w-auto shrink-0 rounded" />
           </div>
         </div>
         ) : null}

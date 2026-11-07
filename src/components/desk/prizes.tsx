@@ -22,8 +22,8 @@ export function PrizeLadder() {
   if (!status) return null;
   const rows = [
     ["Today", `${status.today}/${DAILY_GOAL} questions`, status.today >= DAILY_GOAL ? `$${DAILY_PRIZE} in` : `$${DAILY_PRIZE} at ${DAILY_GOAL}`],
-    ["This week", `${status.weekDays}/${WEEK_GOAL} paid days`, status.weekDays >= WEEK_GOAL ? `$${WEEK_PRIZE} in` : `$${WEEK_PRIZE} at ${WEEK_GOAL} days`],
-    ["This month", `${status.monthDays}/${MONTH_GOAL} paid days`, status.monthDays >= MONTH_GOAL ? `$${MONTH_PRIZE} in` : `$${MONTH_PRIZE} at ${MONTH_GOAL} days`],
+    ["This week", `${status.paidStreak} in a row · ${status.weekDays}/${WEEK_GOAL} this week`, status.weekDays >= WEEK_GOAL ? `$${WEEK_PRIZE} in` : `$${WEEK_PRIZE} at ${WEEK_GOAL} days`],
+    ["This month", `${status.monthDays}/${MONTH_GOAL} paid days · ${status.monthStreak} month streak`, status.monthDays >= MONTH_GOAL ? `$${MONTH_PRIZE} in` : `$${MONTH_PRIZE} at ${MONTH_GOAL} days`],
     ["This year", `${status.yearDays}/${YEAR_GOAL} paid days`, status.yearDays >= YEAR_GOAL ? `$${YEAR_PRIZE} in` : `$${YEAR_PRIZE} at ${YEAR_GOAL} days`],
   ];
   return (
