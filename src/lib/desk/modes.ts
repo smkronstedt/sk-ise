@@ -5,7 +5,7 @@ export const deskModes: { id: DeskMode; label: string }[] = [
   { id: "base", label: "Home Base" },
   { id: "trail", label: "Uro Trail" },
   { id: "encounter", label: "Encounter" },
-  { id: "notes", label: "Field Notes" },
+  { id: "notes", label: "Monster Quest" },
   { id: "rpg", label: "RPG" },
   { id: "ops", label: "Black Ops" },
 ];
