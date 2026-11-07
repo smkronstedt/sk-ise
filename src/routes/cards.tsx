@@ -7,6 +7,8 @@ import {
   schedule,
   generateTopicCards,
   addGenerated,
+  updateCard,
+  removeCard,
   type Card,
 } from '@/lib/cards';
 import { logActivity } from '@/lib/desk/activity';
@@ -17,10 +19,13 @@ export const Route = createFileRoute('/cards')({
 
 function CardsPage() {
   const [cards, setCards] = useState<Card[]>([]);
-  const [mode, setMode] = useState<'my' | 'boards'>('my');
+  const [mode, setMode] = useState<'my' | 'boards' | 'edit'>('my');
   const [current, setCurrent] = useState<Card | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [topic, setTopic] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
     setCards(loadCards());
@@ -54,6 +59,19 @@ function CardsPage() {
     startReview(list);
   };
 
+  const mine = cards.filter((card) => card.source !== 'full');
+  const shown = mine.filter((card) => {
+    const hay = `${card.front} ${card.back} ${card.topic}`.toLowerCase();
+    return hay.includes(query.trim().toLowerCase());
+  });
+  const picked = mine.find((card) => card.id === selected) ?? null;
+
+  const changeCard = (id: string, patch: Partial<Pick<Card, 'front' | 'back'>>) => {
+    const updated = updateCard(id, patch);
+    setCards(updated);
+    setCurrent((card) => (card && card.id === id ? { ...card, ...patch } : card));
+  };
+
   return (
     <Shell>
       <div className="mb-4 flex gap-2">
@@ -68,6 +86,12 @@ function CardsPage() {
           className={`px-3 py-2 rounded ${mode === 'boards' ? 'bg-navy text-white' : 'border'}`}
         >
           Boards Prep
+        </button>
+        <button
+          onClick={() => setMode('edit')}
+          className={`px-3 py-2 rounded ${mode === 'edit' ? 'bg-navy text-white' : 'border'}`}
+        >
+          Edit
         </button>
       </div>
 
@@ -108,16 +132,91 @@ function CardsPage() {
         </div>
       )}
 
-      {current && (
+      {mode === 'edit' && (
+        <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
+          <div>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search your cards"
+              className="min-h-11 w-full rounded border border-line px-3"
+            />
+            <p className="mt-2 text-sm text-muted">{mine.length} cards you added</p>
+            <ul className="mt-2 max-h-[32rem] overflow-auto rounded border border-line bg-paper">
+              {shown.map((card) => (
+                <li key={card.id}>
+                  <button
+                    type="button"
+                    onClick={() => setSelected(card.id)}
+                    className={`block w-full px-3 py-2 text-left text-sm ${selected === card.id ? 'bg-navy text-white' : ''}`}
+                  >
+                    <span className="font-semibold">{card.topic}</span>
+                    <span className="mt-0.5 block truncate">{card.front}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {picked ? (
+            <div className="rounded border border-line bg-paper p-4">
+              <p className="text-xs font-semibold tracking-wide text-muted uppercase">{picked.topic}</p>
+              <label className="mt-3 block text-sm font-semibold">Front</label>
+              <textarea
+                value={picked.front}
+                onChange={(event) => changeCard(picked.id, { front: event.target.value })}
+                className="mt-1 min-h-28 w-full rounded border border-line px-3 py-2"
+              />
+              <label className="mt-3 block text-sm font-semibold">Back</label>
+              <textarea
+                value={picked.back}
+                onChange={(event) => changeCard(picked.id, { back: event.target.value })}
+                className="mt-1 min-h-48 w-full rounded border border-line px-3 py-2"
+              />
+              <p className="mt-2 text-sm text-muted">Saved as you type.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setCards(removeCard(picked.id));
+                  setSelected(null);
+                }}
+                className="mt-3 min-h-11 rounded border border-line px-3 text-sm font-semibold"
+              >
+                Delete card
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted">Pick a card to edit it.</p>
+          )}
+        </div>
+      )}
+
+      {mode !== 'edit' && current && (
         <div className="mt-6 rounded border border-line bg-paper p-6 max-w-2xl">
-          <p className="text-lg font-semibold">{current.front}</p>
-          {!revealed ? (
+          {editing ? null : <p className="text-lg font-semibold">{current.front}</p>}
+          {!revealed && !editing ? (
             <button
               className="mt-6 px-5 py-2.5 bg-navy text-white rounded font-semibold"
               onClick={() => setRevealed(true)}
             >
               Show answer
             </button>
+          ) : editing ? (
+            <div className="mt-4">
+              <textarea
+                value={current.front}
+                onChange={(event) => changeCard(current.id, { front: event.target.value })}
+                className="min-h-24 w-full rounded border border-line px-3 py-2"
+              />
+              <textarea
+                value={current.back}
+                onChange={(event) => changeCard(current.id, { back: event.target.value })}
+                className="mt-2 min-h-36 w-full rounded border border-line px-3 py-2"
+              />
+              <p className="mt-2 text-sm text-muted">Saved as you type.</p>
+              <button type="button" className="mt-2 text-sm font-semibold" onClick={() => setEditing(false)}>
+                Done editing
+              </button>
+            </div>
           ) : (
             <>
               <div className="mt-4 border-t border-line pt-4 text-sm leading-relaxed whitespace-pre-wrap">
@@ -137,6 +236,9 @@ function CardsPage() {
                   Easy 3d
                 </button>
               </div>
+              <button type="button" className="mt-3 text-sm font-semibold" onClick={() => setEditing(true)}>
+                Edit this card
+              </button>
             </>
           )}
         </div>

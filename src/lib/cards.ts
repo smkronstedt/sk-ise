@@ -99,3 +99,16 @@ export function addGenerated(cards: Card[]) {
   const current = loadCards();
   saveCards([...current, ...cards]);
 }
+
+export function updateCard(id: string, patch: Partial<Pick<Card, "front" | "back" | "topic">>) {
+  const cards = loadCards().map((card) => (card.id === id ? { ...card, ...patch } : card));
+  saveCards(cards);
+  return cards;
+}
+
+export function removeCard(id: string) {
+  const cards = loadCards().filter((card) => card.id !== id);
+  saveCards(cards);
+  return cards;
+}
+

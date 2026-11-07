@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Shell } from "@/components/desk/shell";
 import { listPeople, setAccess, setBlackOpsAccess, setBlackOpsPassword, type Person } from "@/lib/access-api";
+import { setBookletsPassword } from "@/lib/booklets-api";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -12,6 +13,7 @@ function AdminPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [password, setPassword] = useState("");
+  const [bookletPassword, setBookletPassword] = useState("");
   const [saved, setSaved] = useState("");
 
   const load = () => {
@@ -71,6 +73,30 @@ function AdminPage() {
           </button>
         </form>
         {saved ? <p className="mt-2 text-sm">{saved}</p> : null}
+      </section>
+      <section className="mb-4 rounded border border-line bg-paper p-4">
+        <h2 className="font-semibold">Booklets password</h2>
+        <p className="mt-1 text-sm text-muted">The Booklets page stays blank until this password is entered. Changing it does not unlock anyone who already has the page open.</p>
+        <form
+          className="mt-3 flex flex-wrap gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSaved("");
+            void setBookletsPassword({ data: { password: bookletPassword } })
+              .then(() => setSaved("Booklet password updated."))
+              .catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not set the password."));
+          }}
+        >
+          <input
+            type="text"
+            value={bookletPassword}
+            onChange={(event) => setBookletPassword(event.target.value)}
+            className="min-h-11 flex-1 rounded border border-line px-3"
+          />
+          <button type="submit" className="min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white">
+            Set password
+          </button>
+        </form>
       </section>
       <section className="rounded border border-line bg-paper">
         <h2 className="border-b border-line px-4 py-3 font-semibold">Waiting ({waiting.length})</h2>
