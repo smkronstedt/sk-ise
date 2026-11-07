@@ -44,6 +44,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
   const [pastCover, setPastCover] = useState(false);
   const [password, setPassword] = useState("");
   const [gateError, setGateError] = useState("");
+  const [topSecret, setTopSecret] = useState(false);
   const [busy, setBusy] = useState("");
   const [selectedId, setSelectedId] = useState("bagram");
   const [flash, setFlash] = useState("");
@@ -197,26 +198,10 @@ export function Operations({ correct, total }: { correct: number; total: number 
 
   if (!pastCover) {
     return (
-      <BlackOpsCover
-        gate={gate}
-        password={password}
-        error={gateError}
-        onPassword={setPassword}
-        onEnter={() => {
+      <BlackOpsCover gate={gate} onEnter={() => {
           sessionStorage.setItem("blackops-cover", "1");
           setPastCover(true);
-        }}
-        onUnlock={() => {
-          setGateError("");
-          void unlockBlackOps({ data: { password } })
-            .then(() => {
-              setGate((current) => (current ? { ...current, unlocked: true, allowed: true } : current));
-              setPastCover(true);
-              sessionStorage.setItem("blackops-cover", "1");
-            })
-            .catch((err: unknown) => setGateError(err instanceof Error ? err.message : "Wrong password."));
-        }}
-      />
+        }} />
     );
   }
 
@@ -293,24 +278,47 @@ export function Operations({ correct, total }: { correct: number; total: number 
           <div>
             <div className="mb-3 flex flex-wrap gap-2">
               {theaters.map((row) => {
-                const locked = !theaterOpen(row.id) || (Boolean(row.classified) && !gate?.unlocked);
+                const progressionLocked = !theaterOpen(row.id);
+                const needsClearance = Boolean(row.classified) && !gate?.unlocked;
                 return (
                   <button
                     key={row.id}
                     type="button"
-                    disabled={locked}
+                    disabled={progressionLocked}
                     onClick={() => {
+                      if (needsClearance) {
+                        setTopSecret(true);
+                        return;
+                      }
+                      setTopSecret(false);
                       setTheater(row.id);
                       setSelectedId(row.towns[0]?.id ?? "");
                     }}
-                    className={`min-h-11 rounded px-4 text-sm font-semibold ${theater === row.id ? "bg-ops-amber text-ops" : "border border-white/20 text-white"} disabled:opacity-40`}
+                    className={`min-h-11 rounded px-4 text-sm font-semibold ${theater === row.id && !topSecret ? "bg-ops-amber text-ops" : "border border-white/20 text-white"} disabled:opacity-40`}
                   >
                     {row.classified ? "Undisclosed" : row.name}
-                    {locked ? " · locked" : ""}
+                    {progressionLocked ? " · locked" : ""}
                   </button>
                 );
               })}
             </div>
+            {topSecret ? (
+              <TopSecret
+                gate={gate}
+                password={password}
+                error={gateError}
+                onPassword={setPassword}
+                onUnlock={() => {
+                  setGateError("");
+                  void unlockBlackOps({ data: { password } })
+                    .then(() => {
+                      setGate((current) => (current ? { ...current, unlocked: true, allowed: true } : current));
+                      setTopSecret(false);
+                    })
+                    .catch((err: unknown) => setGateError(err instanceof Error ? err.message : "Wrong password."));
+                }}
+              />
+            ) : (
             <div className="relative">
               <img src={maps[theater]} alt="" className="w-full rounded border border-line object-cover" />
               {route.towns.map((town) => {
@@ -335,6 +343,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
                 );
               })}
             </div>
+            )}
             {flash ? <p className="mt-2 text-sm font-semibold">{flash}</p> : null}
           </div>
           <ol className="flex flex-col gap-2">
@@ -461,61 +470,72 @@ export function Operations({ correct, total }: { correct: number; total: number 
 
 function BlackOpsCover({
   gate,
+  onEnter,
+}: {
+  gate: { admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean } | null;
+  onEnter: () => void;
+}) {
+  return (
+    <section className="overflow-hidden rounded border border-red-900 bg-black text-red-600">
+      <div className="px-5 py-10 text-center">
+        <p className="text-xs font-semibold tracking-[0.35em] text-red-600 uppercase">Black Ops</p>
+        <h1 className="mt-4 font-serif text-4xl tracking-wide text-red-600 uppercase sm:text-5xl">Secret Clearance Required</h1>
+        <p className="mx-auto mt-4 max-w-xl text-sm text-red-600/80">
+          Named routes are open. Anything past them is held at a higher level.
+        </p>
+        <button type="button" onClick={onEnter} className="mt-6 min-h-11 rounded border border-red-600 px-4 text-sm font-semibold tracking-wide text-red-600 uppercase">
+          Enter the routes
+        </button>
+        {!gate ? <p className="mt-4 text-sm">Checking access…</p> : null}
+      </div>
+    </section>
+  );
+}
+
+function TopSecret({
+  gate,
   password,
   error,
   onPassword,
-  onEnter,
   onUnlock,
 }: {
   gate: { admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean } | null;
   password: string;
   error: string;
   onPassword: (value: string) => void;
-  onEnter: () => void;
   onUnlock: () => void;
 }) {
   return (
-    <section className="overflow-hidden rounded border border-ops bg-ops text-white">
-      <img src="/ops/afghanistan.jpg" alt="" className="h-56 w-full object-cover" />
-      <div className="p-5">
-        <p className="text-xs font-semibold tracking-wide text-ops-amber uppercase">Black Ops</p>
-        <h1 className="mt-1 font-serif text-4xl tracking-tight">The routes with no name.</h1>
-        <p className="mt-2 max-w-2xl text-sm text-ops-olive">
-          Afghanistan and Iraq stay on the map. The undisclosed routes stay shut until this account is allowed in and the password is right. The password is set from the account manager.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={onEnter} className="min-h-11 rounded bg-ops-amber px-4 text-sm font-semibold text-ops">
-            Enter the routes
+    <div className="rounded border border-red-900 bg-black px-5 py-10 text-center text-red-600">
+      <h2 className="font-serif text-3xl tracking-wide uppercase sm:text-4xl">Top Secret Clearance Required</h2>
+      <p className="mx-auto mt-4 max-w-lg text-sm">
+        These routes are not on the board. Reach out to J2, the intel shop, for authorization.
+      </p>
+      {gate && (gate.admin || gate.allowed) ? (
+        <form
+          className="mx-auto mt-5 flex max-w-md flex-col gap-2 text-left"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onUnlock();
+          }}
+        >
+          <label className="text-sm font-semibold">
+            Authorization
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => onPassword(event.target.value)}
+              className="mt-1 w-full rounded border border-red-900 bg-black px-3 py-2 text-red-600"
+            />
+          </label>
+          {error ? <p className="text-sm">{error}</p> : null}
+          {!gate.hasPassword ? <p className="text-sm">J2 has not issued a password yet.</p> : null}
+          <button type="submit" className="min-h-11 rounded border border-red-600 px-4 text-sm font-semibold tracking-wide uppercase">
+            Submit
           </button>
-        </div>
-        {!gate ? <p className="mt-3 text-sm">Checking access…</p> : null}
-        {gate && !gate.admin && !gate.allowed ? <p className="mt-3 text-sm">Black Ops access is closed for this account.</p> : null}
-        {gate && (gate.admin || gate.allowed) ? (
-          <form
-            className="mt-4 flex max-w-md flex-col gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onUnlock();
-            }}
-          >
-            <label className="text-sm font-semibold">
-              Undisclosed password
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => onPassword(event.target.value)}
-                className="mt-1 w-full rounded border border-white/20 bg-black/30 px-3 py-2 text-white"
-              />
-            </label>
-            {error ? <p className="text-sm text-ops-amber">{error}</p> : null}
-            {!gate.hasPassword ? <p className="text-sm text-ops-olive">No password is set yet. Set one in Admin.</p> : null}
-            <button type="submit" className="min-h-11 rounded border border-white/30 px-4 text-sm font-semibold">
-              Open undisclosed
-            </button>
-          </form>
-        ) : null}
-      </div>
-    </section>
+        </form>
+      ) : null}
+    </div>
   );
 }
 
