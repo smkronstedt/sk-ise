@@ -9,6 +9,7 @@ export type Workout = {
   kind: WorkoutKind;
   miles: number;
   note: string;
+  externalId?: string;
 };
 
 function read(): Workout[] {
@@ -31,9 +32,21 @@ export function loadTraining() {
 }
 
 export function addWorkout(entry: Omit<Workout, "id">) {
+  importWorkouts([entry]);
+}
+
+export function importWorkouts(entries: Array<Omit<Workout, "id">>) {
   const rows = read();
-  rows.push({ ...entry, id: `${Date.now()}` });
-  write(rows);
+  const have = new Set(rows.map((row) => row.externalId).filter(Boolean));
+  let added = 0;
+  for (const entry of entries) {
+    if (entry.externalId && have.has(entry.externalId)) continue;
+    rows.push({ ...entry, id: entry.externalId ?? `${Date.now()}-${added}` });
+    if (entry.externalId) have.add(entry.externalId);
+    added += 1;
+  }
+  if (added) write(rows);
+  return added;
 }
 
 function daySet(rows: Workout[]) {
