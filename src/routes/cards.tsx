@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Shell } from '@/components/desk/shell';
 import { AnatomyFigure } from '@/components/desk/anatomy-figure';
 import {
@@ -29,6 +29,13 @@ function CardsPage() {
   const [editing, setEditing] = useState(false);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
+  const reviewRef = useRef({
+    mode,
+    editing,
+    current,
+    revealed,
+    rate: (_rating: 'again' | 'hard' | 'good' | 'easy') => {},
+  });
 
   useEffect(() => {
     let cancel = false;
@@ -58,6 +65,29 @@ function CardsPage() {
     setCurrent(remaining[0] ?? null);
     setRevealed(false);
   };
+
+  reviewRef.current = { mode, editing, current, revealed, rate };
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.code !== 'Space' || event.repeat) return;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return;
+      const now = reviewRef.current;
+      if (now.mode === 'edit' || now.editing || !now.current) return;
+      event.preventDefault();
+      if (!now.revealed) {
+        reviewRef.current = { ...now, revealed: true };
+        setRevealed(true);
+        return;
+      }
+      reviewRef.current = { ...now, revealed: false };
+      now.rate('good');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const startBoards = async () => {
     const generated = await generateTopicCards(topic);
@@ -209,12 +239,15 @@ function CardsPage() {
             </>
           )}
           {!revealed && !editing ? (
-            <button
-              className="mt-6 px-5 py-2.5 bg-navy text-white rounded font-semibold"
-              onClick={() => setRevealed(true)}
-            >
-              Show answer
-            </button>
+            <>
+              <button
+                className="mt-6 px-5 py-2.5 bg-navy text-white rounded font-semibold"
+                onClick={() => setRevealed(true)}
+              >
+                Show answer
+              </button>
+              <p className="mt-3 text-sm text-muted">Space shows the answer. Space again is Good, 1 day.</p>
+            </>
           ) : editing ? (
             <div className="mt-4">
               <textarea
@@ -252,6 +285,7 @@ function CardsPage() {
                   Easy 3d
                 </button>
               </div>
+              <p className="mt-3 text-sm text-muted">Space shows the answer. Space again is Good, 1 day.</p>
               <button type="button" className="mt-3 text-sm font-semibold" onClick={() => setEditing(true)}>
                 Edit this card
               </button>
