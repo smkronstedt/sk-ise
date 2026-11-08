@@ -4,6 +4,7 @@ import { drawQuestionIds } from "@/lib/desk/adapt";
 import { houstonStops, type HoustonStop } from "@/lib/desk/houston";
 import { useDesk } from "@/lib/desk/provider";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
+import { cutSprite } from "@/lib/desk/sprite";
 import type { TestBlock } from "@/lib/desk/types";
 
 const AT = "houston-trail-at";
@@ -35,27 +36,6 @@ function loadImage(src: string) {
   });
 }
 
-function cutGreen(img: HTMLImageElement) {
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return canvas;
-  ctx.drawImage(img, 0, 0);
-  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const r0 = frame.data[0];
-  const g0 = frame.data[1];
-  const b0 = frame.data[2];
-  for (let i = 0; i < frame.data.length; i += 4) {
-    const dr = frame.data[i] - r0;
-    const dg = frame.data[i + 1] - g0;
-    const db = frame.data[i + 2] - b0;
-    if (dr * dr + dg * dg + db * db < 80 * 80) frame.data[i + 3] = 0;
-  }
-  ctx.putImageData(frame, 0, 0);
-  return canvas;
-}
-
 function RoadWalk({ dest, onArrive }: { dest: HoustonStop; onArrive: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -84,6 +64,12 @@ function RoadWalk({ dest, onArrive }: { dest: HoustonStop; onArrive: () => void 
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKey);
+    const onClick = () => {
+      if (arrived) return;
+      arrived = true;
+      arriveRef.current();
+    };
+    canvas.addEventListener("click", onClick);
 
     const resize = () => {
       const width = Math.min(520, wrap.clientWidth || 420);
@@ -94,10 +80,10 @@ function RoadWalk({ dest, onArrive }: { dest: HoustonStop; onArrive: () => void 
     const observer = new ResizeObserver(resize);
     observer.observe(wrap);
 
-    void Promise.all([loadImage(roadFor(dest)), loadImage("/field/towns/walker.jpg")]).then(([road, walker]) => {
+    void Promise.all([loadImage(roadFor(dest)), loadImage("/field/towns/walker.jpg?v=2")]).then(([road, walker]) => {
       if (!alive) return;
       scene = road;
-      hero = walker ? cutGreen(walker) : null;
+      hero = walker ? cutSprite(walker) : null;
     });
 
     const draw = () => {
@@ -112,7 +98,7 @@ function RoadWalk({ dest, onArrive }: { dest: HoustonStop; onArrive: () => void 
         const scale = dx && dy ? 0.7 : 1;
         player.x = Math.min(0.68, Math.max(0.32, player.x + dx * 0.006 * scale));
         player.y = Math.min(0.9, Math.max(0.08, player.y + dy * 0.006 * scale));
-        if (player.y <= 0.12) {
+        if (player.y <= 0.42) {
           arrived = true;
           arriveRef.current();
         }
@@ -140,13 +126,19 @@ function RoadWalk({ dest, onArrive }: { dest: HoustonStop; onArrive: () => void 
       observer.disconnect();
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKey);
+      canvas.removeEventListener("click", onClick);
     };
   }, [dest.id]);
 
   return (
     <div ref={wrapRef} className="bg-[#1c2416]">
-      <canvas ref={canvasRef} className="mx-auto block max-h-[70vh] w-full" />
-      <p className="bg-[#f4efe4] px-4 py-3 text-sm text-[#24180f]">Walking to {dest.name}. Arrow keys or WASD. Walk to the top of the path.</p>
+      <canvas ref={canvasRef} className="mx-auto block max-h-[70vh] w-full cursor-pointer" />
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-[#f4efe4] px-4 py-3">
+        <p className="text-sm text-[#24180f]">Click the road to arrive at {dest.name}. Arrows still walk it.</p>
+        <button type="button" onClick={() => arriveRef.current()} className="min-h-11 rounded bg-[#24180f] px-3 text-sm font-semibold text-[#f4efe4]">
+          Arrive
+        </button>
+      </div>
     </div>
   );
 }

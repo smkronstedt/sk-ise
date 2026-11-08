@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { cities, type City, type Stop } from "@/lib/desk/route";
+import { cutSprite } from "@/lib/desk/sprite";
 import type { BlueprintId } from "@/lib/desk/types";
 
 const COLS = 14;
@@ -100,27 +101,6 @@ function loadImage(src: string) {
     img.onerror = () => resolve(null);
     img.src = src;
   });
-}
-
-function cutGreen(img: HTMLImageElement) {
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return canvas;
-  ctx.drawImage(img, 0, 0);
-  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const r0 = frame.data[0];
-  const g0 = frame.data[1];
-  const b0 = frame.data[2];
-  for (let i = 0; i < frame.data.length; i += 4) {
-    const dr = frame.data[i] - r0;
-    const dg = frame.data[i + 1] - g0;
-    const db = frame.data[i + 2] - b0;
-    if (dr * dr + dg * dg + db * db < 70 * 70) frame.data[i + 3] = 0;
-  }
-  ctx.putImageData(frame, 0, 0);
-  return canvas;
 }
 
 export function MonsterQuest({
@@ -240,11 +220,11 @@ export function MonsterQuest({
     observer.observe(wrap);
 
     const sceneSrc = city ? `/field/towns/${city.id}.jpg` : "/field/towns/league.jpg";
-    void Promise.all([loadImage(sceneSrc), loadImage("/field/towns/walker.jpg"), loadImage("/field/quest/trainer.jpg")]).then(([scene, walker, trainer]) => {
+    void Promise.all([loadImage(sceneSrc), loadImage("/field/towns/walker.jpg?v=2"), loadImage("/field/quest/trainer.jpg?v=2")]).then(([scene, walker, trainer]) => {
       if (!alive) return;
       art.scene = scene;
-      art.hero = walker ? cutGreen(walker) : null;
-      art.trainer = trainer ? cutGreen(trainer) : null;
+      art.hero = walker ? cutSprite(walker) : null;
+      art.trainer = trainer ? cutSprite(trainer) : null;
     });
 
     const draw = (now: number) => {
@@ -285,9 +265,9 @@ export function MonsterQuest({
         if (actor.kind !== "trainer") continue;
         const dx = actor.x * TILE;
         const dy = actor.y * TILE;
-        if (art.trainer) ctx.drawImage(art.trainer, dx + 6, dy - 6, TILE * 0.7, TILE * 0.9);
+        if (art.trainer) ctx.drawImage(art.trainer, dx - 2, dy - TILE * 0.55, TILE * 1.05, TILE * 1.55);
       }
-      if (art.hero) ctx.drawImage(art.hero, drawX * TILE - 6, drawY * TILE - TILE * 0.35, TILE * 1.15, TILE * 1.35);
+      if (art.hero) ctx.drawImage(art.hero, drawX * TILE - 10, drawY * TILE - TILE * 0.7, TILE * 1.35, TILE * 1.85);
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
