@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { latestResult } from "@/lib/desk/adapt";
+import { selectionStatus } from "@/lib/desk/adapt";
 import { bankList, getQuestion, loadCatalog, topicSlug } from "@/lib/desk/catalog";
 import {
   gear,
@@ -144,16 +144,19 @@ export function Operations({ correct, total }: { correct: number; total: number 
     await loadCatalog();
     const wanted = new Set(town.topics.map((topic) => topicSlug(topic)));
     const pool = bankList().filter((question) => wanted.has(question.topicId));
-    const unused = pool.filter((question) => latestResult(desk.state, question.id) === "unused");
-    const source = unused.length >= 10 ? unused : pool;
-    const shuffled = [...source];
+    const unused = pool.filter((question) => selectionStatus(desk.state, question.id) === "unused");
+    const shuffled = [...unused];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     const ids = shuffled.slice(0, 15).map((question) => question.id);
     setBusy("");
-    if (!ids.length) return;
+    if (!ids.length) {
+      setBusy("");
+      setFlash("No unused questions left in this town. Recycle used questions on Build.");
+      return;
+    }
     const id = desk.createTest({
       name: missionName(town),
       mode: "tutor",

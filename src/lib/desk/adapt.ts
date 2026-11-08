@@ -1,7 +1,9 @@
 import { blueprint } from "./blueprint";
-import { getQuestion } from "./catalog";
+import { bankSlugsFor, blueprintForSlug } from "./bank-map";
+import { bankList, getQuestion } from "./catalog";
+import { loadBankProgress } from "./original-bank";
 import { questions } from "./questions";
-import { topicById } from "./topics";
+import { topicById, topics } from "./topics";
 import type { BlueprintId, DeskState, Focus, Pool, Question } from "./types";
 
 export function focusOf(state: DeskState, id: BlueprintId): Focus {
@@ -26,6 +28,16 @@ export function latestResult(
     return answer.choice === question.answer ? "correct" : "incorrect";
   }
   return "unused";
+}
+
+/** What may still be asked. Recycled questions count as unused. Bank answers count as used. */
+export function selectionStatus(state: DeskState, id: string): "unused" | "correct" | "incorrect" {
+  if (state.fresh?.[id]) return "unused";
+  const fromTest = latestResult(state, id);
+  if (fromTest !== "unused") return fromTest;
+  const bank = loadBankProgress().answers[id];
+  if (!bank) return "unused";
+  return bank.correct ? "correct" : "incorrect";
 }
 
 export type BucketStat = {
@@ -80,8 +92,9 @@ export function eligibleQuestions(state: DeskState, topicIds: string[], pool: Po
   const allowed = new Set(topicIds);
   return questions.filter((question) => {
     if (!allowed.has(question.topicId)) return false;
-    const result = latestResult(state, question.id);
+    const result = selectionStatus(state, question.id);
     if (pool === "unused") return result === "unused";
+    if (pool === "used") return result !== "unused";
     if (pool === "incorrect") return result === "incorrect";
     if (pool === "correct") return result === "correct";
     if (pool === "marked") return Boolean(state.marks[question.id]);
@@ -153,8 +166,9 @@ export function filterPool(state: DeskState, list: Question[], topicIds: string[
   const allowed = new Set(topicIds);
   return list.filter((question) => {
     if (!allowed.has(question.topicId)) return false;
-    const result = latestResult(state, question.id);
+    const result = selectionStatus(state, question.id);
     if (pool === "unused") return result === "unused";
+    if (pool === "used") return result !== "unused";
     if (pool === "incorrect") return result === "incorrect";
     if (pool === "correct") return result === "correct";
     if (pool === "marked") return Boolean(state.marks[question.id]);
@@ -170,10 +184,82 @@ export function pickFrom(
   count: number,
 ): string[] {
   const poolQuestions = filterPool(state, list, topicIds, pool);
-  const shuffled = [...poolQuestions];
-  for (let i = shuffled.length - 1; i > 0; i--) {
+  return shuffle(poolQuestions)
+    .slice(0, count)
+    .map((question) => question.id);
+}
+
+function shuffle<T>(list: T[]): T[] {
+  const copy = [...list];
+  for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    [copy[i], copy[j]] = [copy[j], copy[i]];
   }
-  return shuffled.slice(0, count).map((question) => question.id);
+  return copy;
+}
+
+function matchesPool(state: DeskState, id: string, pool: Pool) {
+  const result = selectionStatus(state, id);
+  if (pool === "unused") return result === "unused";
+  if (pool === "used") return result !== "unused";
+  if (pool === "incorrect") return result === "incorrect";
+  if (pool === "correct") return result === "correct";
+  if (pool === "marked") return Boolean(state.marks[id]);
+  return true;
+}
+
+/** Trainer items plus the bank topics that teach the same thing. A full-topic block gets the whole bank. */
+export function questionsForTopics(topicIds: string[]): Question[] {
+  const everyTopic = topics.every((topic) => topicIds.includes(topic.id));
+  const allowed = new Set(topicIds);
+  const slugs = everyTopic ? null : bankSlugsFor(topicIds);
+  const seen = new Set<string>();
+  const out: Question[] = [];
+  for (const question of [...questions, ...bankList()]) {
+    if (seen.has(question.id)) continue;
+    if (!everyTopic && !allowed.has(question.topicId) && !slugs?.has(question.topicId)) continue;
+    seen.add(question.id);
+    out.push(question);
+  }
+  return out;
+}
+
+function blueprintOf(question: Question): BlueprintId {
+  return topicById[question.topicId]?.blueprintId ?? blueprintForSlug(question.topicId) ?? "core";
+}
+
+/** Unused bank questions first. Games and the trail call this after the catalog has loaded. */
+export function drawQuestionIds(
+  state: DeskState,
+  topicIds: string[],
+  pool: Pool,
+  count: number,
+  adaptive: boolean,
+): string[] {
+  const poolQuestions = questionsForTopics(topicIds).filter((question) => matchesPool(state, question.id, pool));
+  if (!adaptive) return shuffle(poolQuestions).slice(0, count).map((question) => question.id);
+  const stats = bucketStats(state);
+  const share = Object.fromEntries(stats.map((row) => [row.id, row.suggested])) as Record<BlueprintId, number>;
+  const weighted = poolQuestions.map((question) => {
+    const result = selectionStatus(state, question.id);
+    return {
+      id: question.id,
+      weight: Math.max(0.05, share[blueprintOf(question)] ?? 1) * statusWeight(result, Boolean(state.marks[question.id])),
+    };
+  });
+  const picked: string[] = [];
+  const rest = [...weighted];
+  while (picked.length < count && rest.length) {
+    const sum = rest.reduce((total, item) => total + item.weight, 0);
+    let roll = Math.random() * sum;
+    let index = 0;
+    for (; index < rest.length; index++) {
+      roll -= rest[index].weight;
+      if (roll <= 0) break;
+    }
+    if (index >= rest.length) index = rest.length - 1;
+    picked.push(rest[index].id);
+    rest.splice(index, 1);
+  }
+  return picked;
 }

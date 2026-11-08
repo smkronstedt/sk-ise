@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Figure } from "@/components/desk/figure";
 import { Shell } from "@/components/desk/shell";
 import { scoreTest } from "@/lib/desk/adapt";
+import { AnatomyFigure } from "@/components/desk/anatomy-figure";
 import { logActivity } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
@@ -128,7 +129,7 @@ function TestPage() {
       {
         id: question.id,
         topic: guide?.short ?? question.topicId,
-        learning_point: question.statement || question.objective,
+        question: question.stem.join("\n\n"),
         answer: question.choices[question.answer],
         rationale: question.explanation,
         key_facts: question.wrong.filter(Boolean),
@@ -242,6 +243,7 @@ function TestPage() {
               {paragraph}
             </p>
           ))}
+          <AnatomyFigure topic={question.topicId} text={question.stem.join(" ")} />
           {question.labs ? (
             <table className="mb-3 w-full border-collapse text-sm">
               <tbody>

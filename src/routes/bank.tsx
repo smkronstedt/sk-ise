@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Shell } from "@/components/desk/shell";
-import { logActivity } from "@/lib/desk/activity";
+import { AnatomyFigure } from "@/components/desk/anatomy-figure";
 import { addCard } from "@/lib/cards";
+import { selectionStatus } from "@/lib/desk/adapt";
+import { loadCatalog } from "@/lib/desk/catalog";
+import { useDesk } from "@/lib/desk/provider";
+import { logActivity } from "@/lib/desk/activity";
 import { linksForBankTopic } from "@/lib/desk/statements";
 import {
   emptyBankProgress,
@@ -18,20 +22,23 @@ export const Route = createFileRoute("/bank")({
   component: BankPage,
 });
 
-type Status = "all" | "unused" | "incorrect" | "correct" | "marked";
+type Status = "unused" | "used" | "all" | "incorrect" | "correct" | "marked";
 
 function BankPage() {
   const [items, setItems] = useState<BankItem[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [view, setView] = useState<"practice" | "points">("practice");
   const [topic, setTopic] = useState("all");
-  const [status, setStatus] = useState<Status>("all");
+  const [status, setStatus] = useState<Status>("unused");
   const [query, setQuery] = useState("");
   const [hardOnly, setHardOnly] = useState(false);
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [progress, setProgress] = useState<BankProgress>(emptyBankProgress);
   const [ready, setReady] = useState(false);
+  const [banner, setBanner] = useState("");
+  const [catalogReady, setCatalogReady] = useState(false);
+  const desk = useDesk();
 
   const [attempt, setAttempt] = useState(0);
 
@@ -40,6 +47,9 @@ function BankPage() {
     setReady(true);
     setFailed(false);
     let cancel = false;
+    void loadCatalog().finally(() => {
+      if (!cancel) setCatalogReady(true);
+    });
     const timer = window.setTimeout(() => {
       if (!cancel) setFailed(true);
     }, 20000);
@@ -74,16 +84,17 @@ function BankPage() {
     const needle = query.trim().toLowerCase();
     return (items ?? []).filter((item) => {
       if (topic !== "all" && item.topic !== topic) return false;
-      const saved = progress.answers[item.id];
-      if (status === "unused" && saved) return false;
-      if (status === "correct" && !saved?.correct) return false;
-      if (status === "incorrect" && saved?.correct !== false) return false;
+      const result = selectionStatus(desk.state, item.id);
+      if (status === "unused" && result !== "unused") return false;
+      if (status === "used" && result === "unused") return false;
+      if (status === "correct" && result !== "correct") return false;
+      if (status === "incorrect" && result !== "incorrect") return false;
       if (status === "marked" && !progress.marks[item.id]) return false;
       if (hardOnly && item.hard !== true) return false;
       const blob = `${item.question} ${item.learning_point} ${item.source_ref} ${item.topic}`.toLowerCase();
       return blob.includes(needle);
     });
-  }, [items, progress.answers, progress.marks, query, status, topic, hardOnly]);
+  }, [items, progress.answers, progress.marks, query, status, topic, hardOnly, desk.state, catalogReady]);
 
   useEffect(() => {
     setIndex(0);
@@ -125,6 +136,7 @@ function BankPage() {
       },
     });
     logActivity("questions");
+    desk.consume(item.id);
     if (!isCorrect) addCard(item, "auto");
   };
 
@@ -177,6 +189,7 @@ function BankPage() {
         >
           <option value="all">Any result</option>
           <option value="unused">Unused</option>
+          <option value="used">Used</option>
           <option value="incorrect">Missed</option>
           <option value="correct">Correct</option>
           <option value="marked">Marked</option>
@@ -188,6 +201,24 @@ function BankPage() {
         >
           Hard only
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            const ids = (items ?? [])
+              .filter((row) => (topic === "all" || row.topic === topic) && selectionStatus(desk.state, row.id) !== "unused")
+              .map((row) => row.id);
+            if (!ids.length) {
+              setBanner("Nothing in Used for this topic.");
+              return;
+            }
+            desk.recycle(ids);
+            setStatus("unused");
+            setBanner(`${ids.length} used questions are back in Unused.`);
+          }}
+          className="min-h-11 rounded border border-line bg-paper px-3 text-sm font-semibold"
+        >
+          Recycle used
+        </button>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -195,6 +226,7 @@ function BankPage() {
           className="min-h-11 flex-1 rounded border border-line bg-paper px-3"
         />
       </div>
+      {banner ? <p className="mt-3 text-sm font-semibold">{banner}</p> : null}
 
       {view === "points" ? (
         <Points items={filtered} />
@@ -272,6 +304,7 @@ function Practice({
         {item.id}
       </p>
       <p className="mt-2 leading-relaxed">{item.question}</p>
+      <AnatomyFigure topic={item.topic} text={item.question} />
       <div className="mt-3 flex flex-col gap-2">
         {letters.map((letter) => {
           const text = optionText(item, letter);

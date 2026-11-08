@@ -7,7 +7,8 @@ import { PrizeLadder } from "@/components/desk/prizes";
 import { Operations } from "@/components/desk/operations";
 import { Shell } from "@/components/desk/shell";
 import { HoustonTrail } from "@/components/desk/houston-trail";
-import { bucketStats, scoreTest } from "@/lib/desk/adapt";
+import { bucketStats, drawQuestionIds, scoreTest } from "@/lib/desk/adapt";
+import { loadCatalog } from "@/lib/desk/catalog";
 import { ise2025 } from "@/lib/desk/ise";
 import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 import { BANK_TOTAL, countBankCorrect } from "@/lib/desk/original-bank";
@@ -73,6 +74,7 @@ function Home() {
   const desk = useDesk();
   const navigate = useNavigate();
   const [mode, setMode] = useState<DeskMode>("classic");
+  const [notice, setNotice] = useState("");
   const stats = bucketStats(desk.state);
   const ranked = [...stats].sort((a, b) => b.suggested - a.suggested);
   const top = ranked[0];
@@ -92,52 +94,65 @@ function Home() {
     return () => window.removeEventListener(MODE_EVENT, sync);
   }, []);
 
-  const startAdaptive = () => {
+  const openUnused = async (input: {
+    name: string;
+    adaptive: boolean;
+    topicIds: string[];
+    count: number;
+  }) => {
+    setNotice("");
+    await loadCatalog();
+    const ids = drawQuestionIds(desk.state, input.topicIds, "unused", input.count, input.adaptive);
+    if (!ids.length) {
+      setNotice("No unused questions left in that set. On Build, open Used and hit Recycle used.");
+      return;
+    }
     const id = desk.createTest({
+      name: input.name,
       mode: "tutor",
+      adaptive: input.adaptive,
+      topicIds: input.topicIds,
+      pool: "unused",
+      count: ids.length,
+      questionIds: ids,
+    });
+    if (id) void navigate({ to: "/test/$id", params: { id } });
+  };
+
+  const startAdaptive = () => {
+    void openUnused({
       adaptive: true,
       topicIds: topics.map((topic) => topic.id),
-      pool: "all",
       count: 15,
       name: "2025 plan",
     });
-    if (id) void navigate({ to: "/test/$id", params: { id } });
   };
 
   const startTopicBattle = (topicId: string) => {
-    const id = desk.createTest({
-      mode: "tutor",
+    void openUnused({
       adaptive: false,
       topicIds: [topicId],
-      pool: "all",
       count: 5,
       name: `Battle: ${topics.find((t) => t.id === topicId)?.short ?? topicId}`,
     });
-    if (id) void navigate({ to: "/test/$id", params: { id } });
   };
 
   const startRoute = (name: string, blueprintId: BlueprintId, count: number, gym: boolean) => {
-    const id = desk.createTest({
-      mode: "tutor",
+    void openUnused({
+      name,
       adaptive: gym,
       topicIds: topics.filter((topic) => topic.blueprintId === blueprintId).map((topic) => topic.id),
-      pool: "all",
       count,
-      name,
     });
-    if (id) void navigate({ to: "/test/$id", params: { id } });
   };
 
   const startChampionship = () => {
-    const id = desk.createTest({
-      mode: "tutor",
+    void openUnused({
       adaptive: true,
       topicIds: topics.map((topic) => topic.id),
-      pool: "all",
       count: 20,
       name: "Championship",
     });
-    if (id) void navigate({ to: "/test/$id", params: { id } });
   };
 
   const applyPlan = () => desk.setFocusMap(ise2025.focus);
@@ -199,21 +214,20 @@ function Home() {
         stats={stats}
         onStart={(blueprintId) => {
           const topicIds = topics.filter((topic) => topic.blueprintId === blueprintId).map((topic) => topic.id);
-          const id = desk.createTest({
-            mode: "tutor",
+          void openUnused({
             adaptive: true,
             topicIds: topicIds.length ? topicIds : topics.map((topic) => topic.id),
-            pool: "all",
             count: 10,
             name: "Today's plan",
           });
-          if (id) void navigate({ to: "/test/$id", params: { id } });
         }}
       />
 
       <PrizeLadder />
 
       <HeatMap />
+
+      {notice ? <p className="mb-3 rounded border border-line bg-paper px-4 py-3 text-sm">{notice}</p> : null}
 
       {mode === "classic" && (
         <ClassicView

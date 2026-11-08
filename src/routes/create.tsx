@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Shell } from "@/components/desk/shell";
-import { eligibleQuestions, filterPool, pickFrom } from "@/lib/desk/adapt";
+import { eligibleQuestions, filterPool, pickFrom, selectionStatus } from "@/lib/desk/adapt";
 import { blueprint } from "@/lib/desk/blueprint";
 import { bankList, bankTopicList, loadCatalog, type CatalogTopic } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
@@ -14,8 +14,9 @@ export const Route = createFileRoute("/create")({
 });
 
 const pools: { id: Pool; label: string }[] = [
-  { id: "all", label: "All" },
   { id: "unused", label: "Unused" },
+  { id: "used", label: "Used" },
+  { id: "all", label: "All" },
   { id: "incorrect", label: "Missed" },
   { id: "correct", label: "Correct" },
   { id: "marked", label: "Marked" },
@@ -26,7 +27,7 @@ function CreatePage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("tutor");
   const [adaptive, setAdaptive] = useState(true);
-  const [pool, setPool] = useState<Pool>("all");
+  const [pool, setPool] = useState<Pool>("unused");
   const [count, setCount] = useState(15);
   const [source, setSource] = useState<"bank" | "trainer">("bank");
   const [bankTopics, setBankTopics] = useState<CatalogTopic[]>([]);
@@ -87,7 +88,11 @@ function CreatePage() {
       questionIds,
     });
     if (!id) {
-      setError("Nothing in that pool. Turn more topics on, or switch the pool to All.");
+      setError(
+        pool === "unused"
+          ? "Nothing unused in that set. Open Used and recycle them, or turn more topics on."
+          : "Nothing in that pool for the topics that are on.",
+      );
       return;
     }
     void navigate({ to: "/test/$id", params: { id } });
@@ -167,6 +172,25 @@ function CreatePage() {
               {item.label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => {
+              const list = source === "bank" ? bankPool : questions;
+              const ids = list
+                .filter((question) => picked.includes(question.topicId) && selectionStatus(desk.state, question.id) !== "unused")
+                .map((question) => question.id);
+              if (!ids.length) {
+                setError("Nothing in Used for the topics that are on.");
+                return;
+              }
+              desk.recycle(ids);
+              setPool("unused");
+              setError("");
+            }}
+            className="min-h-11 rounded border border-line bg-paper px-3 text-sm font-semibold"
+          >
+            Recycle used
+          </button>
         </div>
         {source === "bank" ? (
           <button

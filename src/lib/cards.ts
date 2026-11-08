@@ -12,6 +12,7 @@ export type Card = {
   reps: number;
   lapses: number;
   source: 'auto' | 'manual' | 'full';
+  custom?: boolean;
 };
 
 const INTERVALS = {
@@ -45,13 +46,33 @@ export function schedule(card: Card, rating: keyof typeof INTERVALS): Card {
   };
 }
 
+export function quizFace(q: any): { front: string; back: string } {
+  const front =
+    (typeof q.question === "string" && q.question) ||
+    (Array.isArray(q.stem) ? q.stem.join("\n\n") : "") ||
+    q.learning_point ||
+    q.statement ||
+    "";
+  const answerLine =
+    Array.isArray(q.choices) && typeof q.answer === "number"
+      ? q.choices[q.answer]
+      : q.options && typeof q.answer === "string"
+        ? q.options[q.answer] || ""
+        : typeof q.answer === "string"
+          ? q.answer
+          : "";
+  const back = [answerLine, q.rationale || q.explanation, ...(q.key_facts || [])].filter(Boolean).join("\n\n");
+  return { front, back };
+}
+
 export function createCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto'): Card {
+  const face = quizFace(q);
   return {
     id: crypto.randomUUID(),
     sourceQuestionId: q.id,
     topic: q.topic || 'Uncategorized',
-    front: q.learning_point || q.statement || (q.question || '').slice(0, 200),
-    back: `${q.answer || ''}\n\n${q.rationale || ''}\n\n${(q.key_facts || []).join('\n')}`,
+    front: face.front,
+    back: face.back,
     due: Date.now(),
     interval: 0,
     ease: 2.5,
@@ -75,6 +96,23 @@ export function loadCards(): Card[] {
 
 export function saveCards(cards: Card[]) {
   localStorage.setItem(KEY, JSON.stringify(cards));
+}
+
+/** Old cards stored a learning-point sentence. Rewrite those into the question and the answer. */
+export function refreshQuizCards(lookup: (id: string) => any | undefined): Card[] {
+  const cards = loadCards();
+  let changed = false;
+  const next = cards.map((card) => {
+    if (card.custom) return card;
+    const source = lookup(card.sourceQuestionId);
+    if (!source) return card;
+    const face = quizFace(source);
+    if (!face.front || (card.front === face.front && card.back === face.back)) return card;
+    changed = true;
+    return { ...card, front: face.front, back: face.back || card.back };
+  });
+  if (changed) saveCards(next);
+  return next;
 }
 
 export function addCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto') {
@@ -101,7 +139,7 @@ export function addGenerated(cards: Card[]) {
 }
 
 export function updateCard(id: string, patch: Partial<Pick<Card, "front" | "back" | "topic">>) {
-  const cards = loadCards().map((card) => (card.id === id ? { ...card, ...patch } : card));
+  const cards = loadCards().map((card) => (card.id === id ? { ...card, ...patch, custom: true } : card));
   saveCards(cards);
   return cards;
 }

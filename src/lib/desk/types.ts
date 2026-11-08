@@ -51,7 +51,7 @@ export type Question = {
   statement?: string;
 };
 
-export type Pool = "all" | "unused" | "incorrect" | "correct" | "marked";
+export type Pool = "all" | "unused" | "used" | "incorrect" | "correct" | "marked";
 export type Mode = "tutor" | "timed";
 export type Focus = "boost" | "hold" | "ease";
 
@@ -82,4 +82,6 @@ export type DeskState = {
   marks: Record<string, boolean>;
   notes: Record<string, string>;
   focus: Partial<Record<BlueprintId, Focus>>;
+  /** Questions put back into the unused pile. Selection ignores older answers. */
+  fresh?: Record<string, boolean>;
 };

@@ -7,7 +7,7 @@ import type { BlueprintId, DeskState, Focus, Mode, Pool, TestBlock } from "./typ
 const KEY = "callroom-desk-v1";
 
 function empty(): DeskState {
-  return { tests: [], marks: {}, notes: {}, focus: {} };
+  return { tests: [], marks: {}, notes: {}, focus: {}, fresh: {} };
 }
 
 function load(): DeskState {
@@ -20,6 +20,7 @@ function load(): DeskState {
       marks: parsed.marks ?? {},
       notes: parsed.notes ?? {},
       focus: parsed.focus ?? {},
+      fresh: parsed.fresh ?? {},
     };
   } catch {
     return empty();
@@ -44,6 +45,8 @@ type DeskApi = {
   }) => string | null;
   createFromIds: (ids: string[], name: string) => string | null;
   patchTest: (id: string, recipe: (test: TestBlock) => TestBlock) => void;
+  recycle: (ids: string[]) => void;
+  consume: (id: string) => void;
   removeTest: (id: string) => void;
 };
 
@@ -127,10 +130,30 @@ export function DeskProvider({ children }: { children: ReactNode }) {
       return test.id;
     },
     patchTest: (id, recipe) =>
-      commit((current) => ({
-        ...current,
-        tests: current.tests.map((test) => (test.id === id ? recipe(test) : test)),
-      })),
+      commit((current) => {
+        const tests = current.tests.map((test) => (test.id === id ? recipe(test) : test));
+        const test = tests.find((item) => item.id === id);
+        const fresh = { ...(current.fresh ?? {}) };
+        if (test) {
+          for (const questionId of Object.keys(test.answers)) {
+            if (test.answers[questionId]?.submitted) delete fresh[questionId];
+          }
+        }
+        return { ...current, tests, fresh };
+      }),
+    recycle: (ids) =>
+      commit((current) => {
+        const fresh = { ...(current.fresh ?? {}) };
+        for (const id of ids) fresh[id] = true;
+        return { ...current, fresh };
+      }),
+    consume: (id) =>
+      commit((current) => {
+        if (!current.fresh?.[id]) return current;
+        const fresh = { ...current.fresh };
+        delete fresh[id];
+        return { ...current, fresh };
+      }),
     removeTest: (id) =>
       commit((current) => ({ ...current, tests: current.tests.filter((test) => test.id !== id) })),
   };

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 520">
+  <rect width="760" height="520" fill="#fff"/>
+  <text x="28" y="36" font-family="Georgia, serif" font-size="20" fill="#1c1915">Prostate zones, transverse</text>
+  <ellipse cx="250" cy="250" rx="190" ry="160" fill="#f3d2cf" stroke="#8d3b3b" stroke-width="3"/>
+  <path d="M120 150 C180 90 330 90 390 160 L360 210 C300 150 190 150 140 200 Z" fill="#e7d7b8" stroke="#8a7044" stroke-width="2"/>
+  <ellipse cx="250" cy="268" rx="78" ry="62" fill="#d9896a" stroke="#7a3b2e" stroke-width="2"/>
+  <ellipse cx="250" cy="300" rx="36" ry="28" fill="#c46b4a" stroke="#6e3424" stroke-width="2"/>
+  <ellipse cx="250" cy="248" rx="16" ry="22" fill="#f7f1ea" stroke="#6e3424" stroke-width="2"/>
+  <circle cx="244" cy="292" r="4" fill="#6e3424"/>
+  <circle cx="256" cy="292" r="4" fill="#6e3424"/>
+  <text x="470" y="120" font-family="Georgia, serif" font-size="16" fill="#1c1915">Anterior fibromuscular stroma</text>
+  <text x="470" y="142" font-family="Georgia, serif" font-size="14" fill="#5c564c">No glands. Anterior.</text>
+  <text x="470" y="190" font-family="Georgia, serif" font-size="16" fill="#1c1915">Transition zone</text>
+  <text x="470" y="212" font-family="Georgia, serif" font-size="14" fill="#5c564c">Around the urethra. BPH starts here.</text>
+  <text x="470" y="260" font-family="Georgia, serif" font-size="16" fill="#1c1915">Central zone</text>
+  <text x="470" y="282" font-family="Georgia, serif" font-size="14" fill="#5c564c">Around the ejaculatory ducts.</text>
+  <text x="470" y="330" font-family="Georgia, serif" font-size="16" fill="#1c1915">Peripheral zone</text>
+  <text x="470" y="352" font-family="Georgia, serif" font-size="14" fill="#5c564c">Most of the gland. Most cancers.</text>
+  <text x="470" y="400" font-family="Georgia, serif" font-size="16" fill="#1c1915">Urethra</text>
+  <text x="470" y="422" font-family="Georgia, serif" font-size="14" fill="#5c564c">The two dots are the ejaculatory ducts.</text>
+  <line x1="430" y1="175" x2="310" y2="230" stroke="#8a7044" stroke-width="1.5"/>
+  <line x1="430" y1="250" x2="290" y2="300" stroke="#7a3b2e" stroke-width="1.5"/>
+  <line x1="430" y1="320" x2="400" y2="300" stroke="#8d3b3b" stroke-width="1.5"/>
+</svg>

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { drawQuestionIds } from "@/lib/desk/adapt";
 import { houstonStops, type HoustonStop } from "@/lib/desk/houston";
 import { useDesk } from "@/lib/desk/provider";
-import { getQuestion } from "@/lib/desk/catalog";
+import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import type { TestBlock } from "@/lib/desk/types";
 
 const AT = "houston-trail-at";
@@ -174,17 +175,26 @@ export function HoustonTrail() {
     setMap(false);
   };
 
-  const study = () => {
+  const study = async () => {
+    setLog("");
+    await loadCatalog();
     const count = pace === "hurried" ? Math.min(12, stop.count + 2) : stop.count;
+    const ids = drawQuestionIds(desk.state, stop.topics, "unused", count, false);
+    if (!ids.length) {
+      setLog("No unused questions left here. Recycle used questions on Build.");
+      return;
+    }
     const id = desk.createTest({
       mode: "tutor",
       adaptive: false,
       topicIds: stop.topics,
-      pool: "all",
-      count,
+      pool: "unused",
+      count: ids.length,
+      questionIds: ids,
       name: `Houston: ${stop.name}`,
     });
     if (id) void navigate({ to: "/test/$id", params: { id } });
+    else setLog("No unused questions left here. Recycle used questions on Build.");
   };
 
   if (walking && next) {

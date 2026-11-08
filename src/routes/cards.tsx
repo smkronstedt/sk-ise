@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { Shell } from '@/components/desk/shell';
+import { AnatomyFigure } from '@/components/desk/anatomy-figure';
 import {
   loadCards,
   saveCards,
@@ -9,8 +10,10 @@ import {
   addGenerated,
   updateCard,
   removeCard,
+  refreshQuizCards,
   type Card,
 } from '@/lib/cards';
+import { getQuestion, loadCatalog } from '@/lib/desk/catalog';
 import { logActivity } from '@/lib/desk/activity';
 
 export const Route = createFileRoute('/cards')({
@@ -28,7 +31,13 @@ function CardsPage() {
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
-    setCards(loadCards());
+    let cancel = false;
+    void loadCatalog().finally(() => {
+      if (!cancel) setCards(refreshQuizCards((id) => getQuestion(id)));
+    });
+    return () => {
+      cancel = true;
+    };
   }, []);
 
   const due = cards.filter((c) => c.due <= Date.now() && c.source !== 'full');
@@ -192,7 +201,13 @@ function CardsPage() {
 
       {mode !== 'edit' && current && (
         <div className="mt-6 rounded border border-line bg-paper p-6 max-w-2xl">
-          {editing ? null : <p className="text-lg font-semibold">{current.front}</p>}
+          {editing ? null : (
+            <>
+              <p className="text-xs font-semibold tracking-wide text-muted uppercase">Question</p>
+              <p className="mt-1 text-lg font-semibold whitespace-pre-wrap">{current.front}</p>
+              <AnatomyFigure topic={current.topic} text={current.front} />
+            </>
+          )}
           {!revealed && !editing ? (
             <button
               className="mt-6 px-5 py-2.5 bg-navy text-white rounded font-semibold"
@@ -220,7 +235,8 @@ function CardsPage() {
           ) : (
             <>
               <div className="mt-4 border-t border-line pt-4 text-sm leading-relaxed whitespace-pre-wrap">
-                {current.back}
+                <p className="text-xs font-semibold tracking-wide text-muted uppercase">Answer</p>
+                <p className="mt-1">{current.back}</p>
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
                 <button className="bg-red-600 text-white px-3 py-2 rounded" onClick={() => rate('again')}>
