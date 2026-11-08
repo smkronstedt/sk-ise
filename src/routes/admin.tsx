@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Shell } from "@/components/desk/shell";
-import { listPeople, setAccess, setBlackOpsAccess, setBlackOpsPassword, type Person } from "@/lib/access-api";
+import { listPeople, setAccess, setBlackOpsAccess, setBlackOpsPassword, setUndisclosedPassword, type Person } from "@/lib/access-api";
 import { setBookletsPassword } from "@/lib/booklets-api";
 
 export const Route = createFileRoute("/admin")({
@@ -14,6 +14,7 @@ function AdminPage() {
   const [busy, setBusy] = useState("");
   const [password, setPassword] = useState("");
   const [bookletPassword, setBookletPassword] = useState("");
+  const [undisclosedPassword, setUndisclosedPasswordValue] = useState("");
   const [saved, setSaved] = useState("");
 
   const load = () => {
@@ -51,7 +52,7 @@ function AdminPage() {
       {error ? <p className="mb-3 text-sm text-wrong">{error}</p> : null}
       <section className="mb-4 rounded border border-line bg-paper p-4">
         <h2 className="font-semibold">Black Ops password</h2>
-        <p className="mt-1 text-sm text-muted">Changing it closes the undisclosed routes until each allowed account enters the new password.</p>
+        <p className="mt-1 text-sm text-muted">This opens the Black Ops game. It does not open the undisclosed routes.</p>
         <form
           className="mt-3 flex flex-wrap gap-2"
           onSubmit={(event) => {
@@ -73,6 +74,30 @@ function AdminPage() {
           </button>
         </form>
         {saved ? <p className="mt-2 text-sm">{saved}</p> : null}
+      </section>
+      <section className="mb-4 rounded border border-line bg-paper p-4">
+        <h2 className="font-semibold">Undisclosed password</h2>
+        <p className="mt-1 text-sm text-muted">Separate from the Black Ops password. One entry opens every undisclosed route. Changing it locks them again.</p>
+        <form
+          className="mt-3 flex flex-wrap gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSaved("");
+            void setUndisclosedPassword({ data: { password: undisclosedPassword } })
+              .then(() => setSaved("Undisclosed password updated."))
+              .catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not set the password."));
+          }}
+        >
+          <input
+            type="text"
+            value={undisclosedPassword}
+            onChange={(event) => setUndisclosedPasswordValue(event.target.value)}
+            className="min-h-11 flex-1 rounded border border-line px-3"
+          />
+          <button type="submit" className="min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white">
+            Set password
+          </button>
+        </form>
       </section>
       <section className="mb-4 rounded border border-line bg-paper p-4">
         <h2 className="font-semibold">Booklets password</h2>

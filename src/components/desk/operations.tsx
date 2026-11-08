@@ -14,7 +14,7 @@ import {
   type TheaterId,
   type Town,
 } from "@/lib/desk/ops";
-import { blackOpsStatus, unlockBlackOps } from "@/lib/access-api";
+import { blackOpsStatus, unlockBlackOps, unlockUndisclosed } from "@/lib/access-api";
 import { addWorkout, loadTraining, trainingSummary, type Workout, type WorkoutKind } from "@/lib/desk/training";
 import { useDesk } from "@/lib/desk/provider";
 
@@ -40,7 +40,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
   const [save, setSave] = useState<OpsSave | null>(null);
   const [theater, setTheater] = useState<TheaterId>("afghanistan");
   const [panel, setPanel] = useState<"map" | "camp" | "shop" | "training">("map");
-  const [gate, setGate] = useState<{ admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean } | null>(null);
+  const [gate, setGate] = useState<{ admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean; topSecret: boolean; hasTopSecret: boolean } | null>(null);
   const [pastCover, setPastCover] = useState(false);
   const [password, setPassword] = useState("");
   const [gateError, setGateError] = useState("");
@@ -57,7 +57,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
       .then((status) => {
         setGate(status);
       })
-      .catch(() => setGate({ admin: false, allowed: false, unlocked: false, hasPassword: false }));
+      .catch(() => setGate({ admin: false, allowed: false, unlocked: false, hasPassword: false, topSecret: false, hasTopSecret: false }));
   }, []);
 
   if (!save) return null;
@@ -198,10 +198,27 @@ export function Operations({ correct, total }: { correct: number; total: number 
 
   if (!pastCover) {
     return (
-      <BlackOpsCover gate={gate} onEnter={() => {
+      <BlackOpsCover
+        gate={gate}
+        password={password}
+        error={gateError}
+        onPassword={setPassword}
+        onUnlock={() => {
+          setGateError("");
+          void unlockBlackOps({ data: { password } })
+            .then(() => {
+              setGate((current) => (current ? { ...current, unlocked: true, allowed: true } : current));
+              setPassword("");
+              sessionStorage.setItem("blackops-cover", "1");
+              setPastCover(true);
+            })
+            .catch((err: unknown) => setGateError(err instanceof Error ? err.message : "Wrong password."));
+        }}
+        onEnter={() => {
           sessionStorage.setItem("blackops-cover", "1");
           setPastCover(true);
-        }} />
+        }}
+      />
     );
   }
 
@@ -279,7 +296,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
             <div className="mb-3 flex flex-wrap gap-2">
               {theaters.map((row) => {
                 const progressionLocked = !theaterOpen(row.id);
-                const needsClearance = Boolean(row.classified) && !gate?.unlocked;
+                const needsClearance = Boolean(row.classified) && !gate?.topSecret;
                 return (
                   <button
                     key={row.id}
@@ -310,9 +327,9 @@ export function Operations({ correct, total }: { correct: number; total: number 
                 onPassword={setPassword}
                 onUnlock={() => {
                   setGateError("");
-                  void unlockBlackOps({ data: { password } })
+                  void unlockUndisclosed({ data: { password } })
                     .then(() => {
-                      setGate((current) => (current ? { ...current, unlocked: true, allowed: true } : current));
+                      setGate((current) => (current ? { ...current, topSecret: true } : current));
                       setTopSecret(false);
                     })
                     .catch((err: unknown) => setGateError(err instanceof Error ? err.message : "Wrong password."));
@@ -470,9 +487,17 @@ export function Operations({ correct, total }: { correct: number; total: number 
 
 function BlackOpsCover({
   gate,
+  password,
+  error,
+  onPassword,
+  onUnlock,
   onEnter,
 }: {
-  gate: { admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean } | null;
+  gate: { admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean; topSecret: boolean; hasTopSecret: boolean } | null;
+  password: string;
+  error: string;
+  onPassword: (value: string) => void;
+  onUnlock: () => void;
   onEnter: () => void;
 }) {
   return (
@@ -483,9 +508,31 @@ function BlackOpsCover({
         <p className="mx-auto mt-4 max-w-xl text-sm text-red-600/80">
           Named routes are open. Anything past them is held at a higher level.
         </p>
-        <button type="button" onClick={onEnter} className="mt-6 min-h-11 rounded border border-red-600 px-4 text-sm font-semibold tracking-wide text-red-600 uppercase">
-          Enter the routes
-        </button>
+        {gate?.unlocked ? (
+          <button type="button" onClick={onEnter} className="mt-6 min-h-11 rounded border border-red-600 px-4 text-sm font-semibold tracking-wide text-red-600 uppercase">
+            Enter the routes
+          </button>
+        ) : (
+          <form
+            className="mx-auto mt-6 flex max-w-md flex-col gap-2 text-left"
+            onSubmit={(event) => {
+              event.preventDefault();
+              onUnlock();
+            }}
+          >
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => onPassword(event.target.value)}
+              className="min-h-11 rounded border border-red-900 bg-black px-3 text-red-600"
+            />
+            {error ? <p className="text-sm">{error}</p> : null}
+            {!gate?.hasPassword ? <p className="text-sm">No game password has been set.</p> : null}
+            <button type="submit" className="min-h-11 rounded border border-red-600 px-4 text-sm font-semibold tracking-wide uppercase">
+              Enter the routes
+            </button>
+          </form>
+        )}
         {!gate ? <p className="mt-4 text-sm">Checking access…</p> : null}
       </div>
     </section>
@@ -499,7 +546,7 @@ function TopSecret({
   onPassword,
   onUnlock,
 }: {
-  gate: { admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean } | null;
+  gate: { admin: boolean; allowed: boolean; unlocked: boolean; hasPassword: boolean; topSecret: boolean; hasTopSecret: boolean } | null;
   password: string;
   error: string;
   onPassword: (value: string) => void;
@@ -529,7 +576,7 @@ function TopSecret({
             />
           </label>
           {error ? <p className="text-sm">{error}</p> : null}
-          {!gate.hasPassword ? <p className="text-sm">J2 has not issued a password yet.</p> : null}
+          {!gate.hasTopSecret ? <p className="text-sm">J2 has not issued a password yet.</p> : null}
           <button type="submit" className="min-h-11 rounded border border-red-600 px-4 text-sm font-semibold tracking-wide uppercase">
             Submit
           </button>
