@@ -1,15 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/lib/auth/middleware";
-import type { IseReport } from "@/lib/desk/ise";
+import { iseSections, type IseReport } from "@/lib/desk/ise";
 import { getSql } from "@/lib/db";
+
+const sectionIds = new Set(iseSections.map((row) => row.id));
 
 function cleanReport(data: IseReport): IseReport {
   const year = Math.round(Number(data?.year));
   const score = Math.round(Number(data?.score));
   const percentile = Math.round(Number(data?.percentile));
+  const items = Math.round(Number(data?.items ?? 0));
   if (year < 2015 || year > 2035 || score < 0 || score > 100 || percentile < 0 || percentile > 100) {
     throw new Error("Enter a year, a score from 0 to 100, and a percentile from 0 to 100.");
   }
+  if (items < 0 || items > 300) throw new Error("Item count looks off.");
   let prior: IseReport["prior"] = null;
   if (data?.prior) {
     const priorYear = Math.round(Number(data.prior.year));
@@ -20,16 +24,17 @@ function cleanReport(data: IseReport): IseReport {
     }
     prior = { year: priorYear, score: priorScore, percentile: priorPercentile };
   }
-  const leaks = (Array.isArray(data?.leaks) ? data.leaks : []).slice(0, 4).map((row) => {
-    const label = String(row?.label ?? "").trim().slice(0, 80);
-    const items = Math.round(Number(row?.items));
-    const leakScore = Math.round(Number(row?.score));
-    if (!label || items < 1 || items > 200 || leakScore < 0 || leakScore > 100) {
-      throw new Error("Each weak section needs a name, a percent, and how many items it had.");
-    }
-    return { label, items, score: leakScore };
-  });
-  return { year, score, percentile, prior, leaks };
+  const lines = (Array.isArray(data?.lines) ? data.lines : [])
+    .filter((row) => sectionIds.has(String(row?.id)))
+    .map((row) => {
+      const count = Math.round(Number(row.items));
+      const lineScore = Math.round(Number(row.score));
+      if (count < 1 || count > 200 || lineScore < 0 || lineScore > 100) {
+        throw new Error("Each filled section needs an item count and a percent from 0 to 100.");
+      }
+      return { id: String(row.id), items: count, score: lineScore };
+    });
+  return { year, score, percentile, items, prior, lines };
 }
 
 export const loadIseReport = createServerFn({ method: "GET" })

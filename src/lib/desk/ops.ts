@@ -252,6 +252,12 @@ export function loadOps(): OpsSave {
 
 export function saveOps(state: OpsSave) {
   localStorage.setItem(KEY, JSON.stringify(state));
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("ise-activity"));
+}
+
+export function gearCost(save: OpsSave = loadOps()) {
+  const holdings = save.owned.reduce((sum, id) => sum + (gear.find((item) => item.id === id)?.price ?? 0), 0);
+  return holdings + save.fees;
 }
 
 export function townGate(index: number, count: number, total: number) {

@@ -6,6 +6,7 @@ import { loadCards } from "@/lib/cards";
 import { Cover, Waiting } from "@/components/desk/cover";
 import { DAILY_GOAL, prizeStatus } from "@/lib/desk/activity";
 import { trainingSummary } from "@/lib/desk/training";
+import { gearCost } from "@/lib/desk/ops";
 import { bucketStats } from "@/lib/desk/adapt";
 import { countBankCorrect } from "@/lib/desk/original-bank";
 import type { DeskState } from "@/lib/desk/types";
@@ -49,7 +50,7 @@ export function Shell({ children }: { children: ReactNode }) {
         trainer = 0;
       }
       const correct = countBankCorrect() + trainer;
-      setTally({ correct, money: correct + prizes.purse + trainingSummary().purse, today: prizes.today });
+      setTally({ correct, money: Math.max(0, correct + prizes.purse + trainingSummary().purse - gearCost()), today: prizes.today });
     };
     read();
     window.addEventListener("ise-activity", read);

@@ -1,9 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { CampLoadout } from "@/components/desk/camp-loadout";
 import { selectionStatus } from "@/lib/desk/adapt";
 import { bankList, getQuestion, loadCatalog, topicSlug } from "@/lib/desk/catalog";
+import { prizeStatus } from "@/lib/desk/activity";
 import {
   gear,
+  gearCost,
   levelFor,
   loadOps,
   saveOps,
@@ -68,8 +71,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
   };
 
   const level = levelFor(correct, total);
-  const holdings = save.owned.reduce((sum, id) => sum + (gear.find((item) => item.id === id)?.price ?? 0), 0);
-  const cash = Math.max(0, correct - holdings - save.fees);
+  const cash = Math.max(0, correct + prizeStatus().purse + trainingSummary().purse - gearCost(save));
   const stats = statsFor(save.owned, save.equipped, level);
   const route = theaters.find((row) => row.id === theater) ?? theaters[0];
   const maps: Record<TheaterId, string> = {
@@ -238,7 +240,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
             <div>
               <h1 className="font-serif text-3xl tracking-tight">Black Ops</h1>
               <p className="mt-2 max-w-xl text-sm text-ops-olive">
-                Each town is a block from the bank. Start the town you are on. Clear it at 60% on at least 10 items, and the next town opens. Cash is still $1 per correct answer.
+                Each town is a block from the bank. Start the town you are on. Clear it at 60% on at least 10 items, and the next town opens. Cash matches the header. Buying spends it.
               </p>
             </div>
           </div>
@@ -400,11 +402,12 @@ export function Operations({ correct, total }: { correct: number; total: number 
       )}
 
       {panel === "camp" && (
-        <div className="grid gap-4 p-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
+        <div className="grid gap-4 p-4 lg:grid-cols-[14rem_14rem_minmax(0,1fr)]">
           <div className="flex flex-col items-center">
             <img src="/ops/operator.jpg" alt="Your operator" className="max-h-96 w-full rounded border border-ops-amber object-cover object-top" />
             <img src="/ops/trident.png" alt="Trident" className="mt-3 h-16 w-auto" />
           </div>
+          <CampLoadout equipped={save.equipped} owned={save.owned} />
           <div>
             <h2 className="font-serif text-2xl">Camp</h2>
             <p className="mt-1 text-sm text-muted">One item per slot. Supplies stay on once you buy them.</p>
