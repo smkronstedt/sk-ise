@@ -7,13 +7,12 @@ import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
 import { useDesk } from "@/lib/desk/provider";
 import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
-import { cutSprite } from "@/lib/desk/sprite";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, TestBlock } from "@/lib/desk/types";
 
 const COLS = 13;
 const ROWS = 11;
-const TILE = 46;
+const PX = 16;
 const STEP = 0.16;
 const RIVAL = "Reed Calder";
 
@@ -50,22 +49,187 @@ type Battle = {
   foeHp: number;
   right: number;
   foeName: string;
-  foeSrc: string;
+  foeKind: "trainer" | "leader" | "rival" | "wild";
   title: string;
   need: number;
   reveal: { correct: boolean; note: string } | null;
   over: string | null;
 };
 
-const paint: Record<Tile, string> = {
-  0: "#6eae4b",
-  1: "#e4d09a",
-  2: "#245c32",
-  3: "#3c7ec4",
-  4: "#8d5a2b",
-  5: "#f2e08a",
-  6: "#2f8a3a",
+type Theme = {
+  grass: string;
+  grass2: string;
+  dirt: string;
+  dirt2: string;
+  leaf: string;
+  leaf2: string;
+  trunk: string;
+  roof: string;
+  wall: string;
+  door: string;
+  water: string;
+  water2: string;
+  flower: string;
+  line: string;
 };
+
+function themeFor(element?: string): Theme {
+  const base: Theme = {
+    grass: "#5eae45",
+    grass2: "#498a36",
+    dirt: "#e6c98a",
+    dirt2: "#c9a45e",
+    leaf: "#2f7a34",
+    leaf2: "#1d5424",
+    trunk: "#6d4524",
+    roof: "#9a3b32",
+    wall: "#efe6d2",
+    door: "#5a3418",
+    water: "#3d92c8",
+    water2: "#2b74a4",
+    flower: "#f4e27a",
+    line: "#a78445",
+  };
+  if (element === "Rock") return { ...base, grass: "#8b9860", grass2: "#6f7c49", roof: "#6d6458", leaf: "#5c6848", dirt: "#d9c7a2" };
+  if (element === "Water") return { ...base, grass: "#5ea58a", grass2: "#3e8670", roof: "#2f6f92", water: "#3aa0d0", flower: "#d7f4ff" };
+  if (element === "Electric") return { ...base, roof: "#e2c03a", flower: "#fff1a8", dirt: "#efe0a4" };
+  if (element === "Grass") return { ...base, grass: "#46a03a", grass2: "#2f7d28", leaf: "#1f6a22", roof: "#3d8a32" };
+  if (element === "Poison") return { ...base, roof: "#6d3d86", flower: "#d7a6e8", leaf: "#3d6a48" };
+  if (element === "Psychic") return { ...base, roof: "#6a5ac4", flower: "#d9d2ff", grass: "#6aa888" };
+  if (element === "Fire") return { ...base, roof: "#b8432c", dirt: "#e7b07a", flower: "#ffd0a8", grass: "#c4a15a", grass2: "#a48442" };
+  if (element === "Ground") return { ...base, grass: "#b39a5c", grass2: "#8f7740", dirt: "#d8b078", roof: "#7a5430", leaf: "#6d6840" };
+  return base;
+}
+
+function fill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawTile(ctx: CanvasRenderingContext2D, tile: Tile, x: number, y: number, theme: Theme, frame: number, building: boolean) {
+  const px = x * PX;
+  const py = y * PX;
+  if (tile === 1 || tile === 5) {
+    fill(ctx, px, py, PX, PX, theme.dirt);
+    fill(ctx, px, py, PX, 1, theme.line);
+    fill(ctx, px, py + 15, PX, 1, theme.line);
+    fill(ctx, px + 2, py + 3, 5, 3, theme.dirt2);
+    fill(ctx, px + 9, py + 8, 5, 3, theme.dirt2);
+    if (tile === 5) {
+      fill(ctx, px + 7, py + 3, 2, 10, theme.trunk);
+      fill(ctx, px + 3, py + 1, 10, 5, theme.flower);
+      fill(ctx, px + 4, py + 2, 8, 3, "#fff8dc");
+    }
+    return;
+  }
+  if (tile === 3) {
+    fill(ctx, px, py, PX, PX, theme.water);
+    const shift = (frame % 4) * 2;
+    fill(ctx, px + ((1 + shift) % 12), py + 4, 6, 2, theme.water2);
+    fill(ctx, px + ((6 + shift) % 10), py + 10, 6, 2, "#d9f4ff");
+    return;
+  }
+  if (tile === 6) {
+    fill(ctx, px, py, PX, PX, theme.grass2);
+    const sway = frame % 2;
+    for (let blade = 0; blade < 4; blade++) {
+      const bx = px + 1 + blade * 4 + (sway && blade % 2 ? 1 : 0);
+      fill(ctx, bx, py + 4, 2, 9, theme.leaf);
+      fill(ctx, bx, py + 2, 2, 3, theme.leaf2);
+    }
+    return;
+  }
+  if (tile === 2 && building) {
+    fill(ctx, px, py, PX, PX, theme.wall);
+    fill(ctx, px, py, PX, 4, theme.roof);
+    fill(ctx, px + 2, py + 7, 4, 4, "#9ec0d4");
+    fill(ctx, px + 10, py + 7, 4, 4, "#9ec0d4");
+    fill(ctx, px, py + 15, PX, 1, "#c8bba6");
+    return;
+  }
+  if (tile === 4) {
+    fill(ctx, px, py, PX, PX, theme.wall);
+    fill(ctx, px, py, PX, 4, theme.roof);
+    fill(ctx, px + 4, py + 5, 8, 11, theme.door);
+    fill(ctx, px + 10, py + 10, 1, 2, theme.flower);
+    return;
+  }
+  fill(ctx, px, py, PX, PX, theme.grass);
+  fill(ctx, px + 2, py + 4, 2, 2, theme.grass2);
+  fill(ctx, px + 9, py + 10, 2, 2, theme.grass2);
+  fill(ctx, px + 12, py + 3, 2, 1, theme.grass2);
+  if ((x + y) % 7 === 0) {
+    fill(ctx, px + 6, py + 11, 2, 2, theme.flower);
+    fill(ctx, px + 7, py + 10, 1, 1, "#fff");
+  }
+  if (tile === 2) {
+    fill(ctx, px + 6, py + 9, 4, 7, theme.trunk);
+    fill(ctx, px + 2, py + 4, 12, 7, theme.leaf);
+    fill(ctx, px + 4, py + 1, 8, 5, theme.leaf);
+    fill(ctx, px + 3, py + 5, 3, 2, theme.leaf2);
+    fill(ctx, px + 9, py + 3, 3, 2, "#b6e07a");
+  }
+}
+
+function drawActor(ctx: CanvasRenderingContext2D, tx: number, ty: number, kind: "player" | "trainer" | "leader" | "rival" | "wild", step: number, face: Face) {
+  const baseX = Math.round(tx * PX);
+  const baseY = Math.round(ty * PX);
+  ctx.save();
+  if (face === "left") {
+    ctx.translate(baseX + PX, 0);
+    ctx.scale(-1, 1);
+    ctx.translate(-baseX, 0);
+  }
+  fill(ctx, baseX + 3, baseY + 13, 10, 2, "rgba(20,30,20,.35)");
+  if (kind === "wild") {
+    fill(ctx, baseX + 3, baseY + 4, 10, 8, "#3d8f45");
+    fill(ctx, baseX + 2, baseY + 6, 3, 5, "#2f7034");
+    fill(ctx, baseX + 11, baseY + 6, 3, 5, "#2f7034");
+    fill(ctx, baseX + 5, baseY + 6, 2, 2, "#1a1a1a");
+    fill(ctx, baseX + 9, baseY + 6, 2, 2, "#1a1a1a");
+    fill(ctx, baseX + 6, baseY + 2, 4, 3, "#f2e27a");
+    ctx.restore();
+    return;
+  }
+  const bob = step > 0 ? (Math.floor(step * 8) % 2) : 0;
+  const x = baseX + 3;
+  const y = baseY - 6 - bob;
+  const hat = kind === "player" ? "#234e8a" : kind === "rival" ? "#1c1c1c" : kind === "leader" ? "#e2b33a" : "#a33b32";
+  const shirt = kind === "player" ? "#d24b40" : kind === "rival" ? "#5b3d86" : kind === "leader" ? "#f4efe2" : "#3e7a4a";
+  const legs = kind === "leader" ? "#3a3128" : "#243044";
+  fill(ctx, x + 1, y, 8, 3, hat);
+  fill(ctx, x, y + 2, 10, 2, hat);
+  fill(ctx, x + 2, y + 4, 6, 4, "#f0c8a0");
+  const eye = face === "up" ? y + 4 : y + 5;
+  fill(ctx, x + 3, eye, 1, 1, "#1a1a1a");
+  fill(ctx, x + 6, eye, 1, 1, "#1a1a1a");
+  fill(ctx, x + 1, y + 8, 8, 5, shirt);
+  fill(ctx, x + 1, y + 8, 2, 3, kind === "player" ? "#f0c8a0" : shirt);
+  fill(ctx, x + 7, y + 8, 2, 3, kind === "player" ? "#f0c8a0" : shirt);
+  const swing = step > 0 ? Math.floor(step * 8) % 2 : 0;
+  fill(ctx, x + 2, y + 13, 2, 3 + swing, legs);
+  fill(ctx, x + 6, y + 13, 2, 4 - swing, legs);
+  ctx.restore();
+}
+
+function PixelActor({ kind }: { kind: "player" | "trainer" | "leader" | "rival" | "wild" }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, 64, 64);
+    ctx.save();
+    ctx.scale(3, 3);
+    drawActor(ctx, 0.4, 1.15, kind, 0, "down");
+    ctx.restore();
+  }, [kind]);
+  return <canvas ref={ref} className="h-24 w-24 [image-rendering:pixelated]" />;
+}
 
 function blank(): Tile[][] {
   return Array.from({ length: ROWS }, () => Array<Tile>(COLS).fill(2));
@@ -257,32 +421,6 @@ function seenBy(world: World, x: number, y: number) {
   return null;
 }
 
-function loadImage(src: string) {
-  return new Promise<HTMLImageElement | null>((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
-}
-
-function SpriteFace({ src }: { src: string }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const img = new Image();
-    img.onload = () => {
-      const cut = cutSprite(img);
-      canvas.width = 96;
-      canvas.height = 120;
-      canvas.getContext("2d")?.drawImage(cut, 0, 0, 96, 120);
-    };
-    img.src = src;
-  }, [src]);
-  return <canvas ref={ref} className="h-28 w-24 object-contain" />;
-}
-
 export function MonsterQuest({
   stops,
   picked: _picked,
@@ -377,7 +515,7 @@ export function MonsterQuest({
       foeHp: ids.length,
       right: 0,
       foeName: npc.name,
-      foeSrc: npc.foe,
+      foeKind: npc.kind,
       title: npc.testName,
       need: npc.need,
       reveal: null,
@@ -416,7 +554,7 @@ export function MonsterQuest({
       foeHp: 1,
       right: 0,
       foeName: "Wild question",
-      foeSrc: "",
+      foeKind: "wild",
       title: "Tall grass",
       need: 1,
       reveal: null,
@@ -540,8 +678,8 @@ export function MonsterQuest({
     let bang: Npc | null = null;
     let grassSteps = 0;
     let timer = 0;
-    const player = { x: posRef.current.x, y: posRef.current.y, fromX: posRef.current.x, fromY: posRef.current.y };
-    const art: { hero: CanvasImageSource | null; trainer: CanvasImageSource | null } = { hero: null, trainer: null };
+    const player = { x: posRef.current.x, y: posRef.current.y, fromX: posRef.current.x, fromY: posRef.current.y, face: "up" as Face };
+    let walked = 0;
 
     const spot = (npc: Npc) => {
       if (busyRef.current) return;
@@ -565,20 +703,9 @@ export function MonsterQuest({
 
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKey);
-    void Promise.all([loadImage("/field/towns/walker.jpg?v=2"), loadImage("/field/towns/trainer.jpg?v=2")]).then(([walker, trainer]) => {
-      if (!alive) return;
-      art.hero = walker ? cutSprite(walker) : null;
-      art.trainer = trainer ? cutSprite(trainer) : null;
-    });
-
-    const resize = () => {
-      const width = Math.min(COLS * TILE, wrap.clientWidth || COLS * TILE);
-      canvas.width = width;
-      canvas.height = Math.round(width * (ROWS / COLS));
-    };
-    resize();
-    const observer = new ResizeObserver(resize);
-    observer.observe(wrap);
+    canvas.width = COLS * PX;
+    canvas.height = ROWS * PX;
+    ctx.imageSmoothingEnabled = false;
 
     const dir = () => {
       const keys = keysRef.current;
@@ -605,9 +732,11 @@ export function MonsterQuest({
           if (step && canWalk(map, player.x + step[0], player.y + step[1])) {
             player.fromX = player.x;
             player.fromY = player.y;
+            player.face = step[1] < 0 ? "up" : step[1] > 0 ? "down" : step[0] < 0 ? "left" : "right";
             player.x += step[0];
             player.y += step[1];
             moving = STEP;
+            walked += 1;
             posRef.current.x = player.x;
             posRef.current.y = player.y;
             const tile = map.tiles[player.y][player.x];
@@ -629,40 +758,28 @@ export function MonsterQuest({
       const t = moving === 0 ? 1 : 1 - moving / STEP;
       const drawX = player.fromX + (player.x - player.fromX) * t;
       const drawY = player.fromY + (player.y - player.fromY) * t;
-      const scale = canvas.width / (COLS * TILE);
-      ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      ctx.clearRect(0, 0, COLS * TILE, ROWS * TILE);
+      const theme = themeFor(here?.element);
+      const frame = Math.floor(now / 280);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, COLS * PX, ROWS * PX);
       for (let y = 0; y < ROWS; y++) {
         for (let x = 0; x < COLS; x++) {
           const tile = map.tiles[y][x];
-          ctx.fillStyle = paint[tile];
-          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-          if (tile === 2) {
-            ctx.fillStyle = "#1b4626";
-            ctx.beginPath();
-            ctx.arc(x * TILE + TILE / 2, y * TILE + TILE / 2, TILE * 0.28, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          if (tile === 6) {
-            ctx.fillStyle = "#1f6b2c";
-            ctx.fillRect(x * TILE + 8, y * TILE + 10, 4, 14);
-            ctx.fillRect(x * TILE + 18, y * TILE + 16, 4, 14);
-            ctx.fillRect(x * TILE + 28, y * TILE + 8, 4, 14);
-          }
+          const building = scene === "gym" || (scene === "town" && y === 1 && tile === 2);
+          drawTile(ctx, tile, x, y, theme, frame, building);
         }
       }
+      const stepPhase = moving > 0 ? walked + t : 0;
       for (const npc of map.npcs) {
-        const sprite = npc.kind === "rival" ? art.hero : art.trainer;
-        if (sprite) ctx.drawImage(sprite, npc.x * TILE - 2, npc.y * TILE - TILE * 0.55, TILE * 1.05, TILE * 1.55);
+        drawActor(ctx, npc.x, npc.y, npc.kind === "leader" ? "leader" : npc.kind === "rival" ? "rival" : "trainer", 0, npc.face);
         if (bang && bang.id === npc.id && now < bangUntil) {
-          ctx.fillStyle = "#fff4a8";
-          ctx.fillRect(npc.x * TILE + 12, npc.y * TILE - TILE * 0.85, 22, 22);
-          ctx.fillStyle = "#111";
-          ctx.font = "bold 18px sans-serif";
-          ctx.fillText("!", npc.x * TILE + 18, npc.y * TILE - TILE * 0.45);
+          fill(ctx, npc.x * PX + 3, npc.y * PX - 14, 10, 12, "#fff8dc");
+          fill(ctx, npc.x * PX + 7, npc.y * PX - 11, 2, 5, "#1a1a1a");
+          fill(ctx, npc.x * PX + 7, npc.y * PX - 5, 2, 2, "#1a1a1a");
         }
       }
-      if (art.hero) ctx.drawImage(art.hero, drawX * TILE - 8, drawY * TILE - TILE * 0.7, TILE * 1.25, TILE * 1.75);
+      drawActor(ctx, drawX, drawY, "player", stepPhase, player.face);
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
@@ -670,7 +787,6 @@ export function MonsterQuest({
       alive = false;
       window.clearTimeout(timer);
       cancelAnimationFrame(raf);
-      observer.disconnect();
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKey);
       keysRef.current.clear();
@@ -689,25 +805,37 @@ export function MonsterQuest({
         </button>
       </div>
       {battle ? (
-        <div className="bg-[#88b040] p-3 text-black">
-          <div className="grid grid-cols-2 gap-3">
+        <div>
+        <div className="relative overflow-hidden bg-[#7ec8e3] px-3 pt-4 pb-2 text-black">
+          <div className="absolute inset-x-0 bottom-0 h-28 bg-[#5eae45]" />
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-[#498a36]" />
+          <div className="relative grid grid-cols-[1fr_auto] items-end gap-2">
             <div className="border-4 border-black bg-[#f8f8d8] p-2">
               <p className="text-xs font-bold uppercase">{battle.foeName}</p>
               <div className="mt-1 h-3 border-2 border-black bg-white">
                 <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.foeHp / maxHp) * 100)}%` }} />
               </div>
               <p className="mt-1 text-xs">HP {Math.max(0, battle.foeHp)}/{maxHp}</p>
-              <div className="flex justify-end">{battle.foeSrc ? <SpriteFace src={battle.foeSrc} /> : <div className="flex h-28 w-24 items-center justify-center bg-[#2f8a3a] text-3xl text-white">?</div>}</div>
+            </div>
+            <div className="flex flex-col items-center">
+              <PixelActor kind={battle.foeKind} />
+              <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
+            </div>
+          </div>
+          <div className="relative mt-2 grid grid-cols-[auto_1fr] items-end gap-2">
+            <div className="flex flex-col items-center">
+              <PixelActor kind="player" />
+              <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
             </div>
             <div className="border-4 border-black bg-[#f8f8d8] p-2">
               <p className="text-xs font-bold uppercase">You</p>
               <div className="mt-1 h-3 border-2 border-black bg-white">
-                <div className="h-full bg-[#c23b2e]" style={{ width: `${Math.max(0, (battle.you / maxHp) * 100)}%` }} />
+                <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.you / maxHp) * 100)}%` }} />
               </div>
               <p className="mt-1 text-xs">HP {Math.max(0, battle.you)}/{maxHp}</p>
-              <SpriteFace src="/field/towns/walker.jpg?v=2" />
             </div>
           </div>
+        </div>
           <div className="mt-3 border-4 border-double border-black bg-[#f8f8d8] p-3">
             <p className="text-xs font-bold uppercase">{battle.title}</p>
             {question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : <p className="mt-2 text-sm">Opening the question…</p>}
@@ -737,7 +865,7 @@ export function MonsterQuest({
           </div>
         </div>
       ) : (
-        <canvas ref={canvasRef} className="block w-full" />
+        <canvas ref={canvasRef} className="block w-full [image-rendering:pixelated]" />
       )}
       {!battle ? (
         <div className="border-t-4 border-black bg-[#fff4a8] p-3 text-black">
