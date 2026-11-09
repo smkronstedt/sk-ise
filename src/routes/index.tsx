@@ -7,9 +7,12 @@ import { PrizeLadder } from "@/components/desk/prizes";
 import { Operations } from "@/components/desk/operations";
 import { Shell } from "@/components/desk/shell";
 import { HoustonTrail } from "@/components/desk/houston-trail";
+import { InserviceCard } from "@/components/desk/inservice-card";
+import { isAdminEmail } from "@/lib/admin-email";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { bucketStats, drawQuestionIds, scoreTest } from "@/lib/desk/adapt";
 import { loadCatalog } from "@/lib/desk/catalog";
-import { ise2025 } from "@/lib/desk/ise";
+import { ise2025, type IseReport } from "@/lib/desk/ise";
 import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 import { BANK_TOTAL, countBankCorrect } from "@/lib/desk/original-bank";
 import { questions } from "@/lib/desk/questions";
@@ -155,9 +158,12 @@ function Home() {
     });
   };
 
-  const applyPlan = () => desk.setFocusMap(ise2025.focus);
+  const applyFocus = (focus: Record<BlueprintId, Focus>) => desk.setFocusMap(focus);
   const [bankCorrect, setBankCorrect] = useState(0);
   const [leaders, setLeaders] = useState<Leader[] | null>(null);
+  const [ownReport, setOwnReport] = useState<IseReport | null>(null);
+  const { user, isPending } = useCurrentUserState();
+  const mine = isAdminEmail(user?.primaryEmail);
   useEffect(() => {
     setBankCorrect(countBankCorrect());
     let stop = false;
@@ -185,9 +191,15 @@ function Home() {
             <h1 className="font-serif text-2xl tracking-tight">{rank.title}</h1>
             <div className="mt-1 max-w-xl text-sm text-muted">
               <p>{deskStanding(bankCorrect, leaders)}</p>
-              <p>
-                Country: {ise2025.percentile}th percentile on the {ise2025.year} in-service, from {ise2025.prior[0].percentile}th in {ise2025.prior[0].year}. That is the national exam. This bank has no country-wide group.
-              </p>
+              {mine ? (
+                <p>
+                  Country: {ise2025.percentile}th percentile on the {ise2025.year} in-service, from {ise2025.prior[0].percentile}th in {ise2025.prior[0].year}. That is the national exam. This bank has no country-wide group.
+                </p>
+              ) : ownReport ? (
+                <p>
+                  Country: {ownReport.percentile}th percentile on the {ownReport.year} in-service. That is the national exam. This bank has no country-wide group.
+                </p>
+              ) : null}
             </div>
           </div>
           <p className="text-sm text-muted">
@@ -238,7 +250,11 @@ function Home() {
           correct={correct}
           openTests={openTests}
           startAdaptive={startAdaptive}
-          applyPlan={applyPlan}
+          applyFocus={applyFocus}
+          mine={mine}
+          sessionPending={isPending}
+          signedIn={Boolean(user)}
+          onReport={setOwnReport}
         />
       )}
       {mode === "base" && <HomeBase pct={pct} mastered={mastered} dueCards={0} startAdaptive={startAdaptive} />}
@@ -268,7 +284,11 @@ function ClassicView({
   correct,
   openTests,
   startAdaptive,
-  applyPlan,
+  applyFocus,
+  mine,
+  sessionPending,
+  signedIn,
+  onReport,
 }: {
   desk: ReturnType<typeof useDesk>;
   stats: ReturnType<typeof bucketStats>;
@@ -277,7 +297,11 @@ function ClassicView({
   correct: number;
   openTests: ReturnType<typeof useDesk>["state"]["tests"];
   startAdaptive: () => void;
-  applyPlan: () => void;
+  applyFocus: (focus: Record<BlueprintId, Focus>) => void;
+  mine: boolean;
+  sessionPending: boolean;
+  signedIn: boolean;
+  onReport: (report: IseReport | null) => void;
 }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.8fr)]">
@@ -343,36 +367,7 @@ function ClassicView({
             Open the log
           </Link>
         </section>
-        <section className="rounded border border-line bg-paper p-4">
-          <p className="text-sm font-semibold tracking-wide text-muted uppercase">2025 in-service</p>
-          <h2 className="font-serif text-2xl tracking-tight">
-            {ise2025.score}% · {ise2025.percentile}th percentile
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            Up from {ise2025.prior[0].score}% ({ise2025.prior[0].percentile}th) in 2024. Time goes to misses that were both common and large.
-          </p>
-          <ul className="mt-3 flex flex-col gap-2 text-sm">
-            {ise2025.leaks.map((row) => (
-              <li key={row.label}>
-                <span className="font-semibold">{row.label}</span>
-                <span className="text-muted">
-                  {" "}
-                  · {row.score}% on {row.items}. {row.note}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-sm text-muted">
-            Leave infection, fluids, trauma, and congenital alone. Oncology stays on the outline because it is a quarter of the exam, not because it was the weak spot.
-          </p>
-          <button
-            type="button"
-            onClick={applyPlan}
-            className="mt-3 min-h-11 w-full rounded border border-navy px-4 text-sm font-semibold"
-          >
-            Set focus from this report
-          </button>
-        </section>
+        <InserviceCard mine={mine} pending={sessionPending} signedIn={signedIn} onApply={applyFocus} onReport={onReport} />
 
         <section className="rounded border border-line bg-paper p-4">
           <p className="text-sm font-semibold tracking-wide text-muted uppercase">Next block</p>
