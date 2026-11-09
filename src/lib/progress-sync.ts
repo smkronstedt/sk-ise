@@ -1,7 +1,9 @@
 import { loadProgress, saveProgress } from "@/lib/progress-api";
 import { loadActivity, mergeActivity, saveActivity, dayKey, type DayLog } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
-import { loadDaily, saveDaily } from "@/lib/desk/daily";
+import { loadDaily, mergeDaily, saveDaily } from "@/lib/desk/daily";
+import type { ItemAnswer, TestBlock } from "@/lib/desk/types";
+import type { Card } from "@/lib/cards";
 
 const DESK = "callroom-desk-v1";
 const BANK = "callroom-original-bank-v1";
@@ -76,9 +78,141 @@ function unpack(payload: string) {
   return { remoteBundle, remoteActivity, remoteDaily };
 }
 
-function restoreSide(remoteActivity: Record<string, DayLog> | null | undefined, remoteDaily: Record<string, { id: string }> | null | undefined, merge: boolean) {
+function restoreSide(remoteActivity: Record<string, DayLog> | null | undefined, remoteDaily: Record<string, { id: string; choice?: string; correct?: boolean }> | null | undefined, merge: boolean) {
   saveActivity(merge ? mergeActivity(loadActivity(), remoteActivity) : (remoteActivity ?? {}));
-  if (remoteDaily) saveDaily(remoteDaily);
+  if (!remoteDaily) return;
+  saveDaily(merge ? mergeDaily(loadDaily(), remoteDaily) : remoteDaily);
+}
+
+type BankShape = { answers?: Record<string, { choice?: string; correct?: boolean }>; marks?: Record<string, boolean>; notes?: Record<string, string> };
+type DeskShape = { tests?: TestBlock[]; marks?: Record<string, boolean>; notes?: Record<string, string>; focus?: Record<string, string>; fresh?: Record<string, boolean> };
+type OpsShape = { owned?: string[]; equipped?: Record<string, string>; here?: Record<string, string>; fees?: number; treated?: string[] };
+
+function asRecord<T>(value: unknown): T {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as T) : ({} as T);
+}
+
+function mergeFlags(local: Record<string, boolean> = {}, remote: Record<string, boolean> = {}) {
+  const out: Record<string, boolean> = {};
+  for (const key of new Set([...Object.keys(local), ...Object.keys(remote)])) out[key] = Boolean(local[key] || remote[key]);
+  return out;
+}
+
+function mergeNotes(local: Record<string, string> = {}, remote: Record<string, string> = {}) {
+  const out: Record<string, string> = { ...remote };
+  for (const [key, note] of Object.entries(local)) {
+    if (note || !out[key]) out[key] = note;
+  }
+  return out;
+}
+
+function mergeOneTest(local: TestBlock, remote: TestBlock): TestBlock {
+  const answers: Record<string, ItemAnswer> = { ...(remote.answers ?? {}) };
+  for (const [id, answer] of Object.entries(local.answers ?? {})) {
+    const other = answers[id];
+    if (!other?.submitted || answer?.submitted) answers[id] = answer;
+  }
+  const questionIds = (local.questionIds?.length ?? 0) >= (remote.questionIds?.length ?? 0) ? local.questionIds : remote.questionIds;
+  const status = local.status === "done" || remote.status === "done" ? "done" : "open";
+  const finishedAt = Math.max(local.finishedAt ?? 0, remote.finishedAt ?? 0) || undefined;
+  return {
+    ...remote,
+    ...local,
+    questionIds,
+    answers,
+    status,
+    finishedAt,
+    index: Math.max(local.index ?? 0, remote.index ?? 0),
+  };
+}
+
+function mergeTests(local: TestBlock[] = [], remote: TestBlock[] = []) {
+  const map = new Map<string, TestBlock>();
+  for (const test of remote) {
+    if (test?.id) map.set(test.id, test);
+  }
+  for (const test of local) {
+    if (!test?.id) continue;
+    const have = map.get(test.id);
+    map.set(test.id, have ? mergeOneTest(test, have) : test);
+  }
+  return [...map.values()].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0) || a.id.localeCompare(b.id));
+}
+
+function mergeDesk(local: DeskShape, remote: DeskShape): DeskShape {
+  return {
+    tests: mergeTests(local.tests, remote.tests),
+    marks: mergeFlags(local.marks, remote.marks),
+    notes: mergeNotes(local.notes, remote.notes),
+    focus: { ...(remote.focus ?? {}), ...(local.focus ?? {}) },
+    fresh: mergeFlags(local.fresh, remote.fresh),
+  };
+}
+
+function mergeBank(local: BankShape, remote: BankShape): BankShape {
+  const answers: NonNullable<BankShape["answers"]> = {};
+  for (const id of new Set([...Object.keys(local.answers ?? {}), ...Object.keys(remote.answers ?? {})])) {
+    const left = local.answers?.[id];
+    const right = remote.answers?.[id];
+    if (!left) answers[id] = right!;
+    else if (!right || left.correct === right.correct || left.correct) answers[id] = left;
+    else answers[id] = right;
+  }
+  return {
+    answers,
+    marks: mergeFlags(local.marks, remote.marks),
+    notes: mergeNotes(local.notes, remote.notes),
+  };
+}
+
+function mergeCards(local: Card[], remote: Card[]) {
+  const map = new Map<string, Card>();
+  for (const card of remote) {
+    if (card?.id) map.set(card.id, card);
+  }
+  for (const card of local) {
+    if (!card?.id) continue;
+    const have = map.get(card.id);
+    if (!have || (card.reps ?? 0) > (have.reps ?? 0) || ((card.reps ?? 0) === (have.reps ?? 0) && (card.due ?? 0) > (have.due ?? 0))) map.set(card.id, card);
+  }
+  return [...map.values()].sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function mergeOps(local: OpsShape | null, remote: OpsShape | null): OpsShape | null {
+  if (!local && !remote) return null;
+  const left = local ?? {};
+  const right = remote ?? {};
+  return {
+    owned: [...new Set([...(left.owned ?? []), ...(right.owned ?? [])])].sort(),
+    equipped: { ...(right.equipped ?? {}), ...(left.equipped ?? {}) },
+    here: { ...(right.here ?? {}), ...(left.here ?? {}) },
+    fees: Math.max(left.fees ?? 0, right.fees ?? 0),
+    treated: [...new Set([...(left.treated ?? []), ...(right.treated ?? [])])].sort(),
+  };
+}
+
+function mergeBundles(local: Bundle, remote: Bundle): Bundle {
+  const localCards = Array.isArray(local.cards) ? (local.cards as Card[]) : [];
+  const remoteCards = Array.isArray(remote.cards) ? (remote.cards as Card[]) : [];
+  return {
+    desk: mergeDesk(asRecord<DeskShape>(local.desk), asRecord<DeskShape>(remote.desk)),
+    bank: mergeBank(asRecord<BankShape>(local.bank), asRecord<BankShape>(remote.bank)),
+    cards: mergeCards(localCards, remoteCards),
+    ops: mergeOps(local.ops && typeof local.ops === "object" ? (local.ops as OpsShape) : null, remote.ops && typeof remote.ops === "object" ? (remote.ops as OpsShape) : null),
+  };
+}
+
+function stable(value: unknown): string {
+  const sort = (input: unknown): unknown => {
+    if (Array.isArray(input)) return input.map(sort);
+    if (input && typeof input === "object") {
+      const out: Record<string, unknown> = {};
+      for (const key of Object.keys(input as object).sort()) out[key] = sort((input as Record<string, unknown>)[key]);
+      return out;
+    }
+    return input;
+  };
+  return JSON.stringify(sort(value));
 }
 
 type SeedAnswer = { choice?: number | null; submitted?: boolean };
@@ -148,15 +282,16 @@ export async function syncDeviceProgress(userId?: string): Promise<"synced" | "d
     }
     const unpacked = unpack(remote.payload);
     restoreSide(unpacked.remoteActivity, unpacked.remoteDaily, true);
-    if (!hasLocalWork(local) && hasLocalWork(unpacked.remoteBundle)) {
-      apply(unpacked.remoteBundle);
-      if (userId) localStorage.setItem(OWNER, userId);
-      window.location.reload();
-      return "synced";
+    const merged = mergeBundles(local, unpacked.remoteBundle);
+    const changed = stable(merged) !== stable(mergeBundles(local, { desk: {}, bank: {}, cards: [], ops: null }));
+    if (changed) {
+      apply(merged);
+      localStorage.removeItem(SEED);
     }
     await ensureCorrectLog();
-    await saveProgress({ data: { payload: JSON.stringify(pack(local)) } });
+    await saveProgress({ data: { payload: JSON.stringify(pack(merged)) } });
     if (userId) localStorage.setItem(OWNER, userId);
+    if (changed) window.location.reload();
     return "synced";
   } catch {
     return "device";
