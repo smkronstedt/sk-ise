@@ -21,7 +21,7 @@ import { blackOpsStatus, unlockBlackOps, unlockUndisclosed } from "@/lib/access-
 import { addWorkout, loadTraining, trainingSummary, type Workout, type WorkoutKind } from "@/lib/desk/training";
 import { useDesk } from "@/lib/desk/provider";
 
-const MEDIC = 40;
+const MEDIC = 5;
 
 const slots: { id: Slot; label: string }[] = [
   { id: "head", label: "Head" },
