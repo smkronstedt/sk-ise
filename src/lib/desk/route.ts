@@ -54,11 +54,23 @@ export type Stop =
   | { kind: "trainer"; name: string; count: number; open: boolean; done: boolean; city: City }
   | { kind: "gym"; open: boolean; done: boolean; city: City };
 
+export function rivalTestName(city: City) {
+  return `Rival: ${city.city}`;
+}
+
+export function rivalBeaten(tests: TestBlock[], city: City) {
+  return passedNames(tests).has(rivalTestName(city));
+}
+
 export function routeStops(tests: TestBlock[]): Stop[] {
   const names = passedNames(tests);
   const stops: Stop[] = [];
   cities.forEach((city, index) => {
-    const previous = index === 0 || names.has(`Gym: ${cities[index - 1].element}`);
+    const prev = index === 0 ? null : cities[index - 1];
+    const prevGym = !prev || names.has(`Gym: ${prev.element}`);
+    const prevRival = !prev || names.has(`Rival: ${prev.city}`);
+    const already = names.has(`Gym: ${city.element}`);
+    const previous = prevGym && (prevRival || already);
     const trainersDone = city.trainers.every((trainer) => names.has(`Route: ${trainer.name}`));
     for (const trainer of city.trainers) {
       stops.push({
