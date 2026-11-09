@@ -21,7 +21,8 @@ function shiftKey(key: string, days: number) {
 function weekStartKey(key: string) {
   const [year, month, day] = key.split("-").map(Number);
   const dow = new Date(Date.UTC(year, (month || 1) - 1, day || 1)).getUTCDay();
-  return shiftKey(key, -dow);
+  const sinceMonday = dow === 0 ? 6 : dow - 1;
+  return shiftKey(key, -sinceMonday);
 }
 
 export function periodTotals(days: Record<string, { correct?: number } | undefined>, now = new Date()): PeriodScores {

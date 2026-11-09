@@ -106,7 +106,7 @@ function LeaderboardPage() {
           <p className="text-xs font-semibold tracking-wide text-[#8a6418] uppercase">Above the clouds</p>
           <h1 className="font-serif text-3xl text-[#1d3557]">Leaderboard</h1>
           <p className="mt-1 max-w-2xl text-sm text-[#1d3557]">
-            A point is a correct answer. Today, this week, and this month use Central time. A bolt means that score is at least one. Nothing expires.
+            A point is a correct answer. Today, this week, and this month use Central time. The week resets Monday. A bolt means that score is at least one. Nothing expires.
           </p>
         </div>
         <div className="sticky top-16 z-10 border-y border-[#c9a15b] bg-[#e7f3ff]/95 px-4 py-3 backdrop-blur">
