@@ -63,6 +63,7 @@ export function DeskProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const next = recipe(prev ?? load());
       localStorage.setItem(KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("ise-progress"));
       return next;
     });
   };

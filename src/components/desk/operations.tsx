@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { CampLoadout } from "@/components/desk/camp-loadout";
 import { selectionStatus } from "@/lib/desk/adapt";
 import { bankList, getQuestion, loadCatalog, topicSlug } from "@/lib/desk/catalog";
-import { prizeStatus } from "@/lib/desk/activity";
+import { earnedPurse } from "@/lib/desk/purse";
 import {
   gear,
   gearCost,
@@ -71,7 +71,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
   };
 
   const level = levelFor(correct, total);
-  const cash = Math.max(0, correct + prizeStatus().purse + trainingSummary().purse - gearCost(save));
+  const cash = Math.max(0, earnedPurse() - gearCost(save));
   const stats = statsFor(save.owned, save.equipped, level);
   const route = theaters.find((row) => row.id === theater) ?? theaters[0];
   const maps: Record<TheaterId, string> = {
@@ -240,7 +240,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
             <div>
               <h1 className="font-serif text-3xl tracking-tight">Black Ops</h1>
               <p className="mt-2 max-w-xl text-sm text-ops-olive">
-                Each town is a block from the bank. Start the town you are on. Clear it at 60% on at least 10 items, and the next town opens. Cash matches the header. Buying spends it.
+                Each town is a block from the bank. Start the town you are on. Clear it at 60% on at least 10 items, and the next town opens. Questions pay both games. Buying here only spends the Black Ops wallet.
               </p>
             </div>
           </div>

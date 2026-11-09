@@ -9,10 +9,10 @@ import { useDesk } from "@/lib/desk/provider";
 import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, TestBlock } from "@/lib/desk/types";
+import { drawActor, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
 
 const COLS = 13;
 const ROWS = 11;
-const PX = 16;
 const STEP = 0.16;
 const RIVAL = "Reed Calder";
 
@@ -56,180 +56,6 @@ type Battle = {
   over: string | null;
 };
 
-type Theme = {
-  grass: string;
-  grass2: string;
-  dirt: string;
-  dirt2: string;
-  leaf: string;
-  leaf2: string;
-  trunk: string;
-  roof: string;
-  wall: string;
-  door: string;
-  water: string;
-  water2: string;
-  flower: string;
-  line: string;
-};
-
-function themeFor(element?: string): Theme {
-  const base: Theme = {
-    grass: "#5eae45",
-    grass2: "#498a36",
-    dirt: "#e6c98a",
-    dirt2: "#c9a45e",
-    leaf: "#2f7a34",
-    leaf2: "#1d5424",
-    trunk: "#6d4524",
-    roof: "#9a3b32",
-    wall: "#efe6d2",
-    door: "#5a3418",
-    water: "#3d92c8",
-    water2: "#2b74a4",
-    flower: "#f4e27a",
-    line: "#a78445",
-  };
-  if (element === "Rock") return { ...base, grass: "#8b9860", grass2: "#6f7c49", roof: "#6d6458", leaf: "#5c6848", dirt: "#d9c7a2" };
-  if (element === "Water") return { ...base, grass: "#5ea58a", grass2: "#3e8670", roof: "#2f6f92", water: "#3aa0d0", flower: "#d7f4ff" };
-  if (element === "Electric") return { ...base, roof: "#e2c03a", flower: "#fff1a8", dirt: "#efe0a4" };
-  if (element === "Grass") return { ...base, grass: "#46a03a", grass2: "#2f7d28", leaf: "#1f6a22", roof: "#3d8a32" };
-  if (element === "Poison") return { ...base, roof: "#6d3d86", flower: "#d7a6e8", leaf: "#3d6a48" };
-  if (element === "Psychic") return { ...base, roof: "#6a5ac4", flower: "#d9d2ff", grass: "#6aa888" };
-  if (element === "Fire") return { ...base, roof: "#b8432c", dirt: "#e7b07a", flower: "#ffd0a8", grass: "#c4a15a", grass2: "#a48442" };
-  if (element === "Ground") return { ...base, grass: "#b39a5c", grass2: "#8f7740", dirt: "#d8b078", roof: "#7a5430", leaf: "#6d6840" };
-  return base;
-}
-
-function fill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, w, h);
-}
-
-function drawTile(ctx: CanvasRenderingContext2D, tile: Tile, x: number, y: number, theme: Theme, frame: number, building: boolean) {
-  const px = x * PX;
-  const py = y * PX;
-  if (tile === 1 || tile === 5) {
-    fill(ctx, px, py, PX, PX, theme.dirt);
-    fill(ctx, px, py, PX, 1, theme.line);
-    fill(ctx, px, py + 15, PX, 1, theme.line);
-    fill(ctx, px + 2, py + 3, 5, 3, theme.dirt2);
-    fill(ctx, px + 9, py + 8, 5, 3, theme.dirt2);
-    if (tile === 5) {
-      fill(ctx, px + 7, py + 3, 2, 10, theme.trunk);
-      fill(ctx, px + 3, py + 1, 10, 5, theme.flower);
-      fill(ctx, px + 4, py + 2, 8, 3, "#fff8dc");
-    }
-    return;
-  }
-  if (tile === 3) {
-    fill(ctx, px, py, PX, PX, theme.water);
-    const shift = (frame % 4) * 2;
-    fill(ctx, px + ((1 + shift) % 12), py + 4, 6, 2, theme.water2);
-    fill(ctx, px + ((6 + shift) % 10), py + 10, 6, 2, "#d9f4ff");
-    return;
-  }
-  if (tile === 6) {
-    fill(ctx, px, py, PX, PX, theme.grass2);
-    const sway = frame % 2;
-    for (let blade = 0; blade < 4; blade++) {
-      const bx = px + 1 + blade * 4 + (sway && blade % 2 ? 1 : 0);
-      fill(ctx, bx, py + 4, 2, 9, theme.leaf);
-      fill(ctx, bx, py + 2, 2, 3, theme.leaf2);
-    }
-    return;
-  }
-  if (tile === 2 && building) {
-    fill(ctx, px, py, PX, PX, theme.wall);
-    fill(ctx, px, py, PX, 4, theme.roof);
-    fill(ctx, px + 2, py + 7, 4, 4, "#9ec0d4");
-    fill(ctx, px + 10, py + 7, 4, 4, "#9ec0d4");
-    fill(ctx, px, py + 15, PX, 1, "#c8bba6");
-    return;
-  }
-  if (tile === 4) {
-    fill(ctx, px, py, PX, PX, theme.wall);
-    fill(ctx, px, py, PX, 4, theme.roof);
-    fill(ctx, px + 4, py + 5, 8, 11, theme.door);
-    fill(ctx, px + 10, py + 10, 1, 2, theme.flower);
-    return;
-  }
-  fill(ctx, px, py, PX, PX, theme.grass);
-  fill(ctx, px + 2, py + 4, 2, 2, theme.grass2);
-  fill(ctx, px + 9, py + 10, 2, 2, theme.grass2);
-  fill(ctx, px + 12, py + 3, 2, 1, theme.grass2);
-  if ((x + y) % 7 === 0) {
-    fill(ctx, px + 6, py + 11, 2, 2, theme.flower);
-    fill(ctx, px + 7, py + 10, 1, 1, "#fff");
-  }
-  if (tile === 2) {
-    fill(ctx, px + 6, py + 9, 4, 7, theme.trunk);
-    fill(ctx, px + 2, py + 4, 12, 7, theme.leaf);
-    fill(ctx, px + 4, py + 1, 8, 5, theme.leaf);
-    fill(ctx, px + 3, py + 5, 3, 2, theme.leaf2);
-    fill(ctx, px + 9, py + 3, 3, 2, "#b6e07a");
-  }
-}
-
-function drawActor(ctx: CanvasRenderingContext2D, tx: number, ty: number, kind: "player" | "trainer" | "leader" | "rival" | "wild", step: number, face: Face) {
-  const baseX = Math.round(tx * PX);
-  const baseY = Math.round(ty * PX);
-  ctx.save();
-  if (face === "left") {
-    ctx.translate(baseX + PX, 0);
-    ctx.scale(-1, 1);
-    ctx.translate(-baseX, 0);
-  }
-  fill(ctx, baseX + 3, baseY + 13, 10, 2, "rgba(20,30,20,.35)");
-  if (kind === "wild") {
-    fill(ctx, baseX + 3, baseY + 4, 10, 8, "#3d8f45");
-    fill(ctx, baseX + 2, baseY + 6, 3, 5, "#2f7034");
-    fill(ctx, baseX + 11, baseY + 6, 3, 5, "#2f7034");
-    fill(ctx, baseX + 5, baseY + 6, 2, 2, "#1a1a1a");
-    fill(ctx, baseX + 9, baseY + 6, 2, 2, "#1a1a1a");
-    fill(ctx, baseX + 6, baseY + 2, 4, 3, "#f2e27a");
-    ctx.restore();
-    return;
-  }
-  const bob = step > 0 ? (Math.floor(step * 8) % 2) : 0;
-  const x = baseX + 3;
-  const y = baseY - 6 - bob;
-  const hat = kind === "player" ? "#234e8a" : kind === "rival" ? "#1c1c1c" : kind === "leader" ? "#e2b33a" : "#a33b32";
-  const shirt = kind === "player" ? "#d24b40" : kind === "rival" ? "#5b3d86" : kind === "leader" ? "#f4efe2" : "#3e7a4a";
-  const legs = kind === "leader" ? "#3a3128" : "#243044";
-  fill(ctx, x + 1, y, 8, 3, hat);
-  fill(ctx, x, y + 2, 10, 2, hat);
-  fill(ctx, x + 2, y + 4, 6, 4, "#f0c8a0");
-  const eye = face === "up" ? y + 4 : y + 5;
-  fill(ctx, x + 3, eye, 1, 1, "#1a1a1a");
-  fill(ctx, x + 6, eye, 1, 1, "#1a1a1a");
-  fill(ctx, x + 1, y + 8, 8, 5, shirt);
-  fill(ctx, x + 1, y + 8, 2, 3, kind === "player" ? "#f0c8a0" : shirt);
-  fill(ctx, x + 7, y + 8, 2, 3, kind === "player" ? "#f0c8a0" : shirt);
-  const swing = step > 0 ? Math.floor(step * 8) % 2 : 0;
-  fill(ctx, x + 2, y + 13, 2, 3 + swing, legs);
-  fill(ctx, x + 6, y + 13, 2, 4 - swing, legs);
-  ctx.restore();
-}
-
-function PixelActor({ kind }: { kind: "player" | "trainer" | "leader" | "rival" | "wild" }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, 64, 64);
-    ctx.save();
-    ctx.scale(3, 3);
-    drawActor(ctx, 0.4, 1.15, kind, 0, "down");
-    ctx.restore();
-  }, [kind]);
-  return <canvas ref={ref} className="h-24 w-24 [image-rendering:pixelated]" />;
-}
 
 function blank(): Tile[][] {
   return Array.from({ length: ROWS }, () => Array<Tile>(COLS).fill(2));
@@ -703,8 +529,8 @@ export function MonsterQuest({
 
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKey);
-    canvas.width = COLS * PX;
-    canvas.height = ROWS * PX;
+    canvas.width = COLS * TILE;
+    canvas.height = ROWS * TILE;
     ctx.imageSmoothingEnabled = false;
 
     const dir = () => {
@@ -758,25 +584,33 @@ export function MonsterQuest({
       const t = moving === 0 ? 1 : 1 - moving / STEP;
       const drawX = player.fromX + (player.x - player.fromX) * t;
       const drawY = player.fromY + (player.y - player.fromY) * t;
-      const theme = themeFor(here?.element);
       const frame = Math.floor(now / 280);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.imageSmoothingEnabled = false;
-      ctx.clearRect(0, 0, COLS * PX, ROWS * PX);
+      ctx.clearRect(0, 0, COLS * TILE, ROWS * TILE);
       for (let y = 0; y < ROWS; y++) {
         for (let x = 0; x < COLS; x++) {
           const tile = map.tiles[y][x];
           const building = scene === "gym" || (scene === "town" && y === 1 && tile === 2);
-          drawTile(ctx, tile, x, y, theme, frame, building);
+          drawGround(ctx, tile, x, y, building, frame);
+        }
+      }
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          const tile = map.tiles[y][x];
+          const building = scene === "gym" || (scene === "town" && y === 1 && tile === 2);
+          drawProp(ctx, tile, x, y, building);
         }
       }
       const stepPhase = moving > 0 ? walked + t : 0;
       for (const npc of map.npcs) {
         drawActor(ctx, npc.x, npc.y, npc.kind === "leader" ? "leader" : npc.kind === "rival" ? "rival" : "trainer", 0, npc.face);
         if (bang && bang.id === npc.id && now < bangUntil) {
-          fill(ctx, npc.x * PX + 3, npc.y * PX - 14, 10, 12, "#fff8dc");
-          fill(ctx, npc.x * PX + 7, npc.y * PX - 11, 2, 5, "#1a1a1a");
-          fill(ctx, npc.x * PX + 7, npc.y * PX - 5, 2, 2, "#1a1a1a");
+          ctx.fillStyle = "#fff8dc";
+          ctx.fillRect(npc.x * TILE + 8, npc.y * TILE - 18, 16, 18);
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(npc.x * TILE + 14, npc.y * TILE - 14, 4, 8);
+          ctx.fillRect(npc.x * TILE + 14, npc.y * TILE - 4, 4, 3);
         }
       }
       drawActor(ctx, drawX, drawY, "player", stepPhase, player.face);

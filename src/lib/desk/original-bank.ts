@@ -51,6 +51,7 @@ export function loadBankProgress(): BankProgress {
 
 export function saveBankProgress(progress: BankProgress) {
   localStorage.setItem(KEY, JSON.stringify(progress));
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("ise-progress"));
 }
 
 export function optionText(item: BankItem, letter: string) {

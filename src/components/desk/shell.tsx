@@ -5,8 +5,7 @@ import { myAccess, type AccessStatus } from "@/lib/access-api";
 import { loadCards } from "@/lib/cards";
 import { Cover, Waiting } from "@/components/desk/cover";
 import { DAILY_GOAL, prizeStatus } from "@/lib/desk/activity";
-import { trainingSummary } from "@/lib/desk/training";
-import { gearCost } from "@/lib/desk/ops";
+import { cashForMode } from "@/lib/desk/purse";
 import { bucketStats } from "@/lib/desk/adapt";
 import { countBankCorrect } from "@/lib/desk/original-bank";
 import type { DeskState } from "@/lib/desk/types";
@@ -50,11 +49,15 @@ export function Shell({ children }: { children: ReactNode }) {
         trainer = 0;
       }
       const correct = countBankCorrect() + trainer;
-      setTally({ correct, money: Math.max(0, correct + prizes.purse + trainingSummary().purse - gearCost()), today: prizes.today });
+      setTally({ correct, money: cashForMode(loadMode()), today: prizes.today });
     };
     read();
     window.addEventListener("ise-activity", read);
-    return () => window.removeEventListener("ise-activity", read);
+    window.addEventListener("ise-mode", read);
+    return () => {
+      window.removeEventListener("ise-activity", read);
+      window.removeEventListener("ise-mode", read);
+    };
   }, []);
 
   useEffect(() => {
@@ -93,9 +96,24 @@ export function Shell({ children }: { children: ReactNode }) {
     };
     run();
     const timer = window.setInterval(run, 30000);
+    let debounce = 0;
+    const kick = () => {
+      window.clearTimeout(debounce);
+      debounce = window.setTimeout(run, 700);
+    };
+    const onVisible = () => run();
+    window.addEventListener("ise-progress", kick);
+    window.addEventListener("ise-activity", kick);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pagehide", run);
     return () => {
       stop = true;
       window.clearInterval(timer);
+      window.clearTimeout(debounce);
+      window.removeEventListener("ise-progress", kick);
+      window.removeEventListener("ise-activity", kick);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pagehide", run);
     };
   }, [session.data?.user?.id, access]);
 
@@ -134,7 +152,7 @@ export function Shell({ children }: { children: ReactNode }) {
           {open ? (
           <div className="text-right text-xs leading-tight">
             <p className="font-semibold">{tally.correct} correct</p>
-            <p className="font-semibold">${tally.money}</p>
+            <p className="font-semibold">{mode === "ops" ? `Ops $${tally.money}` : mode === "notes" ? `Quest $${tally.money}` : `$${tally.money}`}</p>
             <p className="text-white/70">Today {tally.today}/{DAILY_GOAL}</p>
           </div>
           ) : null}
