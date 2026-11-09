@@ -50,7 +50,93 @@ function AdminPage() {
         </button>
       </div>
       {error ? <p className="mb-3 text-sm text-wrong">{error}</p> : null}
-      <section className="mb-4 rounded border border-line bg-paper p-4">
+      <section className="rounded border border-line bg-paper">
+        <h2 className="border-b border-line px-4 py-3 font-semibold">Waiting for approval ({waiting.length})</h2>
+        {people === null ? <p className="px-4 py-3 text-sm text-muted">Loading…</p> : null}
+        {people && waiting.length === 0 ? <p className="px-4 py-3 text-sm text-muted">No one is waiting.</p> : null}
+        <ul>
+          {waiting.map((person) => (
+            <li key={person.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
+              <div>
+                <p className="font-semibold">{person.name || "No name"}</p>
+                <p className="text-sm text-muted">{person.email}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={busy === person.id}
+                  onClick={() => decide(person.id, "approved")}
+                  className="min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  disabled={busy === person.id}
+                  onClick={() => decide(person.id, "denied")}
+                  className="min-h-11 rounded border border-wrong px-3 text-sm font-semibold text-wrong disabled:opacity-50"
+                >
+                  Decline
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="mt-4 rounded border border-line bg-paper">
+        <h2 className="border-b border-line px-4 py-3 font-semibold">Everyone</h2>
+        <ul>
+          {(people ?? []).map((person) => (
+            <li key={person.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
+              <div>
+                <p className="font-semibold">{person.name || person.email}</p>
+                <p className="text-sm text-muted">
+                  {person.email} · {person.status} · {person.score} correct on the account
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {person.status !== "approved" ? (
+                  <button
+                    type="button"
+                    disabled={busy === person.id}
+                    onClick={() => decide(person.id, "approved")}
+                    className="min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    Approve
+                  </button>
+                ) : null}
+                {person.status !== "denied" ? (
+                  <button
+                    type="button"
+                    disabled={busy === person.id}
+                    onClick={() => decide(person.id, "denied")}
+                    className="min-h-11 rounded border border-wrong px-3 text-sm font-semibold text-wrong disabled:opacity-50"
+                  >
+                    {person.status === "approved" ? "Close access" : "Decline"}
+                  </button>
+                ) : null}
+                {person.status === "approved" ? (
+                  <button
+                    type="button"
+                    disabled={busy === person.id}
+                    onClick={() => {
+                      setBusy(person.id);
+                      void setBlackOpsAccess({ data: { userId: person.id, allowed: !person.blackops } })
+                        .then(() => load())
+                        .catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not update Black Ops."))
+                        .finally(() => setBusy(""));
+                    }}
+                    className="min-h-11 rounded border border-line px-3 text-sm font-semibold disabled:opacity-50"
+                  >
+                    {person.blackops ? "Close Black Ops" : "Allow Black Ops"}
+                  </button>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="mt-4 rounded border border-line bg-paper p-4">
         <h2 className="font-semibold">Black Ops password</h2>
         <p className="mt-1 text-sm text-muted">This opens the Black Ops game. It does not open the undisclosed routes.</p>
         <form
@@ -122,70 +208,6 @@ function AdminPage() {
             Set password
           </button>
         </form>
-      </section>
-      <section className="rounded border border-line bg-paper">
-        <h2 className="border-b border-line px-4 py-3 font-semibold">Waiting ({waiting.length})</h2>
-        {people === null ? <p className="px-4 py-3 text-sm text-muted">Loading…</p> : null}
-        {people && waiting.length === 0 ? <p className="px-4 py-3 text-sm text-muted">No one is waiting.</p> : null}
-        <ul>
-          {waiting.map((person) => (
-            <li key={person.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
-              <div>
-                <p className="font-semibold">{person.name || "No name"}</p>
-                <p className="text-sm text-muted">{person.email}</p>
-              </div>
-              <button
-                type="button"
-                disabled={busy === person.id}
-                onClick={() => decide(person.id, "approved")}
-                className="min-h-11 rounded bg-navy px-3 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                Approve
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="mt-4 rounded border border-line bg-paper">
-        <h2 className="border-b border-line px-4 py-3 font-semibold">Everyone</h2>
-        <ul>
-          {(people ?? []).map((person) => (
-            <li key={person.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
-              <div>
-                <p className="font-semibold">{person.name || person.email}</p>
-                <p className="text-sm text-muted">
-                  {person.email} · {person.status} · {person.score} correct on the account
-                </p>
-              </div>
-              {person.status !== "pending" ? (
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    disabled={busy === person.id}
-                    onClick={() => decide(person.id, person.status === "approved" ? "denied" : "approved")}
-                    className="min-h-11 rounded border border-line px-3 text-sm font-semibold disabled:opacity-50"
-                  >
-                    {person.status === "approved" ? "Close access" : "Approve"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy === person.id}
-                    onClick={() => {
-                      setBusy(person.id);
-                      void setBlackOpsAccess({ data: { userId: person.id, allowed: !person.blackops } })
-                        .then(() => load())
-                        .catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not update Black Ops."))
-                        .finally(() => setBusy(""));
-                    }}
-                    className="min-h-11 rounded border border-line px-3 text-sm font-semibold disabled:opacity-50"
-                  >
-                    {person.blackops ? "Close Black Ops" : "Allow Black Ops"}
-                  </button>
-                </div>
-              ) : null}
-            </li>
-          ))}
-        </ul>
       </section>
     </Shell>
   );
