@@ -12,7 +12,7 @@ import { isAdminEmail } from "@/lib/admin-email";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { bucketStats, drawQuestionIds, scoreTest } from "@/lib/desk/adapt";
 import { loadCatalog } from "@/lib/desk/catalog";
-import { ise2025, type IseReport } from "@/lib/desk/ise";
+import { ise2025 } from "@/lib/desk/ise";
 import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 import { BANK_TOTAL, countBankCorrect } from "@/lib/desk/original-bank";
 import { questions } from "@/lib/desk/questions";
@@ -161,7 +161,6 @@ function Home() {
   const applyFocus = (focus: Record<BlueprintId, Focus>) => desk.setFocusMap(focus);
   const [bankCorrect, setBankCorrect] = useState(0);
   const [leaders, setLeaders] = useState<Leader[] | null>(null);
-  const [ownReport, setOwnReport] = useState<IseReport | null>(null);
   const { user, isPending } = useCurrentUserState();
   const mine = isAdminEmail(user?.primaryEmail);
   useEffect(() => {
@@ -184,6 +183,7 @@ function Home() {
 
   return (
     <Shell>
+      {mine ? (
       <div className="mb-4 rounded border border-line bg-paper px-4 py-3">
         <p className="text-xs font-semibold tracking-wide text-muted uppercase">Rank</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
@@ -191,15 +191,9 @@ function Home() {
             <h1 className="font-serif text-2xl tracking-tight">{rank.title}</h1>
             <div className="mt-1 max-w-xl text-sm text-muted">
               <p>{deskStanding(bankCorrect, leaders)}</p>
-              {mine ? (
-                <p>
-                  Country: {ise2025.percentile}th percentile on the {ise2025.year} in-service, from {ise2025.prior[0].percentile}th in {ise2025.prior[0].year}. That is the national exam. This bank has no country-wide group.
-                </p>
-              ) : ownReport ? (
-                <p>
-                  Country: {ownReport.percentile}th percentile on the {ownReport.year} in-service. That is the national exam. This bank has no country-wide group.
-                </p>
-              ) : null}
+              <p>
+                Country: {ise2025.percentile}th percentile on the {ise2025.year} in-service, from {ise2025.prior[0].percentile}th in {ise2025.prior[0].year}. That is the national exam. This bank has no country-wide group.
+              </p>
             </div>
           </div>
           <p className="text-sm text-muted">
@@ -221,6 +215,7 @@ function Home() {
             : "Every item in the bank is correct."}
         </p>
       </div>
+      ) : null}
 
       <DayPlan
         stats={stats}
@@ -254,7 +249,6 @@ function Home() {
           mine={mine}
           sessionPending={isPending}
           signedIn={Boolean(user)}
-          onReport={setOwnReport}
         />
       )}
       {mode === "base" && <HomeBase pct={pct} mastered={mastered} dueCards={0} startAdaptive={startAdaptive} />}
@@ -288,7 +282,6 @@ function ClassicView({
   mine,
   sessionPending,
   signedIn,
-  onReport,
 }: {
   desk: ReturnType<typeof useDesk>;
   stats: ReturnType<typeof bucketStats>;
@@ -301,7 +294,6 @@ function ClassicView({
   mine: boolean;
   sessionPending: boolean;
   signedIn: boolean;
-  onReport: (report: IseReport | null) => void;
 }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.8fr)]">
@@ -367,7 +359,7 @@ function ClassicView({
             Open the log
           </Link>
         </section>
-        <InserviceCard mine={mine} pending={sessionPending} signedIn={signedIn} onApply={applyFocus} onReport={onReport} />
+        <InserviceCard mine={mine} pending={sessionPending} signedIn={signedIn} onApply={applyFocus} />
 
         <section className="rounded border border-line bg-paper p-4">
           <p className="text-sm font-semibold tracking-wide text-muted uppercase">Next block</p>

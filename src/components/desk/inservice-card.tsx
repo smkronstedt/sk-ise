@@ -130,7 +130,7 @@ export function InserviceCard({
   pending: boolean;
   signedIn: boolean;
   onApply: (focus: Record<BlueprintId, Focus>) => void;
-  onReport: (report: IseReport | null) => void;
+  onReport?: (report: IseReport | null) => void;
 }) {
   const [report, setReport] = useState<IseReport | null>(null);
   const [editing, setEditing] = useState(false);
@@ -141,7 +141,7 @@ export function InserviceCard({
   useEffect(() => {
     if (mine || pending || !signedIn) {
       setReport(null);
-      onReport(null);
+      onReport?.(null);
       return;
     }
     let stop = false;
@@ -149,7 +149,7 @@ export function InserviceCard({
       .then((result) => {
         if (stop) return;
         setReport(result.report);
-        onReport(result.report);
+        onReport?.(result.report);
         setEditing(!result.report);
         if (result.report) setDraft(fromReport(result.report));
       })
@@ -209,7 +209,7 @@ export function InserviceCard({
     void saveIseReport({ data: next })
       .then((result) => {
         setReport(result.report);
-        onReport(result.report);
+        onReport?.(result.report);
         setEditing(false);
       })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not save that report."))
