@@ -42,3 +42,24 @@ export function periodTotals(days: Record<string, { correct?: number } | undefin
   }
   return { today: todayN, week: weekN, month: monthN, all: allN };
 }
+
+/** Bank items have no day. If this person has no earlier study day, those points happened today. */
+export function withBankScore(
+  periods: PeriodScores,
+  days: Record<string, { correct?: number } | undefined>,
+  bankScore: number,
+  now = new Date(),
+): PeriodScores {
+  const today = centralToday(now);
+  const remainder = Math.max(0, bankScore - periods.all);
+  const older = Object.keys(days).some((key) => /^\d{4}-\d{2}-\d{2}$/.test(key) && key < today);
+  if (!older && remainder > 0) {
+    return {
+      today: periods.today + remainder,
+      week: periods.week + remainder,
+      month: periods.month + remainder,
+      all: periods.all + remainder,
+    };
+  }
+  return { ...periods, all: Math.max(periods.all, bankScore) };
+}

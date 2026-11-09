@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getSql } from "@/lib/db";
 import { badgeElements, isChampion } from "@/lib/desk/route";
-import { periodTotals, type PeriodScores } from "@/lib/desk/periods";
+import { periodTotals, withBankScore, type PeriodScores } from "@/lib/desk/periods";
 import type { TestBlock } from "@/lib/desk/types";
 
 export type Leader = {
@@ -48,9 +48,9 @@ export const listLeaders = createServerFn({ method: "GET" }).handler(async (): P
   return {
     leaders: rows.map((row) => {
       const tests = testsOf(row.desk);
+      const activity = activityOf(row.cards);
       const bankScore = Number(row.score ?? 0);
-      const periods = periodTotals(activityOf(row.cards));
-      periods.all = Math.max(periods.all, bankScore);
+      const periods = withBankScore(periodTotals(activity), activity, bankScore);
       return {
         name: row.name?.trim() || "Resident",
         image: row.image ?? "",
