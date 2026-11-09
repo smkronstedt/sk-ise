@@ -1,9 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getSql } from "@/lib/db";
 import { badgeElements, isChampion } from "@/lib/desk/route";
+import { periodTotals, type PeriodScores } from "@/lib/desk/periods";
 import type { TestBlock } from "@/lib/desk/types";
 
-export type Leader = { name: string; image: string; score: number; bio: string; badges: string[]; champion: boolean };
+export type Leader = {
+  name: string;
+  image: string;
+  score: number;
+  periods: PeriodScores;
+  bio: string;
+  badges: string[];
+  champion: boolean;
+};
 
 function testsOf(desk: unknown): TestBlock[] {
   try {
@@ -15,10 +24,21 @@ function testsOf(desk: unknown): TestBlock[] {
   }
 }
 
+function activityOf(cards: unknown): Record<string, { correct?: number }> {
+  try {
+    const value = typeof cards === "string" ? JSON.parse(cards) : cards;
+    if (!value || Array.isArray(value)) return {};
+    const activity = (value as { activity?: Record<string, { correct?: number }> }).activity;
+    return activity && typeof activity === "object" ? activity : {};
+  } catch {
+    return {};
+  }
+}
+
 export const listLeaders = createServerFn({ method: "GET" }).handler(async (): Promise<{ leaders: Leader[] }> => {
   const sql = await getSql();
-  const rows = await sql<{ name: string | null; image: string | null; score: number | null; bio: string | null; desk: unknown }>`
-    select u.name, u.image, coalesce(p.score, 0) as score, coalesce(pr.bio, '') as bio, p.desk as desk
+  const rows = await sql<{ name: string | null; image: string | null; score: number | null; bio: string | null; desk: unknown; cards: unknown }>`
+    select u.name, u.image, coalesce(p.score, 0) as score, coalesce(pr.bio, '') as bio, p.desk as desk, p.cards as cards
     from "user" u
     left join user_progress p on p.user_id = u.id
     left join user_profile pr on pr.user_id = u.id
@@ -28,10 +48,14 @@ export const listLeaders = createServerFn({ method: "GET" }).handler(async (): P
   return {
     leaders: rows.map((row) => {
       const tests = testsOf(row.desk);
+      const bankScore = Number(row.score ?? 0);
+      const periods = periodTotals(activityOf(row.cards));
+      periods.all = Math.max(periods.all, bankScore);
       return {
         name: row.name?.trim() || "Resident",
         image: row.image ?? "",
-        score: Number(row.score ?? 0),
+        score: bankScore,
+        periods,
         bio: row.bio ?? "",
         badges: badgeElements(tests),
         champion: isChampion(tests),

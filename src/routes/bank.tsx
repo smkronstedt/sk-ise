@@ -6,7 +6,7 @@ import { addCard } from "@/lib/cards";
 import { selectionStatus } from "@/lib/desk/adapt";
 import { loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
-import { logActivity } from "@/lib/desk/activity";
+import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { linksForBankTopic } from "@/lib/desk/statements";
 import {
   emptyBankProgress,
@@ -136,6 +136,7 @@ function BankPage() {
       },
     });
     logActivity("questions");
+    if (isCorrect) logCorrect();
     desk.consume(item.id);
     if (!isCorrect) addCard(item, "auto");
   };

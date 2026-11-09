@@ -1,5 +1,6 @@
 import { loadProgress, saveProgress } from "@/lib/progress-api";
-import { loadActivity, mergeActivity, saveActivity, type DayLog } from "@/lib/desk/activity";
+import { loadActivity, mergeActivity, saveActivity, dayKey, type DayLog } from "@/lib/desk/activity";
+import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadDaily, saveDaily } from "@/lib/desk/daily";
 
 const DESK = "callroom-desk-v1";
@@ -9,6 +10,7 @@ const OPS = "callroom-ops-v1";
 const OWNER = "callroom-owner";
 const DAILY = "callroom-daily-v1";
 const EXTRA = [DAILY, "callroom-activity-v1", "callroom-field-caught-v2", "callroom-fieldnotes-xp", "ise-trail-pos"];
+const SEED = "callroom-correct-seed-v1";
 
 type CardsField = { list?: unknown; ops?: unknown; activity?: Record<string, DayLog>; daily?: Record<string, { id: string; choice?: string; correct?: boolean }> } | unknown[] | null;
 
@@ -57,7 +59,7 @@ function apply(bundle: Bundle) {
 }
 
 function clearStudy() {
-  for (const key of [DESK, BANK, CARDS, OPS, ...EXTRA]) localStorage.removeItem(key);
+  for (const key of [DESK, BANK, CARDS, OPS, SEED, ...EXTRA]) localStorage.removeItem(key);
 }
 
 function unpack(payload: string) {
@@ -79,6 +81,47 @@ function restoreSide(remoteActivity: Record<string, DayLog> | null | undefined, 
   if (remoteDaily) saveDaily(remoteDaily);
 }
 
+type SeedAnswer = { choice?: number | null; submitted?: boolean };
+type SeedTest = { createdAt?: number; finishedAt?: number; answers?: Record<string, SeedAnswer> };
+
+/** Count correct answers already sitting on finished and open tests, once. */
+export async function ensureCorrectLog() {
+  try {
+    if (localStorage.getItem(SEED)) return;
+    const raw = localStorage.getItem(DESK);
+    const tests = (raw ? (JSON.parse(raw) as { tests?: SeedTest[] }).tests : []) ?? [];
+    const needsBank = tests.some((test) => Object.keys(test.answers ?? {}).some((id) => id.startsWith("UQB-")));
+    if (needsBank) {
+      await loadCatalog();
+      if (!getQuestion("UQB-0001")) return;
+    }
+    const seeded = new Map<string, number>();
+    for (const test of tests) {
+      const stamp = test.finishedAt || test.createdAt;
+      if (!stamp) continue;
+      let count = 0;
+      for (const [id, answer] of Object.entries(test.answers ?? {})) {
+        if (!answer?.submitted || answer.choice == null) continue;
+        const question = getQuestion(id);
+        if (question && answer.choice === question.answer) count += 1;
+      }
+      if (!count) continue;
+      const key = dayKey(new Date(stamp));
+      seeded.set(key, (seeded.get(key) ?? 0) + count);
+    }
+    const days = loadActivity();
+    for (const [key, count] of seeded) {
+      const row = days[key] ?? { questions: 0, cards: 0 };
+      row.correct = Math.max(row.correct ?? 0, count);
+      days[key] = row;
+    }
+    saveActivity(days);
+    localStorage.setItem(SEED, "1");
+  } catch {
+    return;
+  }
+}
+
 export async function syncDeviceProgress(userId?: string): Promise<"synced" | "device"> {
   const local = localBundle();
   const owner = userId ? localStorage.getItem(OWNER) : null;
@@ -97,6 +140,7 @@ export async function syncDeviceProgress(userId?: string): Promise<"synced" | "d
     }
     if (!remote?.payload) {
       if (hasLocalWork(local)) {
+        await ensureCorrectLog();
         await saveProgress({ data: { payload: JSON.stringify(pack(local)) } });
       }
       if (userId) localStorage.setItem(OWNER, userId);
@@ -110,6 +154,7 @@ export async function syncDeviceProgress(userId?: string): Promise<"synced" | "d
       window.location.reload();
       return "synced";
     }
+    await ensureCorrectLog();
     await saveProgress({ data: { payload: JSON.stringify(pack(local)) } });
     if (userId) localStorage.setItem(OWNER, userId);
     return "synced";

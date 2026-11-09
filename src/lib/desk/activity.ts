@@ -1,6 +1,6 @@
 const KEY = "callroom-activity-v1";
 
-export type DayLog = { questions: number; cards: number };
+export type DayLog = { questions: number; cards: number; correct?: number };
 
 export function dayKey(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -26,6 +26,7 @@ export function mergeActivity(local: Record<string, DayLog>, remote: Record<stri
     out[day] = {
       questions: Math.max(have.questions, Number(row?.questions) || 0),
       cards: Math.max(have.cards, Number(row?.cards) || 0),
+      correct: Math.max(have.correct ?? 0, Number(row?.correct) || 0),
     };
   }
   return out;
@@ -140,7 +141,16 @@ export function prizeStatus(days = typeof window === "undefined" ? {} : loadActi
   };
 }
 
-export function logActivity(kind: keyof DayLog) {
+export function logCorrect() {
+  const days = loadActivity();
+  const today = dayKey();
+  const row = days[today] ?? { questions: 0, cards: 0 };
+  row.correct = (row.correct ?? 0) + 1;
+  days[today] = row;
+  saveActivity(days);
+}
+
+export function logActivity(kind: "questions" | "cards") {
   const days = loadActivity();
   const today = dayKey();
   const row = days[today] ?? { questions: 0, cards: 0 };

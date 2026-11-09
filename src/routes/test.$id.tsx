@@ -4,7 +4,7 @@ import { Figure } from "@/components/desk/figure";
 import { Shell } from "@/components/desk/shell";
 import { scoreTest } from "@/lib/desk/adapt";
 import { AnatomyFigure } from "@/components/desk/anatomy-figure";
-import { logActivity } from "@/lib/desk/activity";
+import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
 import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
@@ -109,6 +109,7 @@ function TestPage() {
       saveBankProgress(progress);
     }
     logActivity("questions");
+    if (answer.choice === question.answer) logCorrect();
   };
 
   const jump = (index: number) => {
