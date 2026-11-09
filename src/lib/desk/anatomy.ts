@@ -23,12 +23,12 @@ const plates: { src: string; keys: string[]; caption: string }[] = [
   },
   {
     src: "/anatomy/vessels.jpg",
-    keys: ["varicocele", "pampiniform", "gonadal vein", "left renal vein", "renal vein", "renal artery", "nutcracker"],
+    keys: ["varicocele", "pampiniform", "gonadal vein", "left renal vein", "nutcracker"],
     caption: "The left gonadal vein drains into the left renal vein, which crosses the aorta. That is why a varicocele is usually on the left. The right gonadal vein drains straight to the vena cava.",
   },
   {
     src: "/anatomy/adrenal-zones.jpg",
-    keys: ["zona glomerulosa", "zona fasciculata", "zona reticularis", "aldosterone", "adrenal cortex", "pheochrom", "adrenal"],
+    keys: ["zona glomerulosa", "zona fasciculata", "zona reticularis", "aldosterone", "adrenal cortex"],
     caption: "Adrenal cortex, outside in: glomerulosa (aldosterone), fasciculata (cortisol), reticularis (androgens). The medulla in the center makes catecholamines.",
   },
   {
@@ -48,7 +48,7 @@ const plates: { src: string; keys: string[]; caption: string }[] = [
   },
   {
     src: "/anatomy/scrotum.jpg",
-    keys: ["dartos", "tunica vaginalis", "cremaster", "scrotum", "epididym", "appendix testis"],
+    keys: ["dartos", "tunica vaginalis", "cremaster", "appendix testis"],
     caption: "Scrotal layers, outside in: skin, dartos, external spermatic fascia, cremaster, internal spermatic fascia, parietal then visceral tunica vaginalis, tunica albuginea, testis. The epididymis is posterolateral.",
   },
   {
@@ -73,51 +73,57 @@ const plates: { src: string; keys: string[]; caption: string }[] = [
   },
   {
     src: "/anatomy/bladder.jpg",
-    keys: ["trigone", "detrusor", "bladder neck", "ureteral orifice", "urachus", "bladder"],
+    keys: ["trigone", "detrusor", "bladder neck", "ureteral orifice", "urachus"],
     caption: "Bladder interior. The trigone is the triangle between the two ureteral orifices and the bladder neck. The urachus runs from the dome to the umbilicus.",
   },
   {
     src: "/anatomy/urethra-segments.jpg",
-    keys: ["prostatic urethra", "membranous", "bulbar", "pendulous", "fossa navicular", "posterior urethral valve", "urethral stricture", "urethroplasty", "urethra"],
+    keys: ["prostatic urethra", "membranous urethra", "bulbar", "pendulous", "fossa navicular", "posterior urethral valve", "urethral stricture", "urethroplasty"],
     caption: "Male urethra, proximal to distal: prostatic, membranous (through the pelvic floor, the external sphincter), bulbar, then pendulous in the shaft.",
   },
   {
     src: "/anatomy/prostate.jpg",
-    keys: ["prostate", "bph", "verumontanum"],
+    keys: ["verumontanum"],
     caption: "Prostate under the bladder, around the urethra.",
   },
   {
     src: "/anatomy/penis.jpg",
-    keys: ["penis", "penile", "peyronie", "glans", "hypospad", "prepuce"],
+    keys: ["peyronie", "glans", "hypospad", "prepuce"],
     caption: "Penis. The glans is the expanded end of the corpus spongiosum. A hypospadias meatus opens on the ventral surface.",
   },
   {
     src: "/anatomy/testis.jpg",
-    keys: ["testis", "testicular", "seminiferous", "sertoli", "leydig", "spermatic"],
+    keys: ["seminiferous", "sertoli", "leydig"],
     caption: "Testis and cord. Seminiferous tubules make sperm. Leydig cells between them make testosterone. The vas leaves the tail of the epididymis.",
   },
   {
     src: "/anatomy/ureter.jpg",
-    keys: ["ureter", "upj", "uvj"],
+    keys: ["upj", "uvj", "ureteropelvic", "ureterovesical"],
     caption: "Ureter. The three common narrowings are the UPJ, the crossing of the iliac vessels, and the UVJ.",
   },
   {
     src: "/anatomy/kidney.jpg",
-    keys: ["kidney", "renal", "calyx", "calyces", "cortex", "hilum", "papilla"],
+    keys: ["calyx", "calyces", "renal papilla", "renal hilum", "renal cortex"],
     caption: "Kidney. Cortex outside, pyramids and papillae inside, calyces into the renal pelvis, vessels and pelvis at the hilum.",
   },
 ];
 
-/** A plate for the structure the question is about, if it has one. */
-export function anatomyPlate(topic: string, text: string): AnatomyPlate | undefined {
-  const blob = `${topic} ${text}`.toLowerCase();
+function hasTerm(blob: string, key: string) {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?:^|[^a-z0-9])${escaped}(?:[^a-z0-9]|$)`).test(blob);
+}
+
+/** A plate only when the question is about that structure, not merely the organ. */
+export function anatomyPlate(_topic: string, text: string): AnatomyPlate | undefined {
+  const blob = text.toLowerCase();
+  let best: AnatomyPlate & { length: number } | undefined;
   for (const plate of plates) {
-    if (plate.keys.some((key) => blob.includes(key))) return { src: plate.src, caption: plate.caption };
+    for (const key of plate.keys) {
+      if (!hasTerm(blob, key) || (best && key.length <= best.length)) continue;
+      best = { src: plate.src, caption: plate.caption, length: key.length };
+    }
   }
-  if (blob.includes("anatomy") || blob.includes("embryolog")) {
-    return { src: "/anatomy/kidney.jpg", caption: "Kidney. Cortex, medulla, calyces, and the pelvis at the hilum." };
-  }
-  return undefined;
+  return best ? { src: best.src, caption: best.caption } : undefined;
 }
 
 export function anatomyImage(topic: string, text: string) {
