@@ -23,6 +23,8 @@ export type Creature = {
   dex?: number;
   moves?: KnownMove[];
   pending?: string;
+  /** Highest evolution stage the player has already been shown. */
+  seenStage?: 0 | 1 | 2;
 };
 
 export type QuestBag = {
@@ -119,13 +121,50 @@ export function stageOf(level: number): 0 | 1 | 2 {
 }
 
 export function creatureSrc(creature: Creature) {
-  if (creature.dex) return spriteFor(creature.dex, loadField().rare.includes(creature.dex));
-  return monSrc(creature.species, stageOf(levelOf(creature.exp)));
+  const stage = stageOf(levelOf(creature.exp));
+  if (stage === 0 && creature.dex) return spriteFor(creature.dex, loadField().rare.includes(creature.dex));
+  return monSrc(creature.species, stage);
 }
 
 export function nameOf(creature: Creature) {
-  if (creature.dex) return DEX[creature.dex - 1]?.name ?? "Caught";
-  return lines[creature.species].names[stageOf(levelOf(creature.exp))];
+  const stage = stageOf(levelOf(creature.exp));
+  if (stage === 0 && creature.dex) return DEX[creature.dex - 1]?.name ?? lines[creature.species].names[0];
+  return lines[creature.species].names[stage];
+}
+
+export type EvolutionMoment = {
+  id: string;
+  species: SpeciesId;
+  from: 0 | 1 | 2;
+  to: 0 | 1 | 2;
+  fromName: string;
+  toName: string;
+  level: number;
+};
+
+/** First change is level 8. Final form is level 16. */
+export function evolutionMoment(creature: Creature): EvolutionMoment | null {
+  const level = levelOf(creature.exp);
+  const to = stageOf(level);
+  const from = creature.seenStage ?? 0;
+  if (to <= from) return null;
+  return {
+    id: creature.id,
+    species: creature.species,
+    from,
+    to,
+    fromName: lines[creature.species].names[from],
+    toName: lines[creature.species].names[to],
+    level,
+  };
+}
+
+export function markEvolutionSeen(creatureId: string) {
+  const bag = loadBag();
+  const creature = [...bag.party, ...bag.box].find((row) => row.id === creatureId);
+  if (creature) creature.seenStage = stageOf(levelOf(creature.exp));
+  saveBag(bag);
+  return loadBag();
 }
 
 export function maxHp(creature: Creature, bag: Pick<QuestBag, "hpBonus">) {

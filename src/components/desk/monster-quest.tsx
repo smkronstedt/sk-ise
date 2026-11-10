@@ -28,10 +28,12 @@ import {
   loadBag,
   enrollGuide,
   creatureSrc,
+  evolutionMoment,
   expPace,
   forgetForPending,
   knownMoves,
   makeLead,
+  markEvolutionSeen,
   moveDef,
   spendPp,
   masterStock,
@@ -387,7 +389,7 @@ export function MonsterQuest({
   const [trialOpen, setTrialOpen] = useState(false);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [notice, setNotice] = useState("");
-  const [evo, setEvo] = useState("");
+  const [evo, setEvo] = useState<ReturnType<typeof evolutionMoment>>(null);
   const [bag, setBag] = useState<QuestBag | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const bagRef = useRef<QuestBag | null>(null);
@@ -402,6 +404,12 @@ export function MonsterQuest({
     setBag(enrollGuide());
     repelRef.current = loadBag().repelLeft;
   }, []);
+
+  useEffect(() => {
+    if (!bag || evo) return;
+    const due = [...bag.party, ...bag.box].map((creature) => evolutionMoment(creature)).find(Boolean) ?? null;
+    if (due) setEvo(due);
+  }, [bag, evo]);
 
   useEffect(() => {
     sessionStorage.setItem("ise-playing", "1");
@@ -720,8 +728,6 @@ export function MonsterQuest({
       },
       over,
     });
-    const evoText = [grew, prize].filter((note) => note.includes("evolved")).join(" ");
-    if (evoText) setEvo(evoText);
   };
 
   const advance = () => {
@@ -1058,12 +1064,24 @@ export function MonsterQuest({
 
   return (
     <div ref={wrapRef} className="relative bg-[#1e3a24]">
-      {evo && lead ? (
+      {evo && bag ? (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#f8f8d8]/95 p-6 text-center text-black">
-          <img src={creatureSrc(lead)} alt="" className="h-48 w-auto" />
-          <p className="mt-3 font-serif text-2xl">{evo}</p>
-          <p className="mt-1 text-sm">Level {levelOf(lead.exp)}. {levelOf(lead.exp) >= 16 ? "Final form." : "The next form is at level 16."}</p>
-          <button type="button" onClick={() => setEvo("")} className="mt-4 min-h-11 border-4 border-black bg-black px-4 text-sm font-bold text-[#fff4a8]">OK</button>
+          <div className="flex items-end justify-center gap-6">
+            <img src={monSrc(evo.species, evo.from)} alt="" className="h-28 w-auto" />
+            <img src={monSrc(evo.species, evo.to)} alt="" className="h-48 w-auto" />
+          </div>
+          <p className="mt-3 font-serif text-2xl">{evo.fromName} evolved into {evo.toName}.</p>
+          <p className="mt-1 text-sm">Level {evo.level}. {evo.to >= 2 ? "Final form." : "The next form is at level 16."}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setBag(markEvolutionSeen(evo.id));
+              setEvo(null);
+            }}
+            className="mt-4 min-h-11 border-4 border-black bg-black px-4 text-sm font-bold text-[#fff4a8]"
+          >
+            OK
+          </button>
         </div>
       ) : null}
       <div className="flex items-center justify-between gap-3 border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
@@ -1122,9 +1140,6 @@ export function MonsterQuest({
           <div className="mt-3 border-4 border-double border-black bg-[#f8f8d8] p-3">
             <p className="text-xs font-bold uppercase">{battle.title}</p>
             {battle.menu === "ask" && question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
-            {question?.image && (battle.menu === "ask" || battle.reveal) ? (
-              <img src={question.image} alt="Figure shown with this question" className="mt-2 max-h-80 w-full bg-white object-contain" />
-            ) : null}
             {!battle.menu && !battle.reveal && !battle.committed ? <p className="mt-2 text-sm font-bold">Fight the whole set, or run. This is the only time it asks.</p> : null}
             {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
             {battle.reveal && question ? (
