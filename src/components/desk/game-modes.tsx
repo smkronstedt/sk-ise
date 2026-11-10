@@ -62,6 +62,136 @@ export function UroTrail({
   );
 }
 
+function paintGrass(ctx: CanvasRenderingContext2D, tile: number, cols: number, rows: number) {
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const n = (x * 17 + y * 31) % 5;
+      ctx.fillStyle = n === 0 ? "#4e9a45" : n === 1 ? "#63b056" : "#58a64c";
+      ctx.fillRect(x * tile, y * tile, tile, tile);
+      if (n === 2) {
+        ctx.fillStyle = "#f2e27a";
+        ctx.fillRect(x * tile + 8, y * tile + 10, 3, 3);
+      }
+      if (n === 3) {
+        ctx.fillStyle = "#2f7a38";
+        ctx.fillRect(x * tile + 16, y * tile + 6, 2, 6);
+      }
+    }
+  }
+}
+
+function paintTree(ctx: CanvasRenderingContext2D, x: number, y: number, tile: number) {
+  const cx = x * tile + tile / 2;
+  const cy = y * tile + tile / 2;
+  ctx.fillStyle = "#6b4a2a";
+  ctx.fillRect(cx - 3, cy + 2, 6, 10);
+  ctx.fillStyle = "#1f6a32";
+  ctx.beginPath();
+  ctx.arc(cx, cy - 2, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#3d9a4a";
+  ctx.beginPath();
+  ctx.arc(cx - 4, cy - 6, 6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function paintHero(ctx: CanvasRenderingContext2D, px: number, py: number, face: string, swing: number) {
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.beginPath();
+  ctx.ellipse(px + 14, py + 24, 8, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#6a4324";
+  ctx.fillRect(px + 8, py + 16, 5, 6);
+  ctx.fillRect(px + 15, py + 16, 5, 6);
+  ctx.fillStyle = "#2f8f4a";
+  ctx.fillRect(px + 8, py + 8, 12, 10);
+  ctx.fillStyle = "#c4553a";
+  ctx.fillRect(px + 11, py + 10, 6, 3);
+  ctx.fillStyle = "#f0c9a0";
+  ctx.beginPath();
+  ctx.arc(px + 14, py + 6, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#d7a24a";
+  ctx.beginPath();
+  ctx.arc(px + 14, py + 4, 5, Math.PI, Math.PI * 2);
+  ctx.fill();
+  if (face === "left" || face === "right") {
+    ctx.fillStyle = "#245c38";
+    ctx.beginPath();
+    ctx.arc(face === "left" ? px + 6 : px + 22, py + 12, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (swing > 0) {
+    ctx.strokeStyle = "#e8eef2";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(px + 18, py + 10);
+    ctx.lineTo(px + 28, py - 2);
+    ctx.stroke();
+  }
+}
+
+function paintGuard(ctx: CanvasRenderingContext2D, px: number, py: number, locked: boolean) {
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.beginPath();
+  ctx.ellipse(px + 14, py + 24, 9, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#7a4a32";
+  ctx.beginPath();
+  ctx.ellipse(px + 14, py + 14, 9, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#c47a58";
+  ctx.beginPath();
+  ctx.ellipse(px + 18, py + 14, 5, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#2a241c";
+  ctx.fillRect(px + 16, py + 12, 2, 2);
+  ctx.fillStyle = "#5c3a28";
+  ctx.fillRect(px + 24, py + 6, 2, 16);
+  ctx.fillStyle = "#d8dde2";
+  ctx.beginPath();
+  ctx.moveTo(px + 22, py + 4);
+  ctx.lineTo(px + 30, py + 8);
+  ctx.lineTo(px + 22, py + 12);
+  ctx.fill();
+  if (locked) {
+    ctx.strokeStyle = "#f2d15a";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px + 2, py + 2, 24, 22);
+  }
+}
+
+function paintRupee(ctx: CanvasRenderingContext2D, px: number, py: number) {
+  ctx.fillStyle = "#1f8a3a";
+  ctx.beginPath();
+  ctx.moveTo(px + 14, py + 4);
+  ctx.lineTo(px + 22, py + 12);
+  ctx.lineTo(px + 14, py + 24);
+  ctx.lineTo(px + 6, py + 12);
+  ctx.fill();
+  ctx.fillStyle = "#8ee07a";
+  ctx.beginPath();
+  ctx.moveTo(px + 14, py + 6);
+  ctx.lineTo(px + 18, py + 12);
+  ctx.lineTo(px + 14, py + 16);
+  ctx.lineTo(px + 10, py + 12);
+  ctx.fill();
+}
+
+function paintTemple(ctx: CanvasRenderingContext2D, tile: number) {
+  ctx.fillStyle = "#8d8678";
+  ctx.fillRect(6 * tile, 0, 5 * tile, tile);
+  ctx.fillStyle = "#6e675c";
+  ctx.fillRect(6 * tile, tile * 0.55, tile, tile * 0.45);
+  ctx.fillRect(10 * tile, tile * 0.55, tile, tile * 0.45);
+  ctx.fillStyle = "#c4553a";
+  ctx.fillRect(8 * tile + 6, 4, tile - 12, tile - 6);
+  ctx.fillStyle = "#f2d15a";
+  ctx.fillRect(8 * tile + tile / 2 - 1, 8, 2, 6);
+  ctx.fillStyle = "#b7b1a4";
+  for (let y = 1; y < 4; y++) ctx.fillRect(8 * tile + 8, y * tile, tile - 16, tile);
+}
+
 function FieldQuest({
   startTopicBattle,
   battleDone,
@@ -78,6 +208,8 @@ function FieldQuest({
     rupees: 0,
     swing: 0,
     lock: false,
+    face: "down",
+    gem: true,
     foe: { x: 10, y: 4, alive: true },
   });
   const [hud, setHud] = useState({ hearts: 3, rupees: 0, line: "The field is quiet. Z locks on. Sword swings." });
@@ -90,6 +222,7 @@ function FieldQuest({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
     let frame = 0;
     let raf = 0;
     const tile = 28;
@@ -102,9 +235,11 @@ function FieldQuest({
       if (frame % 8 === 0 && hero.swing <= 0) {
         const step = keys.current.has("w") ? [0, -1] : keys.current.has("s") ? [0, 1] : keys.current.has("a") ? [-1, 0] : keys.current.has("d") ? [1, 0] : null;
         if (step && !solid(hero.x + step[0], hero.y + step[1])) {
+          hero.face = step[1] < 0 ? "up" : step[1] > 0 ? "down" : step[0] < 0 ? "left" : "right";
           hero.x += step[0];
           hero.y += step[1];
-          if (hero.x === 12 && hero.y === 8 && hero.rupees < 99) {
+          if (hero.gem && hero.x === 12 && hero.y === 8) {
+            hero.gem = false;
             hero.rupees += 1;
             setHud((row) => ({ ...row, rupees: hero.rupees, line: "A green rupee." }));
           }
@@ -126,37 +261,16 @@ function FieldQuest({
           hero.y = 6;
         }
       }
-      ctx.fillStyle = "#67b15a";
-      ctx.fillRect(0, 0, cols * tile, rows * tile);
+      paintGrass(ctx, tile, cols, rows);
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-          if (x === 0 || y === 0 || x === cols - 1 || y === rows - 1) {
-            ctx.fillStyle = "#2f6b32";
-            ctx.fillRect(x * tile, y * tile, tile, tile);
-          }
-          if (x === 8 && y < 4) {
-            ctx.fillStyle = "#8d8a84";
-            ctx.fillRect(x * tile, y * tile, tile, tile);
-          }
+          if (x === 0 || y === 0 || x === cols - 1 || y === rows - 1) paintTree(ctx, x, y, tile);
         }
       }
-      ctx.fillStyle = "#c4553a";
-      ctx.fillRect(8 * tile, 0, tile, tile);
-      ctx.fillStyle = "#3aa34a";
-      ctx.fillRect(12 * tile + 8, 8 * tile + 8, 12, 16);
-      if (foe.alive) {
-        ctx.fillStyle = hero.lock ? "#f2d15a" : "#6b4632";
-        ctx.fillRect(foe.x * tile + 4, foe.y * tile + 2, 20, 24);
-      }
-      ctx.fillStyle = "#2d6cdf";
-      ctx.fillRect(hero.x * tile + 6, hero.y * tile + 4, 16, 20);
-      if (hero.swing > 0) {
-        ctx.strokeStyle = "#f4f1ea";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(hero.x * tile + 14, hero.y * tile + 10, 18, -0.6, 1.2);
-        ctx.stroke();
-      }
+      paintTemple(ctx, tile);
+      if (hero.gem) paintRupee(ctx, 12 * tile, 8 * tile);
+      if (foe.alive) paintGuard(ctx, foe.x * tile, foe.y * tile, hero.lock);
+      paintHero(ctx, hero.x * tile, hero.y * tile, hero.face, hero.swing);
       raf = requestAnimationFrame(draw);
     };
     const down = (event: KeyboardEvent) => {
@@ -181,12 +295,12 @@ function FieldQuest({
   }, [battleDone, next]);
 
   return (
-    <div className="border-b border-world bg-black">
+    <div className="border-b border-world bg-[#3d7a3a] text-[#f4efe4]">
       <div className="flex items-center justify-between px-4 py-2 text-sm">
         <p>{"♥".repeat(hud.hearts)}{"♡".repeat(Math.max(0, 3 - hud.hearts))} · Rupees {hud.rupees}</p>
         <p className="text-stone">{hud.line}</p>
       </div>
-      <canvas ref={canvasRef} width={448} height={308} className="mx-auto block w-full max-w-xl" />
+      <canvas ref={canvasRef} width={896} height={616} className="mx-auto block w-full max-w-xl" />
       <div className="flex flex-wrap gap-2 p-3">
         {(["w", "a", "s", "d"] as const).map((key) => (
           <button key={key} type="button" onPointerDown={() => keys.current.add(key)} onPointerUp={() => keys.current.delete(key)} className="min-h-11 min-w-11 border border-stone text-sm font-bold uppercase">{key}</button>
@@ -233,7 +347,7 @@ export function RpgMode({
         <p className="text-xs font-semibold tracking-wide text-stone uppercase">Overworld</p>
         <h1 className="font-serif text-3xl tracking-tight">RPG</h1>
         <p className="mt-1 max-w-xl text-sm text-stone">
-          Hearts, a sword, and Z to lock on. The red door at the top of the field is the temple. The rooms below are the same road, listed.
+          A forest field. Sword, Z to lock on, and the red temple door at the top. The rooms below are the same road, listed.
         </p>
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-2">
