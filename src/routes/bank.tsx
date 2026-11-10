@@ -28,6 +28,7 @@ function BankPage() {
   const [items, setItems] = useState<BankItem[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [view, setView] = useState<"practice" | "points">("practice");
+  const [setName, setSetName] = useState("sasp");
   const [topic, setTopic] = useState("all");
   const [status, setStatus] = useState<Status>("unused");
   const [query, setQuery] = useState("");
@@ -53,14 +54,16 @@ function BankPage() {
     const timer = window.setTimeout(() => {
       if (!cancel) setFailed(true);
     }, 20000);
-    fetch("/bank/questions.json")
-      .then((response) => {
+    Promise.all([
+      fetch("/bank/questions.json").then((response) => {
         if (!response.ok) throw new Error("missing");
         return response.json() as Promise<BankItem[]>;
-      })
-      .then((data) => {
+      }),
+      fetch("/bank/sasp.json").then((response) => (response.ok ? (response.json() as Promise<BankItem[]>) : [])),
+    ])
+      .then(([uqb, sasp]) => {
         if (!cancel) {
-          setItems(data);
+          setItems([...uqb, ...sasp]);
           setFailed(false);
         }
       })
@@ -83,6 +86,9 @@ function BankPage() {
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return (items ?? []).filter((item) => {
+      if (setName === "uqb" && item.id.startsWith("SASP")) return false;
+      if (setName === "sasp" && !item.id.startsWith("SASP")) return false;
+      if (/^\d{4}$/.test(setName) && !item.id.startsWith(`SASP${setName}`)) return false;
       if (topic !== "all" && item.topic !== topic) return false;
       const result = selectionStatus(desk.state, item.id);
       if (status === "unused" && result !== "unused") return false;
@@ -94,12 +100,12 @@ function BankPage() {
       const blob = `${item.question} ${item.learning_point} ${item.source_ref} ${item.topic}`.toLowerCase();
       return blob.includes(needle);
     });
-  }, [items, progress.answers, progress.marks, query, status, topic, hardOnly, desk.state, catalogReady]);
+  }, [items, progress.answers, progress.marks, query, status, topic, setName, hardOnly, desk.state, catalogReady]);
 
   useEffect(() => {
     setIndex(0);
     setPicked(null);
-  }, [topic, status, query, view, hardOnly]);
+  }, [topic, status, query, view, hardOnly, setName]);
 
   const write = (next: BankProgress) => {
     setProgress(next);
@@ -148,7 +154,7 @@ function BankPage() {
           <p className="text-sm font-semibold tracking-wide text-muted uppercase">Original items</p>
           <h1 className="font-serif text-3xl tracking-tight">Question bank</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted">
-            {items.length} board-style items with learning points. Scores stay in this browser.
+            {items.length} items. The SASP years from your spreadsheet are in here, separate from the older board set. 2024 was not in the file, and 2025 has 14 questions.
             {ready ? ` ${correct}/${answered || 0} correct so far.` : ""}
           </p>
         </div>
@@ -171,6 +177,20 @@ function BankPage() {
       </div>
 
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <select
+          value={setName}
+          onChange={(event) => setSetName(event.target.value)}
+          className="min-h-11 rounded border border-line bg-paper px-3"
+        >
+          <option value="all">Every set</option>
+          <option value="sasp">SASP, all years</option>
+          <option value="uqb">Older board set</option>
+          {["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2025"].map((year) => (
+            <option key={year} value={year}>
+              SASP {year}
+            </option>
+          ))}
+        </select>
         <select
           value={topic}
           onChange={(event) => setTopic(event.target.value)}

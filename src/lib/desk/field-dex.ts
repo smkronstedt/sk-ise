@@ -1,5 +1,5 @@
 import { getQuestion } from "./catalog";
-import { BANK_TOTAL, loadBankProgress } from "./original-bank";
+import { UQB_TOTAL, loadBankProgress } from "./original-bank";
 import { questions } from "./questions";
 import type { TestBlock } from "./types";
 
@@ -23,7 +23,7 @@ export const DEX: Creature[] = FIRST.flatMap((a) => SECOND.map((b) => `${a}${b}`
   }));
 
 /** Unique correct questions required for one creature. Full bank ÷ 151, and never fewer than 8. */
-export const CATCH_EVERY = Math.max(8, Math.floor((BANK_TOTAL + questions.length) / DEX.length));
+export const CATCH_EVERY = Math.max(8, Math.floor((UQB_TOTAL + questions.length) / DEX.length));
 
 const KEY = "callroom-field-caught-v2";
 

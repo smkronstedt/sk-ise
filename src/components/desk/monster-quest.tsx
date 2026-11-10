@@ -1038,13 +1038,23 @@ export function MonsterQuest({
           <p className="text-sm font-bold">{line}</p>
           {notice ? <p className="mt-1 text-sm">{notice}</p> : null}
           <p className="mt-1 text-xs">West door is the shop. The door with the red cross is the Center. It heals everyone, free. {bag?.repelLeft ? `Repel ${bag.repelLeft}. ` : ""}{badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
+          <p className="mt-2 text-xs font-bold">Tap one to walk with you. That one also fights.</p>
           {bag ? (
-            <div className="mt-3 flex gap-2 overflow-x-auto">
+            <div className="mt-2 flex gap-2 overflow-x-auto">
               {bag.party.map((creature, index) => (
                 <button key={creature.id} type="button" onClick={() => { makeLead(index); setBag(loadBag()); }} className={`min-w-24 border-4 bg-[#f8f8d8] p-1 text-left ${index === 0 ? "border-black" : "border-[#c8b56a]"}`}>
                   <img src={monSrc(creature.species, stageOf(levelOf(creature.exp)))} alt="" className="mx-auto h-12 w-auto [image-rendering:pixelated]" />
                   <p className="truncate text-[11px] font-bold">{nameOf(creature)} Lv {levelOf(creature.exp)}</p>
                   <p className="text-[11px]">HP {creature.hp}/{maxHp(creature, bag)}</p>
+                  <p className="text-[11px] font-bold">{index === 0 ? "With you" : "Bring"}</p>
+                </button>
+              ))}
+              {bag.box.map((creature, index) => (
+                <button key={creature.id} type="button" onClick={() => { swapBox(index); setBag(loadBag()); }} className="min-w-24 border-4 border-[#c8b56a] bg-white p-1 text-left">
+                  <img src={monSrc(creature.species, stageOf(levelOf(creature.exp)))} alt="" className="mx-auto h-12 w-auto [image-rendering:pixelated]" />
+                  <p className="truncate text-[11px] font-bold">{nameOf(creature)} Lv {levelOf(creature.exp)}</p>
+                  <p className="text-[11px]">HP {creature.hp}/{maxHp(creature, bag)}</p>
+                  <p className="text-[11px] font-bold">Box · bring</p>
                 </button>
               ))}
             </div>

@@ -123,8 +123,11 @@ export function addCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto') {
 }
 
 export async function generateTopicCards(topic: string | null): Promise<Card[]> {
-  const res = await fetch('/bank/questions.json');
-  const bank = await res.json();
+  const [uqb, sasp] = await Promise.all([
+    fetch("/bank/questions.json").then((res) => res.json()),
+    fetch("/bank/sasp.json").then((res) => (res.ok ? res.json() : [])),
+  ]);
+  const bank = [...uqb, ...sasp];
   const existing = loadCards();
   const existingIds = new Set(existing.map((c) => c.sourceQuestionId));
   const items = topic ? bank.filter((q: any) => q.topic === topic) : bank;

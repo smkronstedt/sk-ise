@@ -50,11 +50,13 @@ function toQuestion(item: BankItem): Question {
 export function loadCatalog() {
   if (bankQuestions.length) return Promise.resolve();
   if (!loading) {
-    loading = fetch("/bank/questions.json")
-      .then((response) => response.json() as Promise<BankItem[]>)
-      .then((items) => {
+    loading = Promise.all([
+      fetch("/bank/questions.json").then((response) => response.json() as Promise<BankItem[]>),
+      fetch("/bank/sasp.json").then((response) => (response.ok ? (response.json() as Promise<BankItem[]>) : [])),
+    ])
+      .then(([uqb, sasp]) => {
         const counts = new Map<string, { title: string; count: number }>();
-        bankQuestions = items.map((item) => {
+        bankQuestions = [...uqb, ...sasp].map((item) => {
           const question = toQuestion(item);
           extra[question.id] = question;
           const row = counts.get(question.topicId) ?? { title: item.topic, count: 0 };

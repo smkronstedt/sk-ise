@@ -21,8 +21,10 @@ export type BankProgress = {
 
 const KEY = "callroom-original-bank-v1";
 
-/** Items in public/bank/questions.json. The desk's 57 vignettes are separate. */
-export const BANK_TOTAL = 1249;
+/** UQB items plus the SASP spreadsheet. The desk's vignettes are separate. */
+export const UQB_TOTAL = 1249;
+export const SASP_TOTAL = 1214;
+export const BANK_TOTAL = UQB_TOTAL + SASP_TOTAL;
 
 export const letters = ["A", "B", "C", "D", "E"] as const;
 
