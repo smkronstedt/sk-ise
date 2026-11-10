@@ -1,5 +1,5 @@
-/** Career ladder. Early titles come faster. The last title still needs every item. */
-export const RANKS = [
+/** Shared ladder. Each step costs more correct answers than the one before it. */
+const SHARED = [
   "Medical Student",
   "Intern",
   "Junior Resident (PGY-2)",
@@ -11,30 +11,32 @@ export const RANKS = [
   "Assistant Professor",
   "Associate Professor",
   "Full Professor",
-  "MD PhD with research time",
-  "MD PhD with your own lab",
-  "Androgen Society President",
-  "AUA South Central Section President",
-  "SMSNA President",
-  "SSMR President",
-  "AUA President",
-  "Navy SEAL Surgeon",
 ] as const;
 
-export type RankGate = { title: (typeof RANKS)[number]; at: number };
+const SHANE_TOP = ["Attending Navy SEAL Surgeon"] as const;
+const PUBLIC_TOP = ["Endowed Professor of Surgery", "Chair of TMC"] as const;
 
-const EARLY = [0, 15, 40, 80, 150, 250, 400, 600, 900, 1300, 1800];
+export type RankGate = { title: string; at: number };
 
-export function rankGates(total: number): RankGate[] {
-  const bank = Math.max(1, total);
-  const gates = RANKS.map((title, index) => {
-    if (index === RANKS.length - 1) return { title, at: bank };
-    if (index < EARLY.length) return { title, at: Math.min(EARLY[index], Math.max(0, bank - 1)) };
-    const start = Math.min(EARLY[EARLY.length - 1], Math.max(0, bank - 1));
-    const span = RANKS.length - EARLY.length;
-    const step = index - (EARLY.length - 1);
-    return { title, at: Math.min(bank - 1, Math.round(start + ((bank - start) * step) / (span + 1))) };
-  });
+export function rankTitles(seal: boolean) {
+  return seal ? [...SHARED, ...SHANE_TOP] : [...SHARED, ...PUBLIC_TOP];
+}
+
+/** Later steps take a larger share of the bank. The last title still needs every item. */
+export function rankGates(total: number, seal = false): RankGate[] {
+  const titles = rankTitles(seal);
+  const bank = Math.max(titles.length, total);
+  const steps = titles.length - 1;
+  const ratio = 1.38;
+  const weights = Array.from({ length: steps }, (_, index) => ratio ** index);
+  const sum = weights.reduce((totalWeight, weight) => totalWeight + weight, 0);
+  const gates: RankGate[] = [{ title: titles[0], at: 0 }];
+  let used = 0;
+  for (let index = 0; index < steps - 1; index += 1) {
+    used += Math.max(8, Math.round((weights[index] / sum) * bank));
+    gates.push({ title: titles[index + 1], at: Math.min(bank - (steps - index), used) });
+  }
+  gates.push({ title: titles[steps], at: bank });
   for (let index = 1; index < gates.length - 1; index += 1) {
     if (gates[index].at <= gates[index - 1].at) gates[index].at = gates[index - 1].at + 1;
   }
@@ -42,11 +44,11 @@ export function rankGates(total: number): RankGate[] {
   return gates;
 }
 
-export function careerRank(correct: number, total: number) {
-  const gates = rankGates(total);
+export function careerRank(correct: number, total: number, seal = false) {
+  const gates = rankGates(total, seal);
   const held = Math.max(0, Math.min(correct, Math.max(1, total)));
   let index = 0;
-  for (let i = 0; i < gates.length; i++) {
+  for (let i = 0; i < gates.length; i += 1) {
     if (held >= gates[i].at) index = i;
   }
   const floor = gates[index].at;

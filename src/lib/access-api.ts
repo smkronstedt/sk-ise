@@ -1,9 +1,10 @@
+import { hashPassword } from "better-auth/crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { isAdminEmail } from "@/lib/admin-email";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { getSql } from "@/lib/db";
 
-export type AccessStatus = "pending" | "approved" | "denied";
+export type AccessStatus = "pending" | "approved" | "denied" | "unverified";
 
 export type Person = {
   id: string;
@@ -13,6 +14,7 @@ export type Person = {
   status: AccessStatus;
   score: number;
   blackops: boolean;
+  emailVerified: boolean;
 };
 
 async function requireAdmin(userId: string) {
@@ -33,7 +35,7 @@ export const myAccess = createServerFn({ method: "GET" })
       where u.id = ${context.userId}
     `;
     const status = rows[0]?.status;
-    const known: AccessStatus = status === "pending" || status === "denied" || status === "unverified" ? (status === "unverified" ? "pending" : status) : "approved";
+    const known: AccessStatus = status === "denied" ? "denied" : status === "pending" || status === "unverified" ? "pending" : "approved";
     return { status: known, admin: isAdminEmail(rows[0]?.email) };
   });
 
@@ -41,23 +43,24 @@ export const listPeople = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<{ people: Person[] }> => {
     const sql = await requireAdmin(context.userId);
-    const people = await sql<Person>`
+    const people = await sql<{ id: string; name: string; email: string; createdAt: string; status: string; score: number; blackops: boolean; emailVerified: boolean }>`
       select u.id, u.name, u.email, u."createdAt"::text as "createdAt",
         coalesce(a.status, 'approved') as status,
         coalesce(p.score, 0)::int as score,
-        coalesce(a.blackops, false) as blackops
+        coalesce(a.blackops, false) as blackops,
+        u."emailVerified" as "emailVerified"
       from "user" u
       left join account_access a on a.user_id = u.id
       left join user_progress p on p.user_id = u.id
-      where u."emailVerified" = true
       order by case when coalesce(a.status, 'approved') = 'pending' then 0 else 1 end, u."createdAt" desc
     `;
     return {
       people: people.map((person) => ({
         ...person,
-        status: person.status === "pending" || person.status === "denied" ? person.status : "approved",
+        status: person.status === "pending" || person.status === "denied" || person.status === "unverified" ? person.status : "approved",
         score: Number(person.score) || 0,
         blackops: Boolean(person.blackops),
+        emailVerified: Boolean(person.emailVerified),
       })),
     };
   });
@@ -83,6 +86,38 @@ export const setAccess = createServerFn({ method: "POST" })
     if (data.status === "denied") {
       await sql`delete from "session" where "userId" = ${data.userId}`;
     }
+    return { ok: true as const };
+  });
+
+export const setUserPassword = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((data: { userId: string; password: string }) => {
+    const password = String(data?.password ?? "");
+    if (!data?.userId || password.length < 8 || password.length > 128) throw new Error("Use 8 to 128 characters.");
+    return { userId: data.userId, password };
+  })
+  .handler(async ({ data, context }) => {
+    const sql = await requireAdmin(context.userId);
+    const target = await sql<{ id: string }>`select id from "user" where id = ${data.userId}`;
+    if (!target[0]) throw new Error("No such account.");
+    const hashed = await hashPassword(data.password);
+    const existing = await sql<{ id: string }>`
+      select id from "account" where "userId" = ${data.userId} and "providerId" = 'credential' limit 1
+    `;
+    if (existing[0]) {
+      await sql`
+        update "account"
+        set password = ${hashed}, "updatedAt" = now()
+        where id = ${existing[0].id}
+      `;
+    } else {
+      const id = crypto.randomUUID();
+      await sql`
+        insert into "account" (id, "accountId", "providerId", "userId", password, "createdAt", "updatedAt")
+        values (${id}, ${data.userId}, 'credential', ${data.userId}, ${hashed}, now(), now())
+      `;
+    }
+    await sql`delete from "session" where "userId" = ${data.userId}`;
     return { ok: true as const };
   });
 

@@ -18,6 +18,7 @@ import { BANK_TOTAL, countBankCorrect } from "@/lib/desk/original-bank";
 import { questions } from "@/lib/desk/questions";
 import { useDesk } from "@/lib/desk/provider";
 import { careerRank } from "@/lib/desk/ranks";
+import { RankMark } from "@/components/desk/rank-mark";
 import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
 import { CATCH_EVERY, DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
@@ -180,7 +181,7 @@ function Home() {
   }, []);
   const experience = bankCorrect + correct;
   const experienceTotal = BANK_TOTAL + questions.length;
-  const rank = careerRank(experience, experienceTotal);
+  const rank = careerRank(experience, experienceTotal, mine);
 
   return (
     <Shell>
@@ -188,7 +189,10 @@ function Home() {
         <p className="text-xs font-semibold tracking-wide text-muted uppercase">Rank {rank.index + 1} of {rank.gates.length}</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h1 className="font-serif text-2xl tracking-tight">{rank.title}</h1>
+            <div className="flex items-center gap-2">
+              <RankMark title={rank.title} on />
+              <h1 className="font-serif text-2xl tracking-tight">{rank.title}</h1>
+            </div>
             <div className="mt-1 max-w-xl text-sm text-muted">
               <p>{deskStanding(experience, leaders)}</p>
               {mine ? (
@@ -213,9 +217,24 @@ function Home() {
         </div>
         <p className="mt-2 text-sm text-muted">
           {rank.next
-            ? `${rank.left} more correct to ${rank.next}.`
-            : "Every item in the bank is correct. Navy SEAL Surgeon."}
+            ? `${rank.left} more correct to ${rank.next}. Each rank after this one takes more.`
+            : `Top rank: ${rank.title}.`}
         </p>
+        <ol className="mt-3 grid gap-2 sm:grid-cols-2">
+          {rank.gates.map((gate, index) => {
+            const previous = index === 0 ? 0 : rank.gates[index - 1].at;
+            const state = index < rank.index ? "Earned" : index === rank.index ? "Now" : "Ahead";
+            return (
+              <li key={gate.title} className={`flex items-center gap-2 rounded border px-2 py-2 ${state === "Ahead" ? "border-line text-muted" : "border-[#c9a15b] bg-white"}`}>
+                <RankMark title={gate.title} on={state !== "Ahead"} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-ink">{gate.title}</p>
+                  <p className="text-xs">{state} · {gate.at} correct · {index === 0 ? "start" : `+${gate.at - previous} from the last rank`}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
       </div>
 
       <DayPlan

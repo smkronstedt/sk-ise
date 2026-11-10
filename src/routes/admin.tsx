@@ -1,12 +1,45 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Shell } from "@/components/desk/shell";
-import { listPeople, setAccess, setBlackOpsAccess, setBlackOpsPassword, setUndisclosedPassword, type Person } from "@/lib/access-api";
+import { listPeople, setAccess, setBlackOpsAccess, setBlackOpsPassword, setUndisclosedPassword, setUserPassword, type Person } from "@/lib/access-api";
 import { setBookletsPassword } from "@/lib/booklets-api";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
+
+function PasswordReset({ person, onError, onSaved }: { person: Person; onError: (message: string) => void; onSaved: (message: string) => void }) {
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <form
+      className="mt-2 flex flex-wrap gap-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        setBusy(true);
+        void setUserPassword({ data: { userId: person.id, password: value } })
+          .then(() => {
+            setValue("");
+            onSaved(`Password updated for ${person.email}. They were signed out.`);
+          })
+          .catch((err: unknown) => onError(err instanceof Error ? err.message : "Could not set that password."))
+          .finally(() => setBusy(false));
+      }}
+    >
+      <input
+        type="text"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        placeholder="New password"
+        minLength={8}
+        className="min-h-11 w-48 rounded border border-line px-3 text-sm"
+      />
+      <button type="submit" disabled={busy || value.length < 8} className="min-h-11 rounded border border-line px-3 text-sm font-semibold disabled:opacity-50">
+        Set password
+      </button>
+    </form>
+  );
+}
 
 function AdminPage() {
   const [people, setPeople] = useState<Person[] | null>(null);
@@ -36,7 +69,7 @@ function AdminPage() {
       .finally(() => setBusy(""));
   };
 
-  const waiting = (people ?? []).filter((person) => person.status === "pending");
+  const waiting = (people ?? []).filter((person) => person.status === "pending" && person.emailVerified);
 
   return (
     <Shell>
@@ -85,18 +118,20 @@ function AdminPage() {
         </ul>
       </section>
       <section className="mt-4 rounded border border-line bg-paper">
-        <h2 className="border-b border-line px-4 py-3 font-semibold">Everyone</h2>
+        <h2 className="border-b border-line px-4 py-3 font-semibold">Everyone ({people?.length ?? 0})</h2>
+        <p className="px-4 pt-3 text-sm text-muted">Approved accounts stay on this list. A new password signs that person out everywhere.</p>
         <ul>
           {(people ?? []).map((person) => (
             <li key={person.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
               <div>
                 <p className="font-semibold">{person.name || person.email}</p>
                 <p className="text-sm text-muted">
-                  {person.email} · {person.status} · {person.score} correct on the account
+                  {person.email} · {person.emailVerified ? person.status : "email not confirmed"} · {person.score} correct on the account
                 </p>
+                <PasswordReset person={person} onError={setError} onSaved={setSaved} />
               </div>
               <div className="flex flex-wrap gap-2">
-                {person.status !== "approved" ? (
+                {person.emailVerified && person.status !== "approved" ? (
                   <button
                     type="button"
                     disabled={busy === person.id}
@@ -106,7 +141,7 @@ function AdminPage() {
                     Approve
                   </button>
                 ) : null}
-                {person.status !== "denied" ? (
+                {person.emailVerified && person.status !== "denied" ? (
                   <button
                     type="button"
                     disabled={busy === person.id}
