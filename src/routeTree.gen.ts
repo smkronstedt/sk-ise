@@ -24,6 +24,7 @@ import { Route as LogRouteImport } from './routes/log'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ResetRouteImport } from './routes/reset'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TestsRouteImport } from './routes/tests'
 import { Route as TestIdRouteImport } from './routes/test.$id'
@@ -104,6 +105,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetRoute = ResetRouteImport.update({
+  id: '/reset',
+  path: '/reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/reset': typeof ResetRoute
   '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
   '/test/$id': typeof TestIdRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/reset': typeof ResetRoute
   '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
   '/test/$id': typeof TestIdRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/reset': typeof ResetRoute
   '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
   '/test/$id': typeof TestIdRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/notifications'
     | '/profile'
+    | '/reset'
     | '/settings'
     | '/tests'
     | '/test/$id'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/notifications'
     | '/profile'
+    | '/reset'
     | '/settings'
     | '/tests'
     | '/test/$id'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/notifications'
     | '/profile'
+    | '/reset'
     | '/settings'
     | '/tests'
     | '/test/$id'
@@ -271,6 +283,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
+  ResetRoute: typeof ResetRoute
   SettingsRoute: typeof SettingsRoute
   TestsRoute: typeof TestsRoute
   TestIdRoute: typeof TestIdRoute
@@ -384,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset': {
+      id: '/reset'
+      path: '/reset'
+      fullPath: '/reset'
+      preLoaderRoute: typeof ResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -431,6 +451,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
+  ResetRoute: ResetRoute,
   SettingsRoute: SettingsRoute,
   TestsRoute: TestsRoute,
   TestIdRoute: TestIdRoute,

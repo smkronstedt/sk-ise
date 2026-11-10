@@ -15,14 +15,25 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"signin" | "signup">(search.mode);
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">(search.mode);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const submit = async () => {
     setError(null);
     setPending(true);
     try {
+      if (mode === "forgot") {
+        const response = await fetch("/api/auth/request-password-reset", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), redirectTo: `${window.location.origin}/reset` }),
+        });
+        if (!response.ok) throw new Error("Could not send the reset email. Try again in a minute.");
+        setSent(true);
+        return;
+      }
       if (mode === "signup") {
         const { data, error: err } = await authClient.signUp.email({
           email,
@@ -51,9 +62,11 @@ function LoginPage() {
   return (
     <Shell>
       <div className="mx-auto max-w-sm">
-        <h1 className="font-serif text-2xl">{mode === "signin" ? "Sign in" : "Create account"}</h1>
+        <h1 className="font-serif text-2xl">{mode === "signup" ? "Create account" : mode === "forgot" ? "Forgot password" : "Sign in"}</h1>
         <p className="mt-1 text-sm text-muted">
-          {mode === "signin"
+          {mode === "forgot"
+            ? "Type the email on the account. If it matches, that address gets the reset link. No other address is emailed."
+            : mode === "signin"
             ? "Sign in so this browser and your other devices share one account."
             : "Use your name. The desk stays closed until the account is approved. Your questions and prizes stay on that profile."}
         </p>
@@ -88,6 +101,7 @@ function LoginPage() {
                 className="mt-1 w-full rounded border border-line px-3 py-2"
               />
             </label>
+            {mode === "forgot" ? null : (
             <label className="text-sm font-semibold">
               Password
               <input
@@ -99,20 +113,31 @@ function LoginPage() {
                 className="mt-1 w-full rounded border border-line px-3 py-2"
               />
             </label>
+            )}
             {error ? <p className="text-sm text-wrong">{error}</p> : null}
+            {sent && mode === "forgot" ? <p className="text-sm">If that email is on an account, a reset link is on its way to the address on file.</p> : null}
             <button
               type="submit"
               disabled={pending}
               className="min-h-11 rounded bg-navy font-semibold text-white disabled:opacity-50"
             >
-              {pending ? "Working…" : mode === "signin" ? "Sign in" : "Create account"}
+              {pending ? "Working…" : mode === "signup" ? "Create account" : mode === "forgot" ? "Email reset link" : "Sign in"}
             </button>
+            {mode === "signin" ? (
+              <button type="button" onClick={() => { setMode("forgot"); setError(null); setSent(false); }} className="text-sm font-semibold text-blue">
+                Forgot password?
+              </button>
+            ) : null}
             <button
               type="button"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+              onClick={() => {
+                setMode(mode === "signin" ? "signup" : "signin");
+                setError(null);
+                setSent(false);
+              }}
               className="text-sm font-semibold text-blue"
             >
-              {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Sign in"}
+              {mode === "signup" ? "Already have an account? Sign in" : mode === "forgot" ? "Back to sign in" : "Need an account? Sign up"}
             </button>
           </form>
         )}
