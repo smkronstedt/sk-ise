@@ -38,10 +38,17 @@ export function RankMark({ title, on }: { title: string; on: boolean }) {
           <rect x="10" y="9" width="16" height="3" fill={gold} />
         </>
       ) : null}
-      {title === "Attending Navy SEAL Surgeon" ? (
+      {title.includes("SEAL") ? (
         <>
           <path d="M18 6 V16 M12 12 H24 M10 20 L18 30 L26 20" fill="none" stroke={ink} strokeWidth="2" />
           <circle cx="18" cy="16" r="2" fill={gold} />
+        </>
+      ) : null}
+      {title.includes("President") ? <polygon points="18,8 21,15 28,15 22,19 24,26 18,22 12,26 14,19 8,15 15,15" fill={gold} stroke={ink} strokeWidth="1" /> : null}
+      {title.startsWith("MD PhD") ? (
+        <>
+          <rect x="12" y="10" width="12" height="16" rx="1" fill="none" stroke={ink} strokeWidth="2" />
+          <path d="M15 16 H21 M18 13 V19" stroke={gold} strokeWidth="2" />
         </>
       ) : null}
     </svg>

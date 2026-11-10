@@ -16,15 +16,35 @@ const SHARED = [
 const SHANE_TOP = ["Attending Navy SEAL Surgeon"] as const;
 const PUBLIC_TOP = ["Endowed Professor of Surgery", "Chair of TMC"] as const;
 
+const OLD = [
+  "Medical Student",
+  "Intern",
+  "Junior Resident (PGY-2)",
+  "Junior Resident (PGY-3)",
+  "Senior Resident",
+  "Chief Resident",
+  "Fellow",
+  "Attending",
+  "Assistant Professor",
+  "Associate Professor",
+  "Full Professor",
+  "MD PhD with research time",
+  "MD PhD with your own lab",
+  "Androgen Society President",
+  "AUA South Central Section President",
+  "SMSNA President",
+  "SSMR President",
+  "AUA President",
+  "Navy SEAL Surgeon",
+] as const;
+
 export type RankGate = { title: string; at: number };
 
 export function rankTitles(seal: boolean) {
   return seal ? [...SHARED, ...SHANE_TOP] : [...SHARED, ...PUBLIC_TOP];
 }
 
-/** Later steps take a larger share of the bank. The last title still needs every item. */
-export function rankGates(total: number, seal = false): RankGate[] {
-  const titles = rankTitles(seal);
+function gatesFor(titles: readonly string[], total: number): RankGate[] {
   const bank = Math.max(titles.length, total);
   const steps = titles.length - 1;
   const ratio = 1.38;
@@ -44,8 +64,16 @@ export function rankGates(total: number, seal = false): RankGate[] {
   return gates;
 }
 
-export function careerRank(correct: number, total: number, seal = false) {
-  const gates = rankGates(total, seal);
+/** Later steps take a larger share of the bank. The last title still needs every item. */
+export function rankGates(total: number, seal = false): RankGate[] {
+  return gatesFor(rankTitles(seal), total);
+}
+
+export function oldRankGates(total: number): RankGate[] {
+  return gatesFor(OLD, total);
+}
+
+function fromGates(correct: number, total: number, gates: RankGate[]) {
   const held = Math.max(0, Math.min(correct, Math.max(1, total)));
   let index = 0;
   for (let i = 0; i < gates.length; i += 1) {
@@ -64,4 +92,12 @@ export function careerRank(correct: number, total: number, seal = false) {
     left: next ? Math.max(0, next.at - held) : 0,
     gates,
   };
+}
+
+export function careerRank(correct: number, total: number, seal = false) {
+  return fromGates(correct, total, rankGates(total, seal));
+}
+
+export function oldCareerRank(correct: number, total: number) {
+  return fromGates(correct, total, oldRankGates(total));
 }

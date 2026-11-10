@@ -17,7 +17,7 @@ import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 import { BANK_TOTAL, countBankCorrect } from "@/lib/desk/original-bank";
 import { questions } from "@/lib/desk/questions";
 import { useDesk } from "@/lib/desk/provider";
-import { careerRank } from "@/lib/desk/ranks";
+import { careerRank, oldCareerRank } from "@/lib/desk/ranks";
 import { RankMark } from "@/components/desk/rank-mark";
 import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
@@ -80,6 +80,7 @@ function Home() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<DeskMode>("classic");
   const [notice, setNotice] = useState("");
+  const [rankTab, setRankTab] = useState<"now" | "old">("now");
   const stats = bucketStats(desk.state);
   const ranked = [...stats].sort((a, b) => b.suggested - a.suggested);
   const top = ranked[0];
@@ -182,6 +183,7 @@ function Home() {
   const experience = bankCorrect + correct;
   const experienceTotal = BANK_TOTAL + questions.length;
   const rank = careerRank(experience, experienceTotal, mine);
+  const oldRank = oldCareerRank(experience, experienceTotal);
 
   return (
     <Shell>
@@ -216,25 +218,29 @@ function Home() {
           <div className="h-full bg-navy" style={{ width: `${Math.round(rank.into * 100)}%` }} />
         </div>
         <p className="mt-2 text-sm text-muted">
-          {rank.next
-            ? `${rank.left} more correct to ${rank.next}. Each rank after this one takes more.`
-            : `Top rank: ${rank.title}.`}
+          {rank.next ? `${rank.left} more correct to ${rank.next}.` : `Top rank: ${rank.title}.`}
         </p>
-        <ol className="mt-3 grid gap-2 sm:grid-cols-2">
-          {rank.gates.map((gate, index) => {
-            const previous = index === 0 ? 0 : rank.gates[index - 1].at;
-            const state = index < rank.index ? "Earned" : index === rank.index ? "Now" : "Ahead";
-            return (
-              <li key={gate.title} className={`flex items-center gap-2 rounded border px-2 py-2 ${state === "Ahead" ? "border-line text-muted" : "border-[#c9a15b] bg-white"}`}>
-                <RankMark title={gate.title} on={state !== "Ahead"} />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-ink">{gate.title}</p>
-                  <p className="text-xs">{state} · {gate.at} correct · {index === 0 ? "start" : `+${gate.at - previous} from the last rank`}</p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+        <div className="mt-3 flex gap-2">
+          <button type="button" onClick={() => setRankTab("now")} className={`min-h-11 rounded px-3 text-sm font-semibold ${rankTab === "now" ? "bg-navy text-white" : "border border-line bg-white"}`}>Rank</button>
+          <button type="button" onClick={() => setRankTab("old")} className={`min-h-11 rounded px-3 text-sm font-semibold ${rankTab === "old" ? "bg-navy text-white" : "border border-line bg-white"}`}>Old ranks</button>
+        </div>
+        {rankTab === "old" ? (
+          <ol className="mt-3 grid gap-2 sm:grid-cols-2">
+            {oldRank.gates.map((gate, index) => {
+              const previous = index === 0 ? 0 : oldRank.gates[index - 1].at;
+              const state = index < oldRank.index ? "Earned" : index === oldRank.index ? "Now" : "Ahead";
+              return (
+                <li key={gate.title} className={`flex items-center gap-2 rounded border px-2 py-2 ${state === "Ahead" ? "border-line text-muted" : "border-[#c9a15b] bg-white"}`}>
+                  <RankMark title={gate.title} on={state !== "Ahead"} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-ink">{gate.title}</p>
+                    <p className="text-xs">{state} · {gate.at} correct · {index === 0 ? "start" : `+${gate.at - previous} from the last rank`}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        ) : null}
       </div>
 
       <DayPlan
