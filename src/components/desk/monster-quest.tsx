@@ -3,7 +3,7 @@ import { Badge } from "@/components/desk/badge";
 import { TownTrial } from "@/components/desk/town-trial";
 import { addCard } from "@/lib/cards";
 import { drawQuestionIds } from "@/lib/desk/adapt";
-import { honors, noteRow } from "@/lib/desk/honors";
+import { noteRow } from "@/lib/desk/honors";
 import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
@@ -1219,16 +1219,6 @@ export function MonsterQuest({
           {notice ? <p className="mt-1 text-sm">{notice}</p> : null}
           <p className="mt-1 text-xs">West door is the shop. The door with the red cross is the Center. It heals everyone, free. {bag?.repelLeft ? `Repel ${bag.repelLeft}. ` : ""}{badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
           <p className="mt-2 text-xs font-bold">Out follows you and fights. Tap Switch to change who is out. One Rare Candy is shared. You have {bag?.candies ?? 0}.</p>
-          <div className="mt-3">
-            <p className="text-xs font-bold">HONORS</p>
-            <div className="mt-1 flex gap-1 overflow-x-auto">
-              {honors().map((honor) => (
-                <span key={honor.id} className={`shrink-0 border-4 px-2 py-1 text-[11px] font-bold ${honor.earned ? "border-black bg-[#fff4a8]" : "border-[#c8b56a] text-[#8a7a48]"}`}>
-                  {honor.name}
-                </span>
-              ))}
-            </div>
-          </div>
           {bag ? (
             <div className="mt-2 flex gap-2 overflow-x-auto">
               {bag.party.map((creature, index) => (

@@ -7,18 +7,20 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { syncDeviceProgress } from "@/lib/progress-sync";
 import type { PeriodScores } from "@/lib/desk/periods";
 import { answerChallenge, challengeBoard, challengeKinds, sendChallenge, type ChallengeBoard } from "@/lib/challenges-api";
+import { honors } from "@/lib/desk/honors";
 
 export const Route = createFileRoute("/leaderboard")({
   component: LeaderboardPage,
 });
 
 const titles = ["Olympian", "Hero", "Champion", "Argonaut", "Hoplite"];
-const boards: { id: keyof PeriodScores | "challenges"; label: string }[] = [
+const boards: { id: keyof PeriodScores | "challenges" | "badges"; label: string }[] = [
   { id: "today", label: "Today" },
   { id: "week", label: "This week" },
   { id: "month", label: "This month" },
   { id: "all", label: "All time" },
   { id: "challenges", label: "Challenges" },
+  { id: "badges", label: "Badges" },
 ];
 
 function titleFor(index: number, score: number) {
@@ -144,10 +146,31 @@ function Challenges({ userId }: { userId?: string }) {
     </section>
   );
 }
+function Badges() {
+  const list = honors();
+  const earned = list.filter((honor) => honor.earned).length;
+  return (
+    <section id="board-badges" className="scroll-mt-32 px-4 pb-8">
+      <h2 className="font-serif text-2xl text-[#1d3557]">Badges</h2>
+      <p className="mt-1 max-w-2xl text-sm text-[#1d3557]">
+        {earned} of {list.length}. These come from questions, a run of right answers, study days, miles, and town trials.
+      </p>
+      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+        {list.map((honor) => (
+          <li key={honor.id} className={`rounded border px-3 py-3 ${honor.earned ? "border-[#c9a15b] bg-white" : "border-white/70 bg-white/40 text-[#1d3557]/50"}`}>
+            <p className="font-semibold text-[#1d3557]">{honor.earned ? "Earned" : "Not yet"} · {honor.name}</p>
+            <p className="text-sm">{honor.detail}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function LeaderboardPage() {
   const [leaders, setLeaders] = useState<Leader[] | null>(null);
   const [error, setError] = useState("");
-  const [board, setBoard] = useState<keyof PeriodScores | "challenges">("today");
+  const [board, setBoard] = useState<keyof PeriodScores | "challenges" | "badges">("today");
   const { user, isPending } = useCurrentUserState();
 
   useEffect(() => {
@@ -167,7 +190,7 @@ function LeaderboardPage() {
     };
   }, [isPending, user?.id]);
 
-  const jump = (id: keyof PeriodScores | "challenges") => {
+  const jump = (id: keyof PeriodScores | "challenges" | "badges") => {
     setBoard(id);
     document.getElementById(`board-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -205,11 +228,12 @@ function LeaderboardPage() {
           <p className="px-4 py-4 text-sm">No accounts yet. Sign in, answer a question, and your name will land here.</p>
         ) : null}
         {leaders && leaders.length > 0
-          ? boards.filter((item) => item.id !== "challenges").map((item) => (
+          ? boards.filter((item) => item.id !== "challenges" && item.id !== "badges").map((item) => (
               <Board key={item.id} board={item.id as keyof PeriodScores} label={item.label} leaders={leaders} />
             ))
           : null}
         <Challenges userId={user?.id} />
+        <Badges />
       </section>
     </Shell>
   );
