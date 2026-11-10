@@ -13,12 +13,16 @@ export const lines: Record<SpeciesId, { names: [string, string, string] }> = {
   drop: { names: ["Drop", "Brook", "Tide"] },
 };
 
+export type KnownMove = { id: string; pp: number };
+
 export type Creature = {
   id: string;
   species: SpeciesId;
   exp: number;
   hp: number;
   dex?: number;
+  moves?: KnownMove[];
+  pending?: string;
 };
 
 export type QuestBag = {
@@ -111,6 +115,87 @@ export function strike(creature: Creature, bag: Pick<QuestBag, "power">) {
   return 3 + bag.power + stageOf(level) + Math.floor(level / 5);
 }
 
+export type MoveDef = { id: string; name: string; kind: string; power: number; pp: number; level: number; species?: SpeciesId };
+
+export const moveBook: MoveDef[] = [
+  { id: "bash", name: "Bash", kind: "Normal", power: 4, pp: 35, level: 1 },
+  { id: "brace", name: "Brace", kind: "Normal", power: 0, pp: 20, level: 6 },
+  { id: "leaf", name: "Leaf Cut", kind: "Grass", power: 7, pp: 20, level: 8, species: "sprout" },
+  { id: "stone", name: "Stone Toss", kind: "Rock", power: 7, pp: 20, level: 8, species: "pebble" },
+  { id: "flare", name: "Flare", kind: "Fire", power: 7, pp: 20, level: 8, species: "wick" },
+  { id: "spray", name: "Spray", kind: "Water", power: 7, pp: 20, level: 8, species: "drop" },
+  { id: "slam", name: "Heavy Slam", kind: "Normal", power: 10, pp: 10, level: 16 },
+  { id: "bloom", name: "Bloom Burst", kind: "Grass", power: 12, pp: 8, level: 22, species: "sprout" },
+  { id: "quake", name: "Ground Crack", kind: "Rock", power: 12, pp: 8, level: 22, species: "pebble" },
+  { id: "blaze", name: "Blaze", kind: "Fire", power: 12, pp: 8, level: 22, species: "wick" },
+  { id: "surge", name: "Surge", kind: "Water", power: 12, pp: 8, level: 22, species: "drop" },
+];
+
+export function moveDef(id: string) {
+  return moveBook.find((move) => move.id === id);
+}
+
+function starterMoves(creature: Creature): KnownMove[] {
+  const level = levelOf(creature.exp);
+  return moveBook
+    .filter((move) => move.level <= level && (!move.species || move.species === creature.species))
+    .slice(-4)
+    .map((move) => ({ id: move.id, pp: move.pp }));
+}
+
+export function knownMoves(creature: Creature) {
+  if (!creature.moves?.length) creature.moves = starterMoves(creature);
+  return creature.moves
+    .map((slot) => ({ ...slot, def: moveDef(slot.id) }))
+    .filter((slot): slot is KnownMove & { def: MoveDef } => Boolean(slot.def));
+}
+
+export function learnThrough(creature: Creature, from: number, to: number) {
+  const notes: string[] = [];
+  if (!creature.moves?.length) creature.moves = starterMoves(creature);
+  for (const move of moveBook) {
+    if (move.level <= from || move.level > to) continue;
+    if (move.species && move.species !== creature.species) continue;
+    if (creature.moves.some((slot) => slot.id === move.id)) continue;
+    if (creature.moves.length < 4) {
+      creature.moves.push({ id: move.id, pp: move.pp });
+      notes.push(`${nameOf(creature)} learned ${move.name}.`);
+    } else if (!creature.pending) {
+      creature.pending = move.id;
+      notes.push(`${nameOf(creature)} wants to learn ${move.name}. Forget a move in the party.`);
+    }
+  }
+  return notes.join(" ");
+}
+
+export function spendPp(creature: Creature, moveId: string) {
+  const slot = knownMoves(creature).find((move) => move.id === moveId);
+  const stored = creature.moves?.find((move) => move.id === moveId);
+  if (!slot || !stored || stored.pp <= 0) return false;
+  stored.pp -= 1;
+  return true;
+}
+
+export function forgetForPending(creatureId: string, slot: number) {
+  const bag = loadBag();
+  const creature = [...bag.party, ...bag.box].find((row) => row.id === creatureId);
+  const next = creature?.pending ? moveDef(creature.pending) : undefined;
+  if (!creature?.moves || !next || slot < 0 || slot >= creature.moves.length) return "";
+  const old = moveDef(creature.moves[slot].id);
+  creature.moves[slot] = { id: next.id, pp: next.pp };
+  creature.pending = undefined;
+  saveBag(bag);
+  return `${nameOf(creature)} forgot ${old?.name ?? "a move"} and learned ${next.name}.`;
+}
+
+export function expPace(exp: number) {
+  const level = levelOf(exp);
+  let spent = 0;
+  for (let i = 1; i < level; i++) spent += 8 + i * 2;
+  const need = level >= 40 ? 1 : 8 + level * 2;
+  return { level, into: Math.max(0, exp - spent), need };
+}
+
 function expForLevel(level: number) {
   let exp = 0;
   for (let i = 1; i < level; i++) exp += 8 + i * 2;
@@ -120,6 +205,7 @@ function expForLevel(level: number) {
 export function makeCreature(species: SpeciesId, level: number, hpBonus = 0): Creature {
   const creature: Creature = { id: `${species}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, species, exp: expForLevel(level), hp: 1 };
   creature.hp = maxHp(creature, { hpBonus });
+  creature.moves = starterMoves(creature);
   return creature;
 }
 
@@ -194,9 +280,10 @@ export function grantExp(creature: Creature, amount: number) {
   creature.exp += amount;
   const afterLevel = levelOf(creature.exp);
   const afterStage = stageOf(afterLevel);
-  if (afterStage > beforeStage) return `${beforeName} evolved into ${nameOf(creature)}!`;
-  if (afterLevel > beforeLevel) return `${nameOf(creature)} grew to level ${afterLevel}.`;
-  return "";
+  const learned = learnThrough(creature, beforeLevel, afterLevel);
+  if (afterStage > beforeStage) return [`${beforeName} evolved into ${nameOf(creature)}!`, learned].filter(Boolean).join(" ");
+  if (afterLevel > beforeLevel) return [`${nameOf(creature)} grew to level ${afterLevel}.`, learned].filter(Boolean).join(" ");
+  return learned;
 }
 
 export function catchChance(ball: Ball, hp: number, max: number, charm = false) {

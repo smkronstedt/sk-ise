@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { topics } from "@/lib/desk/topics";
 
 export function UroTrail({
@@ -61,6 +62,143 @@ export function UroTrail({
   );
 }
 
+function FieldQuest({
+  startTopicBattle,
+  battleDone,
+}: {
+  startTopicBattle: (topicId: string) => void;
+  battleDone: Set<string>;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const keys = useRef(new Set<string>());
+  const state = useRef({
+    x: 5,
+    y: 6,
+    hearts: 3,
+    rupees: 0,
+    swing: 0,
+    lock: false,
+    foe: { x: 10, y: 4, alive: true },
+  });
+  const [hud, setHud] = useState({ hearts: 3, rupees: 0, line: "The field is quiet. Z locks on. Sword swings." });
+  const next = topics.find((topic) => !battleDone.has(topic.id));
+  const openRef = useRef(startTopicBattle);
+  openRef.current = startTopicBattle;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let frame = 0;
+    let raf = 0;
+    const tile = 28;
+    const cols = 16;
+    const rows = 11;
+    const solid = (x: number, y: number) => x <= 0 || y <= 0 || x >= cols - 1 || y >= rows - 1 || (x === 8 && y < 4);
+    const draw = () => {
+      frame += 1;
+      const hero = state.current;
+      if (frame % 8 === 0 && hero.swing <= 0) {
+        const step = keys.current.has("w") ? [0, -1] : keys.current.has("s") ? [0, 1] : keys.current.has("a") ? [-1, 0] : keys.current.has("d") ? [1, 0] : null;
+        if (step && !solid(hero.x + step[0], hero.y + step[1])) {
+          hero.x += step[0];
+          hero.y += step[1];
+          if (hero.x === 12 && hero.y === 8 && hero.rupees < 99) {
+            hero.rupees += 1;
+            setHud((row) => ({ ...row, rupees: hero.rupees, line: "A green rupee." }));
+          }
+        }
+      }
+      if (hero.swing > 0) hero.swing -= 1;
+      const foe = hero.foe;
+      if (foe.alive && frame % 20 === 0) foe.x += foe.x > 12 ? -1 : foe.x < 9 ? 1 : Math.random() > 0.5 ? 1 : -1;
+      const near = Math.abs(foe.x - hero.x) + Math.abs(foe.y - hero.y) <= 1;
+      if (foe.alive && near && hero.swing > 0) {
+        foe.alive = false;
+        setHud((row) => ({ ...row, line: "The guard dropped. The temple door is north." }));
+      } else if (foe.alive && hero.x === foe.x && hero.y === foe.y && frame % 30 === 0) {
+        hero.hearts = Math.max(0, hero.hearts - 1);
+        setHud((row) => ({ ...row, hearts: hero.hearts, line: hero.hearts ? "The guard hit you." : "You woke at the forest edge." }));
+        if (hero.hearts <= 0) {
+          hero.hearts = 3;
+          hero.x = 5;
+          hero.y = 6;
+        }
+      }
+      ctx.fillStyle = "#67b15a";
+      ctx.fillRect(0, 0, cols * tile, rows * tile);
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if (x === 0 || y === 0 || x === cols - 1 || y === rows - 1) {
+            ctx.fillStyle = "#2f6b32";
+            ctx.fillRect(x * tile, y * tile, tile, tile);
+          }
+          if (x === 8 && y < 4) {
+            ctx.fillStyle = "#8d8a84";
+            ctx.fillRect(x * tile, y * tile, tile, tile);
+          }
+        }
+      }
+      ctx.fillStyle = "#c4553a";
+      ctx.fillRect(8 * tile, 0, tile, tile);
+      ctx.fillStyle = "#3aa34a";
+      ctx.fillRect(12 * tile + 8, 8 * tile + 8, 12, 16);
+      if (foe.alive) {
+        ctx.fillStyle = hero.lock ? "#f2d15a" : "#6b4632";
+        ctx.fillRect(foe.x * tile + 4, foe.y * tile + 2, 20, 24);
+      }
+      ctx.fillStyle = "#2d6cdf";
+      ctx.fillRect(hero.x * tile + 6, hero.y * tile + 4, 16, 20);
+      if (hero.swing > 0) {
+        ctx.strokeStyle = "#f4f1ea";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(hero.x * tile + 14, hero.y * tile + 10, 18, -0.6, 1.2);
+        ctx.stroke();
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    const down = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      if ("wasd".includes(key)) keys.current.add(key);
+      if (key === "j") state.current.swing = 10;
+      if (key === "z") {
+        state.current.lock = !state.current.lock;
+        setHud((row) => ({ ...row, line: state.current.lock ? "Locked on." : "Lock off." }));
+      }
+      if (key === "e" && state.current.x === 8 && state.current.y === 1 && next) openRef.current(next.id);
+    };
+    const up = (event: KeyboardEvent) => keys.current.delete(event.key.toLowerCase());
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    raf = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, [battleDone, next]);
+
+  return (
+    <div className="border-b border-world bg-black">
+      <div className="flex items-center justify-between px-4 py-2 text-sm">
+        <p>{"♥".repeat(hud.hearts)}{"♡".repeat(Math.max(0, 3 - hud.hearts))} · Rupees {hud.rupees}</p>
+        <p className="text-stone">{hud.line}</p>
+      </div>
+      <canvas ref={canvasRef} width={448} height={308} className="mx-auto block w-full max-w-xl" />
+      <div className="flex flex-wrap gap-2 p-3">
+        {(["w", "a", "s", "d"] as const).map((key) => (
+          <button key={key} type="button" onPointerDown={() => keys.current.add(key)} onPointerUp={() => keys.current.delete(key)} className="min-h-11 min-w-11 border border-stone text-sm font-bold uppercase">{key}</button>
+        ))}
+        <button type="button" onClick={() => { state.current.swing = 10; }} className="min-h-11 border border-stone px-3 text-sm font-bold">Sword</button>
+        <button type="button" onClick={() => { state.current.lock = !state.current.lock; setHud((row) => ({ ...row, line: state.current.lock ? "Locked on." : "Lock off." })); }} className="min-h-11 border border-stone px-3 text-sm font-bold">Z</button>
+        <button type="button" disabled={!next} onClick={() => next && startTopicBattle(next.id)} className="min-h-11 border border-stone px-3 text-sm font-bold disabled:opacity-40">Temple door</button>
+      </div>
+    </div>
+  );
+}
+
 export function RpgMode({
   battleDone,
   startTopicBattle,
@@ -90,11 +228,12 @@ export function RpgMode({
 
   return (
     <section className="overflow-hidden rounded border border-world-deep bg-world-deep text-white">
+      <FieldQuest battleDone={battleDone} startTopicBattle={startTopicBattle} />
       <div className="px-6 py-5">
         <p className="text-xs font-semibold tracking-wide text-stone uppercase">Overworld</p>
         <h1 className="font-serif text-3xl tracking-tight">RPG</h1>
         <p className="mt-1 max-w-xl text-sm text-stone">
-          Walk the rooms in order. A cleared room opens the next door. Enter a room to battle its next case.
+          Hearts, a sword, and Z to lock on. The red door at the top of the field is the temple. The rooms below are the same road, listed.
         </p>
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-2">

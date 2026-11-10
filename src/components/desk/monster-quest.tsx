@@ -7,6 +7,7 @@ import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
 import { useDesk } from "@/lib/desk/provider";
 import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
+import { DEX, loadField, portraitFor } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, TestBlock } from "@/lib/desk/types";
 import { drawActor, drawCreature, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
@@ -25,7 +26,12 @@ import {
   loadBag,
   enrollGuide,
   creatureSrc,
+  expPace,
+  forgetForPending,
+  knownMoves,
   makeLead,
+  moveDef,
+  spendPp,
   masterStock,
   maxHp,
   monSrc,
@@ -92,7 +98,8 @@ type Battle = {
   reveal: { correct: boolean; note: string } | null;
   over: string | null;
   fainted: boolean;
-  menu: "item" | null;
+  menu: "item" | "fight" | "party" | "ask" | null;
+  moveId?: string;
   guard: boolean;
   boost: boolean;
 };
@@ -354,6 +361,8 @@ export function MonsterQuest({
   const [hold, setHold] = useState<string | null>(null);
   const [line, setLine] = useState("Walk across a trainer's line. They will see you.");
   const [caseOpen, setCaseOpen] = useState(false);
+  const [sheet, setSheet] = useState<"party" | "dex" | null>(null);
+  const [nurse, setNurse] = useState(false);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [notice, setNotice] = useState("");
   const [bag, setBag] = useState<QuestBag | null>(null);
@@ -384,7 +393,7 @@ export function MonsterQuest({
   });
   const city = hold ? (cities.find((item) => item.id === hold) ?? null) : frontier === -1 ? null : cities[frontier];
   cityRef.current = city;
-  pausedRef.current = caseOpen || shopOpen || Boolean(battle);
+  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || nurse;
 
   const go = (next: Scene, x: number, y: number) => {
     posRef.current = { x, y, scene: next, cityId: city?.id ?? "league" };
@@ -517,11 +526,8 @@ export function MonsterQuest({
   apiRef.current.wild = () => void startWild();
   apiRef.current.enter = (tile) => {
     if (tile === 9) {
-      const rested = loadBag();
-      healAll(rested);
-      saveBag(rested);
-      setBag(loadBag());
-      setLine("The Center healed everyone.");
+      setNurse(true);
+      setLine("Welcome to the Center.");
       return;
     }
     if (tile === 7 && scene === "town") {
@@ -589,7 +595,9 @@ export function MonsterQuest({
     const current = loadBag();
     const lead = current.party[0];
     if (!lead) return;
-    const dealtBase = correct ? strike(lead, current) * (battle.boost ? 2 : 1) : 0;
+    const move = battle.moveId ? moveDef(battle.moveId) : undefined;
+    const spent = move ? spendPp(lead, move.id) : true;
+    const dealtBase = correct && spent ? (strike(lead, current) + (move?.power ?? 0)) * (battle.boost ? 2 : 1) : 0;
     const foeHp = Math.max(0, battle.foeHp - dealtBase);
     let grew = "";
     let hp = battle.you;
@@ -633,7 +641,15 @@ export function MonsterQuest({
       seal(false);
       over = "Not enough. You can try again.";
     }
-    const hit = correct ? `Hit for ${dealtBase}.` : battle.guard ? "The Guard held." : "The other side hit you.";
+    const hit = !spent
+      ? "No PP left."
+      : correct
+        ? move?.power === 0
+          ? `${nameOf(lead)} used ${move.name}. Brace is up.`
+          : `${nameOf(lead)} used ${move?.name ?? "Bash"}. Hit for ${dealtBase}.`
+        : battle.guard
+          ? "The Guard held."
+          : "The other side hit you.";
     setBattle({
       ...battle,
       right,
@@ -641,9 +657,10 @@ export function MonsterQuest({
       youMax,
       foeHp,
       fainted,
-      guard: correct ? battle.guard : false,
+      guard: correct && move?.power === 0 ? true : correct ? battle.guard : false,
       boost: correct ? false : battle.boost,
       menu: null,
+      moveId: undefined,
       reveal: { correct, note: [hit, grew].filter(Boolean).join(" ") },
       over,
     });
@@ -672,10 +689,15 @@ export function MonsterQuest({
 
   const run = () => {
     if (!battle) return;
+    if (battle.foeKind !== "wild") {
+      setNotice("No. You can't run from a trainer.");
+      setBattle({ ...battle, menu: null });
+      return;
+    }
     desk.patchTest(battle.testId, (current) => ({ ...current, status: "done", finishedAt: Date.now() }));
     busyRef.current = false;
     setBattle(null);
-    setLine(battle.foeKind === "wild" ? "You got away." : "You backed out.");
+    setLine("You got away.");
   };
 
   const giveUp = () => {
@@ -950,7 +972,7 @@ export function MonsterQuest({
     <div ref={wrapRef} className="bg-[#1e3a24]">
       <div className="flex items-center justify-between gap-3 border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
         <h2 className="font-serif text-xl">{city ? `${city.city} · ${city.element}` : "Championship"}</h2>
-        <button type="button" onClick={() => setCaseOpen((open) => !open)} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
+        <button type="button" onClick={() => setSheet((open) => (open ? null : "party"))} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
           Start
         </button>
       </div>
@@ -988,22 +1010,76 @@ export function MonsterQuest({
                 <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.you / battle.youMax) * 100)}%` }} />
               </div>
               <p className="mt-1 text-xs">HP {Math.max(0, battle.you)}/{battle.youMax}</p>
+              {lead ? (
+                <div className="mt-1 h-2 border-2 border-black bg-white">
+                  <div className="h-full bg-[#3d6fd8]" style={{ width: `${Math.min(100, (expPace(lead.exp).into / expPace(lead.exp).need) * 100)}%` }} />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
           <div className="mt-3 border-4 border-double border-black bg-[#f8f8d8] p-3">
             <p className="text-xs font-bold uppercase">{battle.title}</p>
-            {question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : <p className="mt-2 text-sm">Opening the question…</p>}
+            {battle.menu === "ask" && question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
+            {!battle.menu && !battle.reveal ? <p className="mt-2 text-sm font-bold">What will {lead ? nameOf(lead) : "you"} do?</p> : null}
             {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
             {battle.reveal && question ? <p className="mt-1 max-h-24 overflow-auto text-xs leading-relaxed">{question.explanation}</p> : null}
             {battle.over ? <p className="mt-2 text-sm font-bold">{battle.over} {battle.right}/{battle.ids.length}.</p> : null}
-            {!battle.reveal && !battle.fainted && question && battle.menu !== "item" ? (
+            {!battle.reveal && !battle.fainted && !battle.over && !battle.menu ? (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setBattle({ ...battle, menu: "fight" })} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Fight</button>
+                <button type="button" onClick={() => setBattle({ ...battle, menu: "item" })} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Bag</button>
+                <button type="button" onClick={() => setBattle({ ...battle, menu: "party" })} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Party</button>
+                <button type="button" onClick={run} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Run</button>
+              </div>
+            ) : null}
+            {!battle.reveal && !battle.fainted && battle.menu === "fight" && lead ? (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {knownMoves(lead).map((move) => (
+                  <button
+                    key={move.id}
+                    type="button"
+                    disabled={move.pp <= 0}
+                    onClick={() => setBattle({ ...battle, menu: "ask", moveId: move.id })}
+                    className="min-h-14 border-4 border-black bg-white px-2 text-left text-sm font-bold disabled:opacity-40"
+                  >
+                    {move.def.name}
+                    <span className="block text-[11px] font-normal">{move.def.kind} · PP {move.pp}/{move.def.pp}</span>
+                  </button>
+                ))}
+                <button type="button" onClick={() => setBattle({ ...battle, menu: null })} className="min-h-14 border-4 border-black bg-black text-sm font-bold text-[#fff4a8]">Back</button>
+              </div>
+            ) : null}
+            {!battle.reveal && !battle.fainted && question && battle.menu === "ask" ? (
               <div className="mt-3 flex flex-col gap-2">
+                <p className="text-xs font-bold">{battle.moveId ? moveDef(battle.moveId)?.name : "Fight"}</p>
                 {question.choices.map((choice, index) => (
                   <button key={choice} type="button" onClick={() => grade(index)} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">
                     {"ABCDE"[index]}. {choice}
                   </button>
                 ))}
+              </div>
+            ) : null}
+            {!battle.reveal && !battle.fainted && battle.menu === "party" ? (
+              <div className="mt-3 flex flex-col gap-2">
+                {bag?.party.map((creature, index) => (
+                  <button
+                    key={creature.id}
+                    type="button"
+                    disabled={creature.hp <= 0}
+                    onClick={() => {
+                      if (index > 0) makeLead(index);
+                      const swapped = loadBag();
+                      const out = swapped.party[0];
+                      setBag(swapped);
+                      if (out) setBattle({ ...battle, menu: null, you: out.hp, youMax: maxHp(out, swapped) });
+                    }}
+                    className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold disabled:opacity-40"
+                  >
+                    {index === 0 ? "Out · " : "Switch · "}{nameOf(creature)} Lv {levelOf(creature.exp)} · HP {creature.hp}/{maxHp(creature, bag)}
+                  </button>
+                ))}
+                <button type="button" onClick={() => setBattle({ ...battle, menu: null })} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">Back</button>
               </div>
             ) : null}
             {battle.menu === "item" ? (
@@ -1027,30 +1103,6 @@ export function MonsterQuest({
                 <button type="button" onClick={advance} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
                   {battle.over ? "Back" : "Next"}
                 </button>
-              ) : null}
-              {!battle.over && battle.menu !== "item" ? (
-                <button type="button" onClick={() => setBattle({ ...battle, menu: "item" })} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Item</button>
-              ) : null}
-              {!battle.over && !battle.reveal ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const current = loadBag();
-                    const next = current.party.findIndex((creature, index) => index > 0 && creature.hp > 0);
-                    if (next < 0) return;
-                    makeLead(next);
-                    const swapped = loadBag();
-                    const out = swapped.party[0];
-                    setBag(swapped);
-                    if (out) setBattle({ ...battle, you: out.hp, youMax: maxHp(out, swapped) });
-                  }}
-                  className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold"
-                >
-                  Switch
-                </button>
-              ) : null}
-              {!battle.over && !battle.reveal ? (
-                <button type="button" onClick={run} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Run</button>
               ) : null}
               {battle.fainted && !battle.over ? (
                 <button type="button" onClick={giveUp} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Black out</button>
@@ -1132,6 +1184,41 @@ export function MonsterQuest({
           </ul>
         </div>
       ) : null}
+      {nurse ? (
+        <div className="border-t-4 border-black bg-[#f8f8d8] p-3 text-black">
+          <p className="text-sm font-bold">We can heal your party. Shall we?</p>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const rested = loadBag();
+                healAll(rested);
+                saveBag(rested);
+                setBag(loadBag());
+                setNurse(false);
+                setLine("Your party is fighting fit. We hope to see you again.");
+              }}
+              className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]"
+            >
+              Yes
+            </button>
+            <button type="button" onClick={() => setNurse(false)} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Not now</button>
+          </div>
+        </div>
+      ) : null}
+      {sheet ? (
+        <FieldSheet
+          sheet={sheet}
+          bag={bag}
+          onSheet={setSheet}
+          onBadges={() => {
+            setSheet(null);
+            setCaseOpen(true);
+          }}
+          onChange={() => setBag(loadBag())}
+          onNote={setNotice}
+        />
+      ) : null}
       {caseOpen && bag ? (
         <div className="border-t-4 border-black bg-[#f8f8d8] p-3 text-black">
           <p className="text-xs font-bold tracking-wide uppercase">Badge case</p>
@@ -1153,6 +1240,68 @@ export function MonsterQuest({
               </div>
             </div>
           ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FieldSheet({
+  sheet,
+  bag,
+  onSheet,
+  onBadges,
+  onChange,
+  onNote,
+}: {
+  sheet: "party" | "dex";
+  bag: QuestBag | null;
+  onSheet: (sheet: "party" | "dex" | null) => void;
+  onBadges: () => void;
+  onChange: () => void;
+  onNote: (note: string) => void;
+}) {
+  const field = loadField();
+  return (
+    <div className="border-t-4 border-black bg-[#f8f8d8] p-3 text-black">
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => onSheet("party")} className={`min-h-11 border-4 border-black px-3 text-sm font-bold ${sheet === "party" ? "bg-black text-[#fff4a8]" : "bg-white"}`}>Party</button>
+        <button type="button" onClick={() => onSheet("dex")} className={`min-h-11 border-4 border-black px-3 text-sm font-bold ${sheet === "dex" ? "bg-black text-[#fff4a8]" : "bg-white"}`}>Dex</button>
+        <button type="button" onClick={onBadges} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Badges</button>
+        <button type="button" onClick={() => onSheet(null)} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Close</button>
+      </div>
+      {sheet === "party" && bag ? (
+        <div className="mt-3 flex flex-col gap-2">
+          {[...bag.party, ...bag.box].map((creature, index) => (
+            <div key={creature.id} className="border-4 border-black bg-white p-2">
+              <p className="text-sm font-bold">{index < bag.party.length ? `${index + 1}. ` : "Box · "}{nameOf(creature)} · Lv {levelOf(creature.exp)} · HP {creature.hp}/{maxHp(creature, bag)}</p>
+              <p className="text-xs">{knownMoves(creature).map((move) => `${move.def.name} ${move.pp}/${move.def.pp}`).join(" · ")}</p>
+              {creature.pending && moveDef(creature.pending) ? (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  <p className="w-full text-xs font-bold">Forget a move to learn {moveDef(creature.pending)?.name}.</p>
+                  {knownMoves(creature).map((move, slot) => (
+                    <button key={move.id} type="button" onClick={() => { onNote(forgetForPending(creature.id, slot)); onChange(); }} className="min-h-11 border-4 border-black bg-[#fff4a8] px-2 text-xs font-bold">
+                      Forget {move.def.name}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {sheet === "dex" ? (
+        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {DEX.map((creature) => {
+            const owned = field.caught.includes(creature.number);
+            return (
+              <div key={creature.number} className={`border-4 p-1 text-center ${owned ? "border-black bg-white" : "border-[#c8b56a] bg-[#efe6c0]"}`}>
+                <p className="text-[10px]">#{String(creature.number).padStart(3, "0")}</p>
+                {owned ? <img src={portraitFor(creature.number, field.rare.includes(creature.number))} alt="" className="mx-auto h-12 w-12 rounded-full object-cover" /> : <div className="mx-auto h-12 w-12 rounded-full bg-black/10" />}
+                <p className="truncate text-[11px] font-bold">{owned ? creature.name : "—"}</p>
+              </div>
+            );
+          })}
         </div>
       ) : null}
     </div>
