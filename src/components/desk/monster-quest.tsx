@@ -1028,8 +1028,6 @@ export function MonsterQuest({
             {!battle.reveal && !battle.fainted && !battle.over && !battle.menu ? (
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => setBattle({ ...battle, menu: "fight" })} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Fight</button>
-                <button type="button" onClick={() => setBattle({ ...battle, menu: "item" })} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Bag</button>
-                <button type="button" onClick={() => setBattle({ ...battle, menu: "party" })} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Party</button>
                 <button type="button" onClick={run} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Run</button>
               </div>
             ) : null}

@@ -67,10 +67,10 @@ export const shopItems = [
 export type ShopId = (typeof shopItems)[number]["id"];
 
 const cute: Record<SpeciesId, string> = {
-  sprout: "/field/sprout.jpg",
-  pebble: "/field/stone.jpg",
-  wick: "/field/ember.jpg",
-  drop: "/field/drop.jpg",
+  sprout: "/field/cut/sprout.png?v=3",
+  pebble: "/field/cut/stone.png?v=3",
+  wick: "/field/cut/ember.png?v=3",
+  drop: "/field/cut/drop.png?v=3",
 };
 
 export function monSrc(species: SpeciesId, _stage: 0 | 1 | 2) {
