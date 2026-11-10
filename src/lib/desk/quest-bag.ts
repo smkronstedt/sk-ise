@@ -42,6 +42,7 @@ export type QuestBag = {
   hpBonus: number;
   power: number;
   mastersBought: number;
+  candies: number;
   updatedAt: number;
 };
 
@@ -59,7 +60,7 @@ export const shopItems = [
   { id: "xattack", name: "X Attack", price: 14, note: "Your next hit hits twice as hard." },
   { id: "hp", name: "HP Up", price: 40, note: "Permanent. +6 max HP." },
   { id: "protein", name: "Protein", price: 45, note: "Permanent. Hits harder." },
-  { id: "candy", name: "Rare Candy", price: 50, note: "Permanent. One level. Can evolve." },
+  { id: "candy", name: "Rare Candy", price: 50, note: "Goes in the bag. Use it on one creature for a level." },
   { id: "share", name: "Exp. Share", price: 75, note: "Once. The rest of the party gains experience." },
   { id: "charm", name: "Catch Charm", price: 90, note: "Once. Balls work better. Not a Master Ball." },
 ] as const;
@@ -229,6 +230,7 @@ function starterBag(): QuestBag {
     hpBonus: 0,
     power: 0,
     mastersBought: 0,
+    candies: 0,
     updatedAt: 1,
   };
 }
@@ -254,6 +256,7 @@ export function loadBag(): QuestBag {
         ultra: parsed.balls?.ultra ?? 0,
         master: parsed.balls?.master ?? 0,
       },
+      candies: parsed.candies ?? 1,
     });
   } catch {
     return starterBag();
@@ -276,14 +279,32 @@ export function foeHealth(kind: "trainer" | "leader" | "rival" | "wild", count: 
 export function grantExp(creature: Creature, amount: number) {
   const beforeStage = stageOf(levelOf(creature.exp));
   const beforeLevel = levelOf(creature.exp);
-  const beforeName = nameOf(creature);
   creature.exp += amount;
   const afterLevel = levelOf(creature.exp);
   const afterStage = stageOf(afterLevel);
   const learned = learnThrough(creature, beforeLevel, afterLevel);
-  if (afterStage > beforeStage) return [`${beforeName} evolved into ${nameOf(creature)}!`, learned].filter(Boolean).join(" ");
+  if (afterStage > beforeStage) {
+    const line = creature.dex
+      ? `${nameOf(creature)} evolved.`
+      : `${lines[creature.species].names[beforeStage]} evolved into ${lines[creature.species].names[afterStage]}!`;
+    return [line, learned].filter(Boolean).join(" ");
+  }
   if (afterLevel > beforeLevel) return [`${nameOf(creature)} grew to level ${afterLevel}.`, learned].filter(Boolean).join(" ");
   return learned;
+}
+
+/** Experience for finishing a fight. The lead gets the full amount. Exp. Share splits half to the others. */
+export function payExp(bag: QuestBag, amount: number) {
+  const lead = bag.party[0];
+  if (!lead || amount <= 0) return "";
+  const notes = [`${nameOf(lead)} gained ${amount} Exp.`, grantExp(lead, amount)];
+  if (bag.expShare) {
+    for (const other of bag.party.slice(1)) {
+      const shared = grantExp(other, Math.max(4, Math.floor(amount / 2)));
+      if (shared) notes.push(shared);
+    }
+  }
+  return notes.filter(Boolean).join(" ");
 }
 
 export function catchChance(ball: Ball, hp: number, max: number, charm = false) {
@@ -312,7 +333,6 @@ export function buyItem(id: ShopId, badges: number): string {
   if (id === "share" && bag.expShare) return "You already have Exp. Share.";
   if (id === "charm" && bag.charm) return "You already have a Catch Charm.";
   if (!spendQuest(item.price)) return "Not enough Quest money.";
-  const lead = bag.party[0];
   if (id === "potion") bag.potions += 1;
   if (id === "super") bag.supers += 1;
   if (id === "revive") bag.revives += 1;
@@ -330,31 +350,59 @@ export function buyItem(id: ShopId, badges: number): string {
   }
   if (id === "protein") bag.power += 1;
   let note = `Bought ${item.name}.`;
-  if (id === "candy" && lead) {
-    const gain = 8 + levelOf(lead.exp) * 2;
-    const grew = grantExp(lead, gain);
-    lead.hp = maxHp(lead, bag);
-    note = grew || `${nameOf(lead)} is level ${levelOf(lead.exp)}.`;
+  if (id === "candy") {
+    bag.candies += 1;
+    note = "Rare Candy is in the bag. Open Start, then use it on the one you choose.";
   }
   saveBag(bag);
   return note;
 }
 
-export function drink(kind: "potion" | "super", index = 0): string {
+export function useHeld(kind: "candy" | "potion" | "super" | "revive" | "max", index: number, boxed = false): string {
   const bag = loadBag();
-  const creature = bag.party[index];
-  if (!creature) return "No one to heal.";
-  if (kind === "potion") {
-    if (bag.potions <= 0) return "No Potions.";
-    bag.potions -= 1;
-    creature.hp = Math.min(maxHp(creature, bag), creature.hp + 12);
+  const list = boxed ? bag.box : bag.party;
+  const creature = list[index];
+  if (!creature) return "No one there.";
+  if (kind === "candy") {
+    if (bag.candies <= 0) return "No Rare Candy.";
+    bag.candies -= 1;
+    const before = maxHp(creature, bag);
+    const grew = grantExp(creature, 8 + levelOf(creature.exp) * 2);
+    creature.hp = Math.min(maxHp(creature, bag), creature.hp + Math.max(0, maxHp(creature, bag) - before));
+    saveBag(bag);
+    return grew || `${nameOf(creature)} is level ${levelOf(creature.exp)}.`;
+  }
+  if (kind === "potion" || kind === "super") {
+    if (creature.hp <= 0) return `${nameOf(creature)} is fainted. Use a Revive.`;
+    if (creature.hp >= maxHp(creature, bag)) return `${nameOf(creature)} is already full.`;
+    if (kind === "potion") {
+      if (bag.potions <= 0) return "No Potions.";
+      bag.potions -= 1;
+      creature.hp = Math.min(maxHp(creature, bag), creature.hp + 12);
+    } else {
+      if (bag.supers <= 0) return "No Super Potions.";
+      bag.supers -= 1;
+      creature.hp = maxHp(creature, bag);
+    }
+    saveBag(bag);
+    return `${nameOf(creature)} healed.`;
+  }
+  if (creature.hp > 0) return `${nameOf(creature)} is still up.`;
+  if (kind === "revive") {
+    if (bag.revives <= 0) return "No Revives.";
+    bag.revives -= 1;
+    creature.hp = Math.ceil(maxHp(creature, bag) / 2);
   } else {
-    if (bag.supers <= 0) return "No Super Potions.";
-    bag.supers -= 1;
+    if (bag.maxRevives <= 0) return "No Max Revives.";
+    bag.maxRevives -= 1;
     creature.hp = maxHp(creature, bag);
   }
   saveBag(bag);
-  return `${nameOf(creature)} healed.`;
+  return `${nameOf(creature)} got back up.`;
+}
+
+export function drink(kind: "potion" | "super", index = 0): string {
+  return useHeld(kind, index, false);
 }
 
 export function healAll(bag: QuestBag) {
@@ -510,6 +558,7 @@ export function mergeBags(local: unknown, remote: unknown): QuestBag | null {
     mastersBought: Math.max(left.mastersBought, right.mastersBought),
     expShare: Boolean(left.expShare || right.expShare),
     charm: Boolean(left.charm || right.charm),
+    candies: Math.max(left.candies ?? 0, right.candies ?? 0),
   });
 }
 

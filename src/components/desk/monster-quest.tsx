@@ -36,6 +36,7 @@ import {
   maxHp,
   monSrc,
   nameOf,
+  payExp,
   revive,
   saveBag,
   shopItems,
@@ -44,6 +45,7 @@ import {
   strike,
   swapBox,
   takeBall,
+  useHeld,
   useRepel,
   wildSpecies,
   type Ball,
@@ -614,6 +616,16 @@ export function MonsterQuest({
       hp = Math.min(youMax, hp + Math.max(0, youMax - battle.youMax));
     } else hp = Math.max(0, hp - (battle.guard ? 1 : 4));
     lead.hp = hp;
+    let prize = "";
+    const wonFight = hp > 0 && battle.foeKind !== "wild" && (foeHp <= 0 || (battle.index + 1 >= battle.ids.length && (battle.right + (correct ? 1 : 0)) / battle.ids.length >= battle.need));
+    const wildDown = hp > 0 && battle.foeKind === "wild" && foeHp <= 0;
+    if (wonFight || wildDown) {
+      const amount = wonFight ? 16 + (battle.right + (correct ? 1 : 0)) * 2 : 10;
+      prize = payExp(current, amount);
+      youMax = maxHp(lead, current);
+      hp = Math.min(youMax, lead.hp);
+      lead.hp = hp;
+    }
     if (hp <= 0) {
       const bench = current.party.slice(1).find((creature) => creature.hp > 0);
       if (bench) {
@@ -633,10 +645,10 @@ export function MonsterQuest({
     let over: string | null = null;
     if (!fainted && battle.foeKind !== "wild" && (ko || (last && accurate))) {
       seal(true);
-      over = "You won.";
+      over = prize ? `You won. ${prize}` : "You won.";
     } else if (!fainted && battle.foeKind === "wild" && ko) {
       seal(false);
-      over = "It fainted. Throw a ball while it still has HP.";
+      over = prize ? `It fainted. ${prize} Throw a ball while it still has HP.` : "It fainted. Throw a ball while it still has HP.";
     } else if (!fainted && last && battle.foeKind !== "wild") {
       seal(false);
       over = "Not enough. You can try again.";
@@ -661,7 +673,7 @@ export function MonsterQuest({
       boost: correct ? false : battle.boost,
       menu: null,
       moveId: undefined,
-      reveal: { correct, note: [hit, grew].filter(Boolean).join(" ") },
+      reveal: { correct, note: [hit, grew, prize].filter(Boolean).join(" ") },
       over,
     });
   };
@@ -670,7 +682,7 @@ export function MonsterQuest({
     if (!battle?.reveal) return;
     if (battle.fainted && !battle.over) return;
     if (battle.over) {
-      const wonRival = battle.over === "You won." && battle.title.startsWith("Rival:");
+      const wonRival = battle.over.startsWith("You won") && battle.title.startsWith("Rival:");
       busyRef.current = false;
       setBattle(null);
       if (wonRival && city) {
@@ -1279,7 +1291,30 @@ function FieldSheet({
           {[...bag.party, ...bag.box].map((creature, index) => (
             <div key={creature.id} className="border-4 border-black bg-white p-2">
               <p className="text-sm font-bold">{index < bag.party.length ? `${index + 1}. ` : "Box · "}{nameOf(creature)} · Lv {levelOf(creature.exp)} · HP {creature.hp}/{maxHp(creature, bag)}</p>
+              <p className="text-xs">{levelOf(creature.exp) >= 16 ? "Final form." : levelOf(creature.exp) >= 8 ? "Evolves at level 16." : "Evolves at level 8."}</p>
               <p className="text-xs">{knownMoves(creature).map((move) => `${move.def.name} ${move.pp}/${move.def.pp}`).join(" · ")}</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {bag.candies > 0 ? (
+                  <button type="button" onClick={() => { onNote(useHeld("candy", index < bag.party.length ? index : index - bag.party.length, index >= bag.party.length)); onChange(); }} className="min-h-11 border-4 border-black bg-[#fff4a8] px-2 text-xs font-bold">
+                    Rare Candy ×{bag.candies}
+                  </button>
+                ) : null}
+                {bag.potions > 0 ? (
+                  <button type="button" onClick={() => { onNote(useHeld("potion", index < bag.party.length ? index : index - bag.party.length, index >= bag.party.length)); onChange(); }} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">
+                    Potion ×{bag.potions}
+                  </button>
+                ) : null}
+                {bag.supers > 0 ? (
+                  <button type="button" onClick={() => { onNote(useHeld("super", index < bag.party.length ? index : index - bag.party.length, index >= bag.party.length)); onChange(); }} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">
+                    Super ×{bag.supers}
+                  </button>
+                ) : null}
+                {creature.hp <= 0 && bag.revives > 0 ? (
+                  <button type="button" onClick={() => { onNote(useHeld("revive", index < bag.party.length ? index : index - bag.party.length, index >= bag.party.length)); onChange(); }} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">
+                    Revive ×{bag.revives}
+                  </button>
+                ) : null}
+              </div>
               {creature.pending && moveDef(creature.pending) ? (
                 <div className="mt-1 flex flex-wrap gap-1">
                   <p className="w-full text-xs font-bold">Forget a move to learn {moveDef(creature.pending)?.name}.</p>
