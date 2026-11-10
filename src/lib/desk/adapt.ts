@@ -1,5 +1,5 @@
 import { blueprint } from "./blueprint";
-import { bankSlugsFor, blueprintForSlug } from "./bank-map";
+import { bankSlugsFor } from "./bank-map";
 import { bankList, getQuestion } from "./catalog";
 import { loadBankProgress } from "./original-bank";
 import { questions } from "./questions";
@@ -224,42 +224,31 @@ export function questionsForTopics(topicIds: string[]): Question[] {
   return out;
 }
 
-function blueprintOf(question: Question): BlueprintId {
-  return topicById[question.topicId]?.blueprintId ?? blueprintForSlug(question.topicId) ?? "core";
+function saspOrder(state: DeskState, id: string) {
+  const match = /^SASP(\d{4})-(\d+)/.exec(id);
+  const fresh = selectionStatus(state, id) === "unused" ? 0 : 1;
+  if (!match) return [1, fresh, 0, 0] as const;
+  return [0, fresh, -Number(match[1]), Number(match[2])] as const;
 }
 
-/** Unused bank questions first. Games and the trail call this after the catalog has loaded. */
+/** Original SASP wording first, newest year first, unanswered before answered. Rewritten stems come after. */
+export function orderForSasp<T extends { id: string }>(state: DeskState, list: T[]) {
+  return [...list].sort((a, b) => {
+    const left = saspOrder(state, a.id);
+    const right = saspOrder(state, b.id);
+    for (let i = 0; i < left.length; i++) if (left[i] !== right[i]) return left[i] - right[i];
+    return a.id.localeCompare(b.id);
+  });
+}
+
+/** Unused original SASP questions first, newest year first. Games and the trail call this after the catalog has loaded. */
 export function drawQuestionIds(
   state: DeskState,
   topicIds: string[],
   pool: Pool,
   count: number,
-  adaptive: boolean,
+  _adaptive: boolean,
 ): string[] {
   const poolQuestions = questionsForTopics(topicIds).filter((question) => matchesPool(state, question.id, pool));
-  if (!adaptive) return shuffle(poolQuestions).slice(0, count).map((question) => question.id);
-  const stats = bucketStats(state);
-  const share = Object.fromEntries(stats.map((row) => [row.id, row.suggested])) as Record<BlueprintId, number>;
-  const weighted = poolQuestions.map((question) => {
-    const result = selectionStatus(state, question.id);
-    return {
-      id: question.id,
-      weight: Math.max(0.05, share[blueprintOf(question)] ?? 1) * statusWeight(result, Boolean(state.marks[question.id])),
-    };
-  });
-  const picked: string[] = [];
-  const rest = [...weighted];
-  while (picked.length < count && rest.length) {
-    const sum = rest.reduce((total, item) => total + item.weight, 0);
-    let roll = Math.random() * sum;
-    let index = 0;
-    for (; index < rest.length; index++) {
-      roll -= rest[index].weight;
-      if (roll <= 0) break;
-    }
-    if (index >= rest.length) index = rest.length - 1;
-    picked.push(rest[index].id);
-    rest.splice(index, 1);
-  }
-  return picked;
+  return orderForSasp(state, poolQuestions).slice(0, count).map((question) => question.id);
 }

@@ -1,4 +1,5 @@
 import { spendQuest } from "@/lib/desk/purse";
+import { DEX, loadField, spriteFor } from "@/lib/desk/field-dex";
 
 export const BAG_KEY = "callroom-quest-bag-v1";
 
@@ -17,6 +18,7 @@ export type Creature = {
   species: SpeciesId;
   exp: number;
   hp: number;
+  dex?: number;
 };
 
 export type QuestBag = {
@@ -89,7 +91,13 @@ export function stageOf(level: number): 0 | 1 | 2 {
   return 0;
 }
 
+export function creatureSrc(creature: Creature) {
+  if (creature.dex) return spriteFor(creature.dex, loadField().rare.includes(creature.dex));
+  return monSrc(creature.species, stageOf(levelOf(creature.exp)));
+}
+
 export function nameOf(creature: Creature) {
+  if (creature.dex) return DEX[creature.dex - 1]?.name ?? "Caught";
   return lines[creature.species].names[stageOf(levelOf(creature.exp))];
 }
 
@@ -329,6 +337,50 @@ export function makeLead(index: number) {
   if (index <= 0 || index >= bag.party.length) return;
   const [creature] = bag.party.splice(index, 1);
   bag.party.unshift(creature);
+  saveBag(bag);
+}
+
+const GUIDE_SPECIES: SpeciesId[] = ["sprout", "pebble", "wick", "drop"];
+
+/** Caught guide creatures join the same party that walks and fights. Six can travel. The rest wait in the box. */
+export function enrollGuide() {
+  const field = loadField();
+  const bag = loadBag();
+  const owned = new Set(
+    [...bag.party, ...bag.box].map((creature) => creature.dex).filter((number): number is number => typeof number === "number"),
+  );
+  let changed = false;
+  for (const number of field.caught) {
+    if (owned.has(number)) continue;
+    const creature = makeCreature(GUIDE_SPECIES[number % GUIDE_SPECIES.length], 5, bag.hpBonus);
+    creature.id = `dex-${number}`;
+    creature.dex = number;
+    if (bag.party.length < 6) bag.party.push(creature);
+    else bag.box.push(creature);
+    owned.add(number);
+    changed = true;
+  }
+  if (changed) saveBag(bag);
+  return loadBag();
+}
+
+export function bringToFront(dex: number) {
+  enrollGuide();
+  const bag = loadBag();
+  const partyIndex = bag.party.findIndex((creature) => creature.dex === dex);
+  if (partyIndex === 0) return;
+  if (partyIndex > 0) {
+    const [creature] = bag.party.splice(partyIndex, 1);
+    bag.party.unshift(creature);
+    saveBag(bag);
+    return;
+  }
+  const boxIndex = bag.box.findIndex((creature) => creature.dex === dex);
+  if (boxIndex < 0) return;
+  const [creature] = bag.box.splice(boxIndex, 1);
+  const displaced = bag.party.length >= 6 ? bag.party.pop() : undefined;
+  bag.party.unshift(creature);
+  if (displaced) bag.box.unshift(displaced);
   saveBag(bag);
 }
 

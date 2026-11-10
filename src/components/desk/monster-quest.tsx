@@ -7,7 +7,6 @@ import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
 import { useDesk } from "@/lib/desk/provider";
 import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
-import { DEX, chooseLead, fieldLead, loadField, portraitFor, spriteFor } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, TestBlock } from "@/lib/desk/types";
 import { drawActor, drawCreature, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
@@ -24,6 +23,8 @@ import {
   levelOf,
   lines,
   loadBag,
+  enrollGuide,
+  creatureSrc,
   makeLead,
   masterStock,
   maxHp,
@@ -357,20 +358,24 @@ export function MonsterQuest({
   const [notice, setNotice] = useState("");
   const [bag, setBag] = useState<QuestBag | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
-  const [companion, setCompanion] = useState<number | null>(null);
   const bagRef = useRef<QuestBag | null>(null);
   const followRef = useRef<string | null>(null);
   const repelRef = useRef(0);
   bagRef.current = bag;
-  followRef.current = companion ? spriteFor(companion, loadField().rare.includes(companion)) : null;
+  followRef.current = bag?.party[0] ? creatureSrc(bag.party[0]) : null;
 
   useEffect(() => {
     const next = loadBag();
     if (!localStorage.getItem(BAG_KEY)) saveBag(next);
-    setBag(localStorage.getItem(BAG_KEY) ? loadBag() : next);
-    repelRef.current = (localStorage.getItem(BAG_KEY) ? loadBag() : next).repelLeft;
-    setCompanion(fieldLead());
+    setBag(enrollGuide());
+    repelRef.current = loadBag().repelLeft;
   }, []);
+
+  useEffect(() => {
+    if (battle) sessionStorage.setItem("ise-battle", "1");
+    else sessionStorage.removeItem("ise-battle");
+    return () => sessionStorage.removeItem("ise-battle");
+  }, [battle]);
 
   const frontier = cities.findIndex((city, index) => {
     const trainer = stops.find((stop) => stop.kind === "trainer" && stop.city.id === city.id);
@@ -949,13 +954,6 @@ export function MonsterQuest({
           Start
         </button>
       </div>
-      <CompanionPick
-        selected={companion}
-        onPick={(number) => {
-          chooseLead(number);
-          setCompanion(number);
-        }}
-      />
       {battle ? (
         <div>
         <div className="relative overflow-hidden bg-[#7ec8e3] px-3 pt-4 pb-2 text-black">
@@ -980,12 +978,12 @@ export function MonsterQuest({
           </div>
           <div className="relative mt-2 grid grid-cols-[auto_1fr] items-end gap-2">
             <div className="flex flex-col items-center">
-              {lead ? <img src={companion ? spriteFor(companion, loadField().rare.includes(companion)) : monSrc(lead.species, stageOf(levelOf(lead.exp)))} alt="" className="h-28 w-auto object-contain" /> : null}
+              {lead ? <img src={creatureSrc(lead)} alt="" className="h-28 w-auto object-contain" /> : null}
               <PixelActor kind="player" />
               <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
             </div>
             <div className="border-4 border-black bg-[#f8f8d8] p-2">
-              <p className="text-xs font-bold uppercase">{companion ? `${DEX[companion - 1]?.name ?? "With you"} · Lv ${lead ? levelOf(lead.exp) : 1}` : lead ? `${nameOf(lead)} · Lv ${levelOf(lead.exp)}` : "You"}</p>
+              <p className="text-xs font-bold uppercase">{lead ? `${nameOf(lead)} · Lv ${levelOf(lead.exp)}` : "You"}</p>
               <div className="mt-1 h-3 border-2 border-black bg-white">
                 <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.you / battle.youMax) * 100)}%` }} />
               </div>
@@ -1034,6 +1032,24 @@ export function MonsterQuest({
                 <button type="button" onClick={() => setBattle({ ...battle, menu: "item" })} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Item</button>
               ) : null}
               {!battle.over && !battle.reveal ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = loadBag();
+                    const next = current.party.findIndex((creature, index) => index > 0 && creature.hp > 0);
+                    if (next < 0) return;
+                    makeLead(next);
+                    const swapped = loadBag();
+                    const out = swapped.party[0];
+                    setBag(swapped);
+                    if (out) setBattle({ ...battle, you: out.hp, youMax: maxHp(out, swapped) });
+                  }}
+                  className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold"
+                >
+                  Switch
+                </button>
+              ) : null}
+              {!battle.over && !battle.reveal ? (
                 <button type="button" onClick={run} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Run</button>
               ) : null}
               {battle.fainted && !battle.over ? (
@@ -1050,23 +1066,23 @@ export function MonsterQuest({
           <p className="text-sm font-bold">{line}</p>
           {notice ? <p className="mt-1 text-sm">{notice}</p> : null}
           <p className="mt-1 text-xs">West door is the shop. The door with the red cross is the Center. It heals everyone, free. {bag?.repelLeft ? `Repel ${bag.repelLeft}. ` : ""}{badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
-          <p className="mt-2 text-xs font-bold">Battle team. The row above the map is who walks with you.</p>
+          <p className="mt-2 text-xs font-bold">Out follows you and fights. Tap Switch to send a different one. Six can travel.</p>
           {bag ? (
             <div className="mt-2 flex gap-2 overflow-x-auto">
               {bag.party.map((creature, index) => (
                 <button key={creature.id} type="button" onClick={() => { makeLead(index); setBag(loadBag()); }} className={`min-w-24 border-4 bg-[#f8f8d8] p-1 text-left ${index === 0 ? "border-black" : "border-[#c8b56a]"}`}>
-                  <img src={monSrc(creature.species, stageOf(levelOf(creature.exp)))} alt="" className="mx-auto h-12 w-auto" />
+                  <img src={creatureSrc(creature)} alt="" className="mx-auto h-14 w-14 rounded-full object-cover" />
                   <p className="truncate text-[11px] font-bold">{nameOf(creature)} Lv {levelOf(creature.exp)}</p>
                   <p className="text-[11px]">HP {creature.hp}/{maxHp(creature, bag)}</p>
-                  <p className="text-[11px] font-bold">{index === 0 ? "With you" : "Bring"}</p>
+                  <p className="text-[11px] font-bold">{index === 0 ? "Out" : "Switch"}</p>
                 </button>
               ))}
               {bag.box.map((creature, index) => (
                 <button key={creature.id} type="button" onClick={() => { swapBox(index); setBag(loadBag()); }} className="min-w-24 border-4 border-[#c8b56a] bg-white p-1 text-left">
-                  <img src={monSrc(creature.species, stageOf(levelOf(creature.exp)))} alt="" className="mx-auto h-12 w-auto" />
+                  <img src={creatureSrc(creature)} alt="" className="mx-auto h-14 w-14 rounded-full object-cover" />
                   <p className="truncate text-[11px] font-bold">{nameOf(creature)} Lv {levelOf(creature.exp)}</p>
                   <p className="text-[11px]">HP {creature.hp}/{maxHp(creature, bag)}</p>
-                  <p className="text-[11px] font-bold">Box · bring</p>
+                  <p className="text-[11px] font-bold">Send out</p>
                 </button>
               ))}
             </div>
@@ -1139,38 +1155,6 @@ export function MonsterQuest({
           ) : null}
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function CompanionPick({ selected, onPick }: { selected: number | null; onPick: (number: number) => void }) {
-  const field = loadField();
-  const caught = DEX.filter((creature) => field.caught.includes(creature.number));
-  return (
-    <div className="border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
-      <p className="text-sm font-bold">Tap one. That one walks with you.</p>
-      {caught.length === 0 ? (
-        <p className="mt-1 text-xs">None caught yet. Correct answers add them to the Guide, then they show up here.</p>
-      ) : (
-        <div className="mt-2 flex gap-2 overflow-x-auto">
-          {caught.map((creature) => {
-            const on = creature.number === selected;
-            const rare = field.rare.includes(creature.number);
-            return (
-              <button
-                key={creature.number}
-                type="button"
-                onClick={() => onPick(creature.number)}
-                className={`min-w-24 border-4 bg-white p-1 text-center ${on ? "border-black" : "border-[#c8b56a]"}`}
-              >
-                <img src={portraitFor(creature.number, rare)} alt="" className="mx-auto h-16 w-16 rounded-full object-cover" />
-                <p className="truncate text-[11px] font-bold">{creature.name}</p>
-                <p className="text-[11px] font-bold">{on ? "With you" : "Pick"}</p>
-              </button>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

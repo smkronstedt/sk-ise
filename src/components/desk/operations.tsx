@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { selectionStatus } from "@/lib/desk/adapt";
+import { orderForSasp, selectionStatus } from "@/lib/desk/adapt";
 import { bankList, getQuestion, loadCatalog, topicSlug } from "@/lib/desk/catalog";
 import { earnedPurse } from "@/lib/desk/purse";
 import {
@@ -146,12 +146,7 @@ export function Operations({ correct, total }: { correct: number; total: number 
     const wanted = new Set(town.topics.map((topic) => topicSlug(topic)));
     const pool = bankList().filter((question) => wanted.has(question.topicId));
     const unused = pool.filter((question) => selectionStatus(desk.state, question.id) === "unused");
-    const shuffled = [...unused];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    const ids = shuffled.slice(0, 15).map((question) => question.id);
+    const ids = orderForSasp(desk.state, unused).slice(0, 15).map((question) => question.id);
     setBusy("");
     if (!ids.length) {
       setBusy("");

@@ -297,6 +297,25 @@ export async function ensureCorrectLog() {
 let syncing: Promise<"synced" | "device"> | null = null;
 let syncAgain = false;
 
+function battleOpen() {
+  if (typeof window === "undefined") return false;
+  if (window.location.pathname.startsWith("/test")) return true;
+  try {
+    return sessionStorage.getItem("ise-battle") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function reloadIfIdle() {
+  if (battleOpen()) {
+    sessionStorage.setItem("ise-sync-refresh", "1");
+    return;
+  }
+  sessionStorage.removeItem("ise-sync-refresh");
+  window.location.reload();
+}
+
 export async function syncDeviceProgress(userId?: string): Promise<"synced" | "device"> {
   if (syncing) {
     syncAgain = true;
@@ -329,7 +348,7 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
         restoreSide(unpacked.remoteActivity, unpacked.remoteDaily, false);
       }
       localStorage.setItem(OWNER, userId);
-      window.location.reload();
+      reloadIfIdle();
       return "synced";
     }
     if (!remote?.payload) {
@@ -355,7 +374,7 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
     const fresh = mergeBundles(localBundle(), merged);
     await saveProgress({ data: { payload: JSON.stringify(pack(fresh)) } });
     if (userId) localStorage.setItem(OWNER, userId);
-    if (changed) window.location.reload();
+    if (changed) reloadIfIdle();
     return "synced";
   } catch {
     return "device";

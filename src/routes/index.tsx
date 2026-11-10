@@ -20,7 +20,8 @@ import { useDesk } from "@/lib/desk/provider";
 import { careerRank } from "@/lib/desk/ranks";
 import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
-import { CATCH_EVERY, DEX, chooseLead, fieldLead, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
+import { CATCH_EVERY, DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
+import { bringToFront } from "@/lib/desk/quest-bag";
 import { MODE_EVENT, loadMode, type DeskMode } from "@/lib/desk/modes";
 import { Badge } from "@/components/desk/badge";
 import { RpgMode } from "@/components/desk/game-modes";
@@ -557,7 +558,6 @@ function FieldNotes({
     setRare(result.rare);
     setFresh(result.fresh);
     setToward(result.toward);
-    setWalking(fieldLead());
   }, [desk.state.tests]);
 
   return (
@@ -566,7 +566,7 @@ function FieldNotes({
         <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
         <h1 className="font-serif text-3xl tracking-tight">Monster Quest</h1>
         <p className="mt-1 text-sm">
-          One creature for every {CATCH_EVERY} different questions you get right. Open Guide and tap Walk with me. The same row sits on top of the map.
+          One creature for every {CATCH_EVERY} different questions you get right. Put in front sends that one out. It follows you and it fights. {have.size}/151 caught.
         </p>
         <div className="mt-4 flex gap-2">
           <button
@@ -633,14 +633,14 @@ function FieldNotes({
                     <button
                       type="button"
                       onClick={() => {
-                        chooseLead(creature.number);
+                        bringToFront(creature.number);
                         setWalking(creature.number);
                       }}
                       className={`mt-2 min-h-11 w-full rounded px-2 text-sm font-semibold ${
                         walking === creature.number ? "bg-field-stamp text-white" : "border border-field-ink"
                       }`}
                     >
-                      {walking === creature.number ? "With you" : "Walk with me"}
+                      {walking === creature.number ? "Out" : "Put in front"}
                     </button>
                   ) : null}
                 </div>
