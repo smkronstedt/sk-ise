@@ -67,15 +67,37 @@ export const shopItems = [
 
 export type ShopId = (typeof shopItems)[number]["id"];
 
-const cute: Record<SpeciesId, string> = {
-  sprout: "/field/cut/sprout.png?v=3",
-  pebble: "/field/cut/stone.png?v=3",
-  wick: "/field/cut/ember.png?v=3",
-  drop: "/field/cut/drop.png?v=3",
+const cute: Record<SpeciesId, [string, string, string]> = {
+  sprout: ["/field/cut/sprout.png?v=4", "/field/cut/thicket.png?v=4", "/field/cut/canopy.png?v=4"],
+  pebble: ["/field/cut/stone.png?v=4", "/field/cut/ridge.png?v=4", "/field/cut/crag.png?v=4"],
+  wick: ["/field/cut/ember.png?v=4", "/field/cut/kindle.png?v=4", "/field/cut/pyre.png?v=4"],
+  drop: ["/field/cut/drop.png?v=4", "/field/cut/brook.png?v=4", "/field/cut/tide.png?v=4"],
 };
 
-export function monSrc(species: SpeciesId, _stage: 0 | 1 | 2) {
-  return cute[species];
+export function monSrc(species: SpeciesId, stage: 0 | 1 | 2) {
+  return cute[species][stage];
+}
+
+export const speciesType: Record<SpeciesId, string> = {
+  sprout: "Grass",
+  pebble: "Rock",
+  wick: "Fire",
+  drop: "Water",
+};
+
+export function effectiveness(move: string, foe: string) {
+  const table: Record<string, Record<string, number>> = {
+    Grass: { Water: 2, Ground: 2, Rock: 2, Fire: 0.5, Grass: 0.5, Poison: 0.5 },
+    Fire: { Grass: 2, Poison: 0.5, Water: 0.5, Rock: 0.5, Fire: 0.5 },
+    Water: { Fire: 2, Ground: 2, Rock: 2, Grass: 0.5, Water: 0.5 },
+    Rock: { Fire: 2, Electric: 2, Poison: 0.5, Grass: 0.5, Ground: 0.5 },
+    Electric: { Water: 2, Grass: 0.5, Electric: 0.5, Ground: 0 },
+    Poison: { Grass: 2, Poison: 0.5, Ground: 0.5, Psychic: 2 },
+    Psychic: { Poison: 2, Psychic: 0.5 },
+    Ground: { Fire: 2, Electric: 2, Rock: 2, Grass: 0.5 },
+    Normal: { Rock: 0.5 },
+  };
+  return table[move]?.[foe] ?? 1;
 }
 
 export function levelOf(exp: number) {

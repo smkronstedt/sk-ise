@@ -40,6 +40,7 @@ import {
   revive,
   saveBag,
   shopItems,
+  speciesType,
   spendBattleItem,
   stageOf,
   strike,
@@ -47,6 +48,7 @@ import {
   takeBall,
   useHeld,
   useRepel,
+  effectiveness,
   wildSpecies,
   type Ball,
   type QuestBag,
@@ -94,6 +96,7 @@ type Battle = {
   right: number;
   foeName: string;
   foeKind: "trainer" | "leader" | "rival" | "wild";
+  foeType: string;
   foeSpecies?: SpeciesId;
   title: string;
   need: number;
@@ -239,6 +242,19 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
     tiles[8][8] = 3;
   }
   tiles[5][11] = rivalDone ? 5 : 8;
+  if (townIndex % 4 === 1) {
+    tiles[2][2] = 3;
+    tiles[2][3] = 3;
+    tiles[3][2] = 3;
+  } else if (townIndex % 4 === 2) {
+    tiles[6][2] = 2;
+    tiles[6][4] = 2;
+    tiles[7][3] = 2;
+  } else if (townIndex % 4 === 3) {
+    tiles[8][4] = 3;
+    tiles[8][5] = 3;
+    tiles[9][4] = 3;
+  }
 
   const spots: { x: number; y: number; face: Face }[] = [
     { x: 2, y: 3, face: "right" },
@@ -367,6 +383,7 @@ export function MonsterQuest({
   const [nurse, setNurse] = useState(false);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [notice, setNotice] = useState("");
+  const [evo, setEvo] = useState("");
   const [bag, setBag] = useState<QuestBag | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const bagRef = useRef<QuestBag | null>(null);
@@ -461,6 +478,7 @@ export function MonsterQuest({
       right: 0,
       foeName: npc.name,
       foeKind: npc.kind,
+      foeType: city?.element ?? "Normal",
       title: npc.testName,
       need: npc.need,
       reveal: null,
@@ -512,6 +530,7 @@ export function MonsterQuest({
       right: 0,
       foeName: lines[species].names[stageOf(level)],
       foeKind: "wild",
+      foeType: speciesType[species],
       foeSpecies: species,
       title: "Tall grass",
       need: 1,
@@ -599,13 +618,14 @@ export function MonsterQuest({
     if (!lead) return;
     const move = battle.moveId ? moveDef(battle.moveId) : undefined;
     const spent = move ? spendPp(lead, move.id) : true;
-    const dealtBase = correct && spent ? (strike(lead, current) + (move?.power ?? 0)) * (battle.boost ? 2 : 1) : 0;
+    const mult = move ? effectiveness(move.kind, battle.foeType) : 1;
+    const dealtBase = correct && spent ? Math.round((strike(lead, current) + (move?.power ?? 0)) * (battle.boost ? 2 : 1) * mult) : 0;
     const foeHp = Math.max(0, battle.foeHp - dealtBase);
     let grew = "";
     let hp = battle.you;
     let youMax = battle.youMax;
     if (correct) {
-      grew = grantExp(lead, 5);
+      grew = grantExp(lead, 3);
       if (current.expShare) {
         for (const other of current.party.slice(1)) {
           const shared = grantExp(other, 2);
@@ -650,15 +670,20 @@ export function MonsterQuest({
       seal(false);
       over = prize ? `It fainted. ${prize} Throw a ball while it still has HP.` : "It fainted. Throw a ball while it still has HP.";
     } else if (!fainted && last && battle.foeKind !== "wild") {
+      if (!prize) {
+        prize = payExp(current, 8);
+        saveBag(current);
+        setBag(loadBag());
+      }
       seal(false);
-      over = "Not enough. You can try again.";
+      over = prize ? `Not enough. ${prize}` : "Not enough. You can try again.";
     }
     const hit = !spent
       ? "No PP left."
       : correct
         ? move?.power === 0
           ? `${nameOf(lead)} used ${move.name}. Brace is up.`
-          : `${nameOf(lead)} used ${move?.name ?? "Bash"}. Hit for ${dealtBase}.`
+          : `${nameOf(lead)} used ${move?.name ?? "Bash"}. Hit for ${dealtBase}.${mult > 1 ? " It's super effective." : mult < 1 && mult > 0 ? " It's not very effective." : mult === 0 ? " It had no effect." : ""}`
         : battle.guard
           ? "The Guard held."
           : "The other side hit you.";
@@ -676,6 +701,8 @@ export function MonsterQuest({
       reveal: { correct, note: [hit, grew, prize].filter(Boolean).join(" ") },
       over,
     });
+    const evoText = [grew, prize].filter((note) => note.includes("evolved")).join(" ");
+    if (evoText) setEvo(evoText);
   };
 
   const advance = () => {
@@ -857,9 +884,31 @@ export function MonsterQuest({
 
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKey);
-    canvas.width = COLS * TILE;
-    canvas.height = ROWS * TILE;
-    ctx.imageSmoothingEnabled = false;
+    const release = () => keysRef.current.clear();
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", release);
+    window.addEventListener("blur", release);
+    const onMap = (event: PointerEvent) => {
+      keysRef.current.clear();
+      if (pausedRef.current || busyRef.current) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.min(COLS - 1, Math.max(0, Math.floor(((event.clientX - rect.left) / rect.width) * COLS)));
+      const y = Math.min(ROWS - 1, Math.max(0, Math.floor(((event.clientY - rect.top) / rect.height) * ROWS)));
+      const npc = map.npcs.find((one) => one.x === x && one.y === y);
+      if (npc && Math.abs(npc.x - player.x) + Math.abs(npc.y - player.y) <= 3) {
+        apiRef.current.talk(npc);
+        return;
+      }
+      const tile = map.tiles[y]?.[x];
+      const below = map.tiles[y + 1]?.[x];
+      const door = tile === 4 || tile === 5 || tile === 7 || tile === 9 ? tile : below === 4 || below === 5 || below === 7 || below === 9 ? below : 0;
+      if (door && Math.abs(x - player.x) + Math.abs(y - player.y) <= 2) apiRef.current.enter(door, x, y);
+    };
+    canvas.addEventListener("pointerdown", onMap);
+    canvas.width = COLS * TILE * 2;
+    canvas.height = ROWS * TILE * 2;
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    ctx.imageSmoothingEnabled = true;
 
     const dir = () => {
       const keys = keysRef.current;
@@ -880,7 +929,7 @@ export function MonsterQuest({
           interactRef.current = false;
           const near = map.npcs.find((npc) => Math.abs(npc.x - player.x) + Math.abs(npc.y - player.y) === 1);
           if (near) apiRef.current.talk(near);
-          else setCaseOpen((open) => !open);
+          else setLine("Stand next to someone, or click them.");
         } else {
           const step = dir();
           if (step && canWalk(map, player.x + step[0], player.y + step[1])) {
@@ -923,8 +972,8 @@ export function MonsterQuest({
       const drawX = player.fromX + (player.x - player.fromX) * t;
       const drawY = player.fromY + (player.y - player.fromY) * t;
       const frame = Math.floor(now / 280);
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.imageSmoothingEnabled = false;
+      ctx.setTransform(2, 0, 0, 2, 0, 0);
+      ctx.imageSmoothingEnabled = true;
       ctx.clearRect(0, 0, COLS * TILE, ROWS * TILE);
       for (let y = 0; y < ROWS; y++) {
         for (let x = 0; x < COLS; x++) {
@@ -958,6 +1007,11 @@ export function MonsterQuest({
         }
       }
       drawActor(ctx, drawX, drawY, "player", stepPhase, player.face);
+      const wash = ["#d7b98a", "#7eb6d6", "#f0e27a", "#7dcea0", "#c39bd3", "#e6d5f2", "#e59866", "#c4a484"][Math.max(0, cities.findIndex((item) => item.id === id)) % 8];
+      ctx.fillStyle = wash;
+      ctx.globalAlpha = scene === "town" ? 0.16 : 0.05;
+      ctx.fillRect(0, 0, COLS * TILE, ROWS * TILE);
+      ctx.globalAlpha = 1;
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
@@ -967,6 +1021,10 @@ export function MonsterQuest({
       cancelAnimationFrame(raf);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKey);
+      window.removeEventListener("pointerup", release);
+      window.removeEventListener("pointercancel", release);
+      window.removeEventListener("blur", release);
+      canvas.removeEventListener("pointerdown", onMap);
       keysRef.current.clear();
       const left = repelRef.current;
       const stored = loadBag();
@@ -981,7 +1039,15 @@ export function MonsterQuest({
   const lead = bag?.party[0];
 
   return (
-    <div ref={wrapRef} className="bg-[#1e3a24]">
+    <div ref={wrapRef} className="relative bg-[#1e3a24]">
+      {evo && lead ? (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#f8f8d8]/95 p-6 text-center text-black">
+          <img src={creatureSrc(lead)} alt="" className="h-48 w-auto" />
+          <p className="mt-3 font-serif text-2xl">{evo}</p>
+          <p className="mt-1 text-sm">Level {levelOf(lead.exp)}. {levelOf(lead.exp) >= 16 ? "Final form." : "The next form is at level 16."}</p>
+          <button type="button" onClick={() => setEvo("")} className="mt-4 min-h-11 border-4 border-black bg-black px-4 text-sm font-bold text-[#fff4a8]">OK</button>
+        </div>
+      ) : null}
       <div className="flex items-center justify-between gap-3 border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
         <h2 className="font-serif text-xl">{city ? `${city.city} · ${city.element}` : "Championship"}</h2>
         <button type="button" onClick={() => setSheet((open) => (open ? null : "party"))} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
@@ -995,7 +1061,7 @@ export function MonsterQuest({
           <div className="absolute inset-x-0 bottom-0 h-8 bg-[#498a36]" />
           <div className="relative grid grid-cols-[1fr_8rem] items-end gap-2">
             <div className="mb-10 border-4 border-black bg-[#f8f8d8] p-2">
-              <p className="text-xs font-bold uppercase">{battle.foeName}</p>
+              <p className="text-xs font-bold uppercase">{battle.foeName} · {battle.foeType}</p>
               <div className="mt-1 h-3 border-2 border-black bg-white">
                 <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.foeHp / battle.foeMax) * 100)}%` }} />
               </div>
@@ -1060,7 +1126,7 @@ export function MonsterQuest({
                     className="min-h-14 border-4 border-black bg-white px-2 text-left text-sm font-bold disabled:opacity-40"
                   >
                     {move.def.name}
-                    <span className="block text-[11px] font-normal">{move.def.kind} · PP {move.pp}/{move.def.pp}</span>
+                    <span className="block text-[11px] font-normal">{move.def.kind} · power {move.def.power} · PP {move.pp}/{move.def.pp}</span>
                   </button>
                 ))}
                 <button type="button" onClick={() => setBattle({ ...battle, menu: null })} className="min-h-14 border-4 border-black bg-black text-sm font-bold text-[#fff4a8]">Back</button>
@@ -1127,7 +1193,7 @@ export function MonsterQuest({
           </div>
         </div>
       ) : (
-        <canvas ref={canvasRef} className="block w-full [image-rendering:pixelated]" />
+        <canvas ref={canvasRef} className="block w-full" />
       )}
       {!battle ? (
         <div className="border-t-4 border-black bg-[#fff4a8] p-3 text-black">
@@ -1202,7 +1268,7 @@ export function MonsterQuest({
         </div>
       ) : null}
       {shopOpen ? (
-        <div className="border-t-4 border-black bg-[#f8f8d8] p-3 text-black">
+        <div className="absolute inset-x-0 top-16 z-20 max-h-[70vh] overflow-auto border-4 border-black bg-[#f8f8d8] p-3 text-black">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-bold tracking-wide uppercase">Town shop · Quest ${questCash()}</p>
             <button type="button" onClick={() => setShopOpen(false)} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">Close</button>
@@ -1221,7 +1287,7 @@ export function MonsterQuest({
         </div>
       ) : null}
       {nurse ? (
-        <div className="border-t-4 border-black bg-[#f8f8d8] p-3 text-black">
+        <div className="absolute inset-x-0 top-16 z-20 border-4 border-black bg-[#f8f8d8] p-3 text-black">
           <p className="text-sm font-bold">We can heal your party. Shall we?</p>
           <div className="mt-2 flex gap-2">
             <button
