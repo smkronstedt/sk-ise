@@ -69,8 +69,11 @@ export function rankGates(total: number, seal = false): RankGate[] {
   return gatesFor(rankTitles(seal), total);
 }
 
-export function oldRankGates(total: number): RankGate[] {
-  return gatesFor(OLD, total);
+const PERSONAL = new Set(["Attending Navy SEAL Surgeon", "Navy SEAL Surgeon", "Androgen Society President", "SMSNA President"]);
+
+export function oldRankGates(total: number, seal = false): RankGate[] {
+  const titles = seal ? OLD : OLD.filter((title) => !PERSONAL.has(title));
+  return gatesFor(titles, total);
 }
 
 function fromGates(correct: number, total: number, gates: RankGate[]) {
@@ -98,6 +101,6 @@ export function careerRank(correct: number, total: number, seal = false) {
   return fromGates(correct, total, rankGates(total, seal));
 }
 
-export function oldCareerRank(correct: number, total: number) {
-  return fromGates(correct, total, oldRankGates(total));
+export function oldCareerRank(correct: number, total: number, seal = false) {
+  return fromGates(correct, total, oldRankGates(total, seal));
 }

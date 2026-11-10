@@ -183,7 +183,7 @@ function Home() {
   const experience = bankCorrect + correct;
   const experienceTotal = BANK_TOTAL + questions.length;
   const rank = careerRank(experience, experienceTotal, mine);
-  const oldRank = oldCareerRank(experience, experienceTotal);
+  const oldRank = oldCareerRank(experience, experienceTotal, mine);
 
   return (
     <Shell>
