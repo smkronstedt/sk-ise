@@ -22,6 +22,7 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LecturesRouteImport } from './routes/lectures'
 import { Route as LogRouteImport } from './routes/log'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TestsRouteImport } from './routes/tests'
@@ -93,6 +94,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/lectures': typeof LecturesRoute
   '/log': typeof LogRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/lectures': typeof LecturesRoute
   '/log': typeof LogRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/lectures': typeof LecturesRoute
   '/log': typeof LogRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/lectures'
     | '/log'
     | '/login'
+    | '/notifications'
     | '/profile'
     | '/settings'
     | '/tests'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/lectures'
     | '/log'
     | '/login'
+    | '/notifications'
     | '/profile'
     | '/settings'
     | '/tests'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/lectures'
     | '/log'
     | '/login'
+    | '/notifications'
     | '/profile'
     | '/settings'
     | '/tests'
@@ -257,6 +269,7 @@ export interface RootRouteChildren {
   LecturesRoute: typeof LecturesRoute
   LogRoute: typeof LogRoute
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   TestsRoute: typeof TestsRoute
@@ -357,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -409,6 +429,7 @@ const rootRouteChildren: RootRouteChildren = {
   LecturesRoute: LecturesRoute,
   LogRoute: LogRoute,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   TestsRoute: TestsRoute,

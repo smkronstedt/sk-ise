@@ -19,6 +19,7 @@ export function loadProgress(): CaseProgress[] {
 
 export function saveProgress(progress: CaseProgress[]) {
   localStorage.setItem(XP_KEY, JSON.stringify(progress));
+  window.dispatchEvent(new Event("ise-progress"));
 }
 
 export function addXp(topicId: string, amount: number): CaseProgress {

@@ -179,6 +179,7 @@ export function TrailGame({
       if (now > saveAt) {
         saveAt = now + 800;
         localStorage.setItem(SAVE_KEY, JSON.stringify({ x: player.x, y: player.y }));
+        window.dispatchEvent(new Event("ise-progress"));
       }
 
       draw(dt, now);

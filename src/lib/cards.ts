@@ -96,6 +96,7 @@ export function loadCards(): Card[] {
 
 export function saveCards(cards: Card[]) {
   localStorage.setItem(KEY, JSON.stringify(cards));
+  window.dispatchEvent(new Event("ise-progress"));
 }
 
 /** Old cards stored a learning-point sentence. Rewrite those into the question and the answer. */

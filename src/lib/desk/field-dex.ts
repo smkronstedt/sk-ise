@@ -2,6 +2,7 @@ import { getQuestion } from "./catalog";
 import { UQB_TOTAL, loadBankProgress } from "./original-bank";
 import { questions } from "./questions";
 import type { TestBlock } from "./types";
+import { touchProgress } from "@/lib/desk/touch";
 
 const GYMS = ["oncology", "stones", "andrology", "obstruction", "urogyn", "peds", "core", "basic"] as const;
 type Gym = (typeof GYMS)[number];
@@ -44,6 +45,7 @@ export function fieldLead() {
 export function chooseLead(number: number) {
   if (!load().caught.includes(number)) return;
   localStorage.setItem(LEAD, String(number));
+  touchProgress();
 }
 
 function load(): Save {
@@ -117,6 +119,7 @@ export function syncCatches(tests: TestBlock[]): {
   }
   const fresh = caught.filter((number) => !had.has(number)).map((number) => DEX[number - 1]);
   localStorage.setItem(KEY, JSON.stringify({ caught, rare }));
+  touchProgress();
   return { caught, rare, fresh, correct: ids.length, toward: ids.length % CATCH_EVERY };
 }
 

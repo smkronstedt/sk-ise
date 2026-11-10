@@ -170,6 +170,7 @@ export function HoustonTrail() {
   const go = (nextIndex: number) => {
     const index = Math.min(houstonStops.length - 1, Math.max(0, nextIndex));
     localStorage.setItem(AT, String(index));
+    window.dispatchEvent(new Event("ise-progress"));
     setAt(index);
     setWalking(false);
     setMap(false);

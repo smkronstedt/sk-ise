@@ -23,8 +23,8 @@ export type ChallengeRow = {
 
 export type ChallengeBoard = {
   me: string;
-  opted: boolean;
   people: { id: string; name: string; image: string }[];
+  pending: number;
   rows: ChallengeRow[];
 };
 
@@ -34,14 +34,10 @@ export const challengeBoard = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<ChallengeBoard> => {
     const sql = await getSql();
-    const mine = await sql<{ opted: boolean }>`
-      select opted from challenge_opt where user_id = ${context.userId}
-    `;
     const people = await sql<{ id: string; name: string | null; image: string | null }>`
       select u.id, u.name, u.image
-      from challenge_opt o
-      join "user" u on u.id = o.user_id
-      where o.opted = true and u.id <> ${context.userId}
+      from "user" u
+      where u.email is not null and u.email <> '' and u.id <> ${context.userId}
       order by u.name asc
     `;
     const rows = await sql<{ id: string; from_id: string; to_id: string; from_name: string | null; to_name: string | null; kind: string; status: string }>`
@@ -55,8 +51,8 @@ export const challengeBoard = createServerFn({ method: "GET" })
     `;
     return {
       me: context.userId,
-      opted: Boolean(mine[0]?.opted),
       people: people.map((row) => ({ id: row.id, name: row.name?.trim() || "Resident", image: row.image ?? "" })),
+      pending: rows.filter((row) => row.to_id === context.userId && row.status === "pending").length,
       rows: rows.map((row) => ({
         id: row.id,
         fromId: row.from_id,
@@ -69,19 +65,6 @@ export const challengeBoard = createServerFn({ method: "GET" })
     };
   });
 
-export const setChallengeOpt = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator((data: { opted: boolean }) => ({ opted: Boolean(data?.opted) }))
-  .handler(async ({ data, context }) => {
-    const sql = await getSql();
-    await sql`
-      insert into challenge_opt (user_id, opted)
-      values (${context.userId}, ${data.opted})
-      on conflict (user_id) do update set opted = excluded.opted
-    `;
-    return { ok: true as const };
-  });
-
 export const sendChallenge = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((data: { toId: string; kind: string }) => {
@@ -90,11 +73,7 @@ export const sendChallenge = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const sql = await getSql();
-    const ready = await sql<{ user_id: string }>`
-      select user_id from challenge_opt
-      where opted = true and user_id in (${context.userId}, ${data.toId})
-    `;
-    if (ready.length < 2) throw new Error("Both of you have to opt in first.");
+    if (data.toId === context.userId) throw new Error("Pick someone else.");
     const id = crypto.randomUUID();
     await sql`
       insert into challenges (id, from_id, to_id, kind)

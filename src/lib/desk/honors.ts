@@ -1,5 +1,6 @@
 import { loadActivity, studyStreak } from "@/lib/desk/activity";
 import { trainingSummary } from "@/lib/desk/training";
+import { touchProgress } from "@/lib/desk/touch";
 
 const TRIALS = "callroom-trials";
 const ROW = "callroom-row-v1";
@@ -11,6 +12,7 @@ export function noteRow(correct: boolean) {
   localStorage.setItem(ROW, String(next));
   const best = Number(localStorage.getItem(BEST) || 0);
   if (next > best) localStorage.setItem(BEST, String(next));
+  touchProgress();
 }
 
 export function rowBest() {
@@ -36,6 +38,7 @@ export function markTrial(id: string) {
   if (typeof window === "undefined") return;
   const ids = trialIds();
   if (!ids.includes(id)) localStorage.setItem(TRIALS, JSON.stringify([...ids, id]));
+  touchProgress();
 }
 
 export type Honor = { id: string; name: string; detail: string; earned: boolean };

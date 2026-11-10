@@ -14,10 +14,21 @@ const TRAIN = "callroom-training-v1";
 const QUEST = "callroom-quest-spend-v1";
 const OWNER = "callroom-owner";
 const DAILY = "callroom-daily-v1";
-const EXTRA = [DAILY, "callroom-activity-v1", "callroom-field-caught-v2", "callroom-fieldnotes-xp", "ise-trail-pos", TRAIN, QUEST, BAG_KEY];
+const EXTRA = [DAILY, "callroom-activity-v1", "callroom-field-caught-v2", "callroom-field-lead", "callroom-fieldnotes-xp", "ise-trail-pos", "houston-trail-at", "callroom-trials", "callroom-row-v1", "callroom-row-best", TRAIN, QUEST, BAG_KEY];
 const SEED = "callroom-correct-seed-v1";
 
-type CardsField = { list?: unknown; ops?: unknown; activity?: Record<string, DayLog>; daily?: Record<string, { id: string; choice?: string; correct?: boolean }>; training?: unknown; questSpend?: number; questBag?: unknown } | unknown[] | null;
+type Side = {
+  field?: { caught?: number[]; rare?: number[] } | null;
+  lead?: number | null;
+  trials?: string[] | null;
+  row?: number;
+  rowBest?: number;
+  houston?: number;
+  trail?: { x?: number; y?: number } | null;
+  notes?: { topicId?: string; xp?: number; level?: number; stage?: number }[] | null;
+};
+
+type CardsField = { list?: unknown; ops?: unknown; activity?: Record<string, DayLog>; daily?: Record<string, { id: string; choice?: string; correct?: boolean }>; training?: unknown; questSpend?: number; questBag?: unknown; side?: Side } | unknown[] | null;
 
 type Bundle = {
   desk: unknown;
@@ -27,6 +38,7 @@ type Bundle = {
   training: unknown;
   questSpend: number;
   questBag: unknown;
+  side: Side;
 };
 
 function questNumber(value: unknown) {
@@ -48,6 +60,23 @@ function write(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+function readSide(): Side {
+  const num = (key: string) => {
+    const value = Number(localStorage.getItem(key));
+    return Number.isFinite(value) ? value : 0;
+  };
+  return {
+    field: read("callroom-field-caught-v2") as Side["field"],
+    lead: num("callroom-field-lead") || null,
+    trials: read("callroom-trials") as string[] | null,
+    row: num("callroom-row-v1"),
+    rowBest: num("callroom-row-best"),
+    houston: num("houston-trail-at"),
+    trail: read("ise-trail-pos") as Side["trail"],
+    notes: read("callroom-fieldnotes-xp") as Side["notes"],
+  };
+}
+
 function localBundle(): Bundle {
   return {
     desk: read(DESK),
@@ -57,6 +86,7 @@ function localBundle(): Bundle {
     training: read(TRAIN),
     questSpend: questNumber(localStorage.getItem(QUEST)),
     questBag: read(BAG_KEY),
+    side: readSide(),
   };
 }
 
@@ -66,7 +96,20 @@ function hasLocalWork(bundle: Bundle) {
   const cards = Array.isArray(bundle.cards) ? bundle.cards : [];
   const training = Array.isArray(bundle.training) ? bundle.training : [];
   const bag = bundle.questBag as { party?: unknown[] } | null;
-  return Boolean(desk?.tests?.length || (bank?.answers && Object.keys(bank.answers).length) || cards.length || bundle.ops || training.length || bundle.questSpend > 0 || bag?.party?.length);
+  const caught = bundle.side?.field?.caught?.length ?? 0;
+  return Boolean(desk?.tests?.length || (bank?.answers && Object.keys(bank.answers).length) || cards.length || bundle.ops || training.length || bundle.questSpend > 0 || bag?.party?.length || caught || (bundle.side?.trials?.length ?? 0) || (bundle.side?.houston ?? 0) > 0);
+}
+
+function writeSide(side: Side | null | undefined) {
+  if (!side) return;
+  if (side.field) write("callroom-field-caught-v2", side.field);
+  if (side.lead) localStorage.setItem("callroom-field-lead", String(side.lead));
+  if (side.trials) write("callroom-trials", side.trials);
+  localStorage.setItem("callroom-row-v1", String(side.row || 0));
+  localStorage.setItem("callroom-row-best", String(side.rowBest || 0));
+  if (side.houston) localStorage.setItem("houston-trail-at", String(side.houston));
+  if (side.trail) write("ise-trail-pos", side.trail);
+  if (side.notes) write("callroom-fieldnotes-xp", side.notes);
 }
 
 function apply(bundle: Bundle) {
@@ -77,6 +120,7 @@ function apply(bundle: Bundle) {
   write(TRAIN, bundle.training);
   localStorage.setItem(QUEST, String(bundle.questSpend || 0));
   if (bundle.questBag) write(BAG_KEY, bundle.questBag);
+  writeSide(bundle.side);
 }
 
 function clearStudy() {
@@ -98,6 +142,7 @@ function unpack(payload: string) {
     training: remoteTraining ?? null,
     questSpend: remoteQuest,
     questBag: Array.isArray(cardsField) ? null : (cardsField?.questBag ?? null),
+    side: Array.isArray(cardsField) ? {} : (cardsField?.side ?? {}),
   };
   return { remoteBundle, remoteActivity, remoteDaily };
 }
@@ -215,6 +260,27 @@ function mergeOps(local: OpsShape | null, remote: OpsShape | null): OpsShape | n
   };
 }
 
+function mergeSide(local: Side = {}, remote: Side = {}): Side {
+  const caught = [...new Set([...(local.field?.caught ?? []), ...(remote.field?.caught ?? [])])].sort((a, b) => a - b);
+  const rare = [...new Set([...(local.field?.rare ?? []), ...(remote.field?.rare ?? [])])].sort((a, b) => a - b);
+  const trials = [...new Set([...(local.trials ?? []), ...(remote.trials ?? [])])];
+  const notes = new Map<string, { topicId?: string; xp?: number; level?: number; stage?: number }>();
+  for (const row of [...(remote.notes ?? []), ...(local.notes ?? [])]) {
+    if (!row?.topicId) continue;
+    const have = notes.get(row.topicId);
+    if (!have || (row.xp ?? 0) > (have.xp ?? 0)) notes.set(row.topicId, row);
+  }
+  return {
+    field: { caught, rare },
+    lead: local.lead || remote.lead || null,
+    trials,
+    row: Math.max(local.row || 0, remote.row || 0),
+    rowBest: Math.max(local.rowBest || 0, remote.rowBest || 0),
+    houston: Math.max(local.houston || 0, remote.houston || 0),
+    trail: local.trail ?? remote.trail ?? null,
+    notes: [...notes.values()],
+  };
+}
 function mergeTraining(local: unknown, remote: unknown) {
   const rows = [...(Array.isArray(remote) ? remote : []), ...(Array.isArray(local) ? local : [])];
   const map = new Map<string, unknown>();
@@ -237,6 +303,7 @@ function mergeBundles(local: Bundle, remote: Bundle): Bundle {
     training: mergeTraining(local.training, remote.training),
     questSpend: Math.max(local.questSpend || 0, remote.questSpend || 0),
     questBag: mergeBags(local.questBag, remote.questBag),
+    side: mergeSide(local.side, remote.side),
   };
 }
 
@@ -364,7 +431,7 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
     const unpacked = newer?.payload ? unpack(newer.payload) : first;
     restoreSide(unpacked.remoteActivity, unpacked.remoteDaily, true);
     const merged = mergeBundles(localBundle(), unpacked.remoteBundle);
-    const localOnly = mergeBundles(localBundle(), { desk: {}, bank: {}, cards: [], ops: null, training: [], questSpend: 0, questBag: null });
+    const localOnly = mergeBundles(localBundle(), { desk: {}, bank: {}, cards: [], ops: null, training: [], questSpend: 0, questBag: null, side: {} });
     const changed = stable(merged) !== stable(localOnly);
     if (changed) {
       apply(merged);
@@ -385,6 +452,6 @@ function pack(bundle: Bundle) {
   return {
     desk: bundle.desk ?? {},
     bank: bundle.bank ?? {},
-    cards: { list: bundle.cards ?? [], ops: bundle.ops ?? null, activity: loadActivity(), daily: loadDaily(), training: bundle.training ?? [], questSpend: bundle.questSpend || 0, questBag: bundle.questBag ?? null },
+    cards: { list: bundle.cards ?? [], ops: bundle.ops ?? null, activity: loadActivity(), daily: loadDaily(), training: bundle.training ?? [], questSpend: bundle.questSpend || 0, questBag: bundle.questBag ?? null, side: bundle.side ?? {} },
   };
 }

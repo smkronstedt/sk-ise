@@ -6,7 +6,7 @@ import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { syncDeviceProgress } from "@/lib/progress-sync";
 import type { PeriodScores } from "@/lib/desk/periods";
-import { answerChallenge, challengeBoard, challengeKinds, sendChallenge, setChallengeOpt, type ChallengeBoard } from "@/lib/challenges-api";
+import { answerChallenge, challengeBoard, challengeKinds, sendChallenge, type ChallengeBoard } from "@/lib/challenges-api";
 
 export const Route = createFileRoute("/leaderboard")({
   component: LeaderboardPage,
@@ -100,19 +100,11 @@ function Challenges({ userId }: { userId?: string }) {
   return (
     <section id="board-challenges" className="scroll-mt-32 px-4 pb-8">
       <h2 className="font-serif text-2xl text-[#1d3557]">Challenges</h2>
-      <p className="mt-1 max-w-2xl text-sm text-[#1d3557]">Both people have to opt in. Then you pick the person and what you are challenging them to.</p>
+      <p className="mt-1 max-w-2xl text-sm text-[#1d3557]">Pick a person and what you want them to do. They get it under Notifications and can accept or decline.</p>
       {error ? <p className="mt-2 text-sm text-wrong">{error}</p> : null}
       {board ? (
         <div className="mt-3 flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => void setChallengeOpt({ data: { opted: !board.opted } }).then(load)}
-            className={`min-h-11 w-fit rounded px-3 text-sm font-semibold ${board.opted ? "bg-[#1d3557] text-white" : "border border-[#c9a15b] bg-white"}`}
-          >
-            {board.opted ? "You are opted in" : "Opt in to challenges"}
-          </button>
-          {board.opted ? (
-            <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
               <select value={person} onChange={(event) => setPerson(event.target.value)} className="min-h-11 rounded border border-[#c9a15b] bg-white px-2">
                 <option value="">Who</option>
                 {board.people.map((one) => (
@@ -133,8 +125,7 @@ function Challenges({ userId }: { userId?: string }) {
                 Challenge
               </button>
             </div>
-          ) : null}
-          <ul className="flex flex-col gap-2">
+          <ul className="mt-3 flex flex-col gap-2">
             {board.rows.map((row) => (
               <li key={row.id} className="rounded border border-white/80 bg-white/80 px-3 py-2 text-sm">
                 <p className="font-semibold">{row.fromId === board.me ? `You challenged ${row.toName}` : `${row.fromName} challenged you`}</p>

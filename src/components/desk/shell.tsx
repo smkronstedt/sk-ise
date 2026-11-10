@@ -11,6 +11,7 @@ import { countBankCorrect } from "@/lib/desk/original-bank";
 import type { DeskState } from "@/lib/desk/types";
 import { deskModes, loadMode, saveMode, type DeskMode } from "@/lib/desk/modes";
 import { syncDeviceProgress } from "@/lib/progress-sync";
+import { challengeBoard } from "@/lib/challenges-api";
 
 const links = [
   { to: "/", label: "Desk" },
@@ -23,6 +24,7 @@ const links = [
   { to: "/lectures", label: "Lectures" },
   { to: "/booklets", label: "Booklets" },
   { to: "/cards", label: "Cards" },
+  { to: "/notifications", label: "Notifications" },
 ] as const;
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -36,6 +38,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const [tally, setTally] = useState({ correct: 0, money: 0, today: 0 });
   const [access, setAccess] = useState<AccessStatus | "unknown">("unknown");
   const [admin, setAdmin] = useState(false);
+  const [pendingChallenges, setPendingChallenges] = useState(0);
 
   useEffect(() => {
     const read = () => {
@@ -117,6 +120,27 @@ export function Shell({ children }: { children: ReactNode }) {
     };
   }, [session.data?.user?.id, access]);
 
+  useEffect(() => {
+    const userId = session.data?.user?.id;
+    if (!userId) return;
+    let stop = false;
+    const load = () => {
+      void challengeBoard()
+        .then((board) => {
+          if (!stop) setPendingChallenges(board.pending);
+        })
+        .catch(() => {
+          if (!stop) setPendingChallenges(0);
+        });
+    };
+    load();
+    const timer = window.setInterval(load, 30000);
+    return () => {
+      stop = true;
+      window.clearInterval(timer);
+    };
+  }, [session.data?.user?.id]);
+
   const signedIn = Boolean(session.data?.user);
   const open = !authEnabled || (signedIn && access === "approved");
   const waiting = authEnabled && signedIn && access === "pending";
@@ -145,6 +169,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 >
                   {link.label}
                   {link.to === "/cards" && dueCount > 0 ? <span className="ml-1 text-xs">{dueCount}</span> : null}
+                  {link.to === "/notifications" && pendingChallenges > 0 ? <span className="ml-1 text-xs">{pendingChallenges}</span> : null}
                 </Link>
               );
             })}
