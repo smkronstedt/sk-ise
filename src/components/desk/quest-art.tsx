@@ -112,7 +112,12 @@ export function drawCreature(ctx: CanvasRenderingContext2D, tx: number, ty: numb
     ctx.scale(-1, 1);
     ctx.translate(-baseX, 0);
   }
-  if (img) ctx.drawImage(img, x, y, width, height);
+  if (img) {
+    ctx.beginPath();
+    ctx.arc(x + width / 2, y + height / 2, Math.min(width, height) / 2, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(img, x, y, width, height);
+  }
   ctx.restore();
 }
 

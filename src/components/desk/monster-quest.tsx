@@ -959,7 +959,7 @@ export function MonsterQuest({
             </div>
             <div className="flex flex-col items-center">
               {battle.foeKind === "wild" && battle.foeSpecies ? (
-                <img src={monSrc(battle.foeSpecies, stageOf(3 + Math.max(0, cities.findIndex((item) => item.id === city?.id))))} alt="" className="h-36 w-auto object-contain [image-rendering:pixelated]" />
+                <img src={monSrc(battle.foeSpecies, stageOf(3 + Math.max(0, cities.findIndex((item) => item.id === city?.id))))} alt="" className="h-36 w-auto object-contain" />
               ) : (
                 <PixelActor kind={battle.foeKind} />
               )}
@@ -968,7 +968,7 @@ export function MonsterQuest({
           </div>
           <div className="relative mt-2 grid grid-cols-[auto_1fr] items-end gap-2">
             <div className="flex flex-col items-center">
-              {lead ? <img src={monSrc(lead.species, stageOf(levelOf(lead.exp)))} alt="" className="h-28 w-auto object-contain [image-rendering:pixelated]" /> : null}
+              {lead ? <img src={monSrc(lead.species, stageOf(levelOf(lead.exp)))} alt="" className="h-28 w-auto object-contain" /> : null}
               <PixelActor kind="player" />
               <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
             </div>
@@ -1043,7 +1043,7 @@ export function MonsterQuest({
             <div className="mt-2 flex gap-2 overflow-x-auto">
               {bag.party.map((creature, index) => (
                 <button key={creature.id} type="button" onClick={() => { makeLead(index); setBag(loadBag()); }} className={`min-w-24 border-4 bg-[#f8f8d8] p-1 text-left ${index === 0 ? "border-black" : "border-[#c8b56a]"}`}>
-                  <img src={monSrc(creature.species, stageOf(levelOf(creature.exp)))} alt="" className="mx-auto h-12 w-auto [image-rendering:pixelated]" />
+                  <img src={monSrc(creature.species, stageOf(levelOf(creature.exp)))} alt="" className="mx-auto h-12 w-auto" />
                   <p className="truncate text-[11px] font-bold">{nameOf(creature)} Lv {levelOf(creature.exp)}</p>
                   <p className="text-[11px]">HP {creature.hp}/{maxHp(creature, bag)}</p>
                   <p className="text-[11px] font-bold">{index === 0 ? "With you" : "Bring"}</p>
@@ -1051,7 +1051,7 @@ export function MonsterQuest({
               ))}
               {bag.box.map((creature, index) => (
                 <button key={creature.id} type="button" onClick={() => { swapBox(index); setBag(loadBag()); }} className="min-w-24 border-4 border-[#c8b56a] bg-white p-1 text-left">
-                  <img src={monSrc(creature.species, stageOf(levelOf(creature.exp)))} alt="" className="mx-auto h-12 w-auto [image-rendering:pixelated]" />
+                  <img src={monSrc(creature.species, stageOf(levelOf(creature.exp)))} alt="" className="mx-auto h-12 w-auto" />
                   <p className="truncate text-[11px] font-bold">{nameOf(creature)} Lv {levelOf(creature.exp)}</p>
                   <p className="text-[11px]">HP {creature.hp}/{maxHp(creature, bag)}</p>
                   <p className="text-[11px] font-bold">Box · bring</p>

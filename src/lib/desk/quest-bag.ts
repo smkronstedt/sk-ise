@@ -60,8 +60,15 @@ export const shopItems = [
 
 export type ShopId = (typeof shopItems)[number]["id"];
 
-export function monSrc(species: SpeciesId, stage: 0 | 1 | 2) {
-  return `/quest/mon/${species}-${stage}.png`;
+const cute: Record<SpeciesId, string> = {
+  sprout: "/field/sprout.jpg",
+  pebble: "/field/stone.jpg",
+  wick: "/field/ember.jpg",
+  drop: "/field/drop.jpg",
+};
+
+export function monSrc(species: SpeciesId, _stage: 0 | 1 | 2) {
+  return cute[species];
 }
 
 export function levelOf(exp: number) {
