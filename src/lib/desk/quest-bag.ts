@@ -173,8 +173,9 @@ export function markEvolutionSeen(creatureId: string) {
   const stage = stageOf(levelOf(creature.exp));
   creature.seenStage = stage;
   if (stage > 0) {
-    const log = loadEvoLog().filter((entry) => !(entry.id === creature.id && entry.stage === stage));
-    log.push({ id: creature.id, name: nameOf(creature), level: levelOf(creature.exp), stage, at: Date.now() });
+    const form = stage as 1 | 2;
+    const log = loadEvoLog().filter((entry) => !(entry.id === creature.id && entry.stage === form));
+    log.push({ id: creature.id, name: nameOf(creature), level: levelOf(creature.exp), stage: form, at: Date.now() });
     localStorage.setItem(EVO_LOG, JSON.stringify(log));
   }
   saveBag(bag);
