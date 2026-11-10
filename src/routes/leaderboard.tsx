@@ -6,17 +6,19 @@ import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { syncDeviceProgress } from "@/lib/progress-sync";
 import type { PeriodScores } from "@/lib/desk/periods";
+import { answerChallenge, challengeBoard, challengeKinds, sendChallenge, setChallengeOpt, type ChallengeBoard } from "@/lib/challenges-api";
 
 export const Route = createFileRoute("/leaderboard")({
   component: LeaderboardPage,
 });
 
 const titles = ["Olympian", "Hero", "Champion", "Argonaut", "Hoplite"];
-const boards: { id: keyof PeriodScores; label: string }[] = [
+const boards: { id: keyof PeriodScores | "challenges"; label: string }[] = [
   { id: "today", label: "Today" },
   { id: "week", label: "This week" },
   { id: "month", label: "This month" },
   { id: "all", label: "All time" },
+  { id: "challenges", label: "Challenges" },
 ];
 
 function titleFor(index: number, score: number) {
@@ -70,10 +72,91 @@ function Board({ board, label, leaders }: { board: keyof PeriodScores; label: st
   );
 }
 
+function kindLabel(id: string) {
+  return challengeKinds.find((item) => item.id === id)?.label ?? id;
+}
+
+function Challenges({ userId }: { userId?: string }) {
+  const [board, setBoard] = useState<ChallengeBoard | null>(null);
+  const [error, setError] = useState("");
+  const [person, setPerson] = useState("");
+  const [kind, setKind] = useState("ten");
+
+  const load = async () => {
+    try {
+      setBoard(await challengeBoard());
+      setError("");
+    } catch {
+      setError("Sign in to opt in and send a challenge.");
+    }
+  };
+
+  useEffect(() => {
+    if (userId) void load();
+  }, [userId]);
+
+  if (!userId) return <p className="px-4 py-4 text-sm">Sign in to challenge someone.</p>;
+
+  return (
+    <section id="board-challenges" className="scroll-mt-32 px-4 pb-8">
+      <h2 className="font-serif text-2xl text-[#1d3557]">Challenges</h2>
+      <p className="mt-1 max-w-2xl text-sm text-[#1d3557]">Both people have to opt in. Then you pick the person and what you are challenging them to.</p>
+      {error ? <p className="mt-2 text-sm text-wrong">{error}</p> : null}
+      {board ? (
+        <div className="mt-3 flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => void setChallengeOpt({ data: { opted: !board.opted } }).then(load)}
+            className={`min-h-11 w-fit rounded px-3 text-sm font-semibold ${board.opted ? "bg-[#1d3557] text-white" : "border border-[#c9a15b] bg-white"}`}
+          >
+            {board.opted ? "You are opted in" : "Opt in to challenges"}
+          </button>
+          {board.opted ? (
+            <div className="flex flex-wrap gap-2">
+              <select value={person} onChange={(event) => setPerson(event.target.value)} className="min-h-11 rounded border border-[#c9a15b] bg-white px-2">
+                <option value="">Who</option>
+                {board.people.map((one) => (
+                  <option key={one.id} value={one.id}>{one.name}</option>
+                ))}
+              </select>
+              <select value={kind} onChange={(event) => setKind(event.target.value)} className="min-h-11 rounded border border-[#c9a15b] bg-white px-2">
+                {challengeKinds.map((item) => (
+                  <option key={item.id} value={item.id}>{item.label}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={!person}
+                onClick={() => void sendChallenge({ data: { toId: person, kind } }).then(load).catch((reason: Error) => setError(reason.message))}
+                className="min-h-11 rounded bg-[#1d3557] px-3 text-sm font-semibold text-white disabled:opacity-40"
+              >
+                Challenge
+              </button>
+            </div>
+          ) : null}
+          <ul className="flex flex-col gap-2">
+            {board.rows.map((row) => (
+              <li key={row.id} className="rounded border border-white/80 bg-white/80 px-3 py-2 text-sm">
+                <p className="font-semibold">{row.fromId === board.me ? `You challenged ${row.toName}` : `${row.fromName} challenged you`}</p>
+                <p>{kindLabel(row.kind)} · {row.status}</p>
+                {row.toId === board.me && row.status === "pending" ? (
+                  <div className="mt-2 flex gap-2">
+                    <button type="button" onClick={() => void answerChallenge({ data: { id: row.id, accept: true } }).then(load)} className="min-h-11 rounded bg-[#1d3557] px-3 text-sm font-semibold text-white">Accept</button>
+                    <button type="button" onClick={() => void answerChallenge({ data: { id: row.id, accept: false } }).then(load)} className="min-h-11 rounded border border-[#c9a15b] px-3 text-sm font-semibold">Decline</button>
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  );
+}
 function LeaderboardPage() {
   const [leaders, setLeaders] = useState<Leader[] | null>(null);
   const [error, setError] = useState("");
-  const [board, setBoard] = useState<keyof PeriodScores>("today");
+  const [board, setBoard] = useState<keyof PeriodScores | "challenges">("today");
   const { user, isPending } = useCurrentUserState();
 
   useEffect(() => {
@@ -93,7 +176,7 @@ function LeaderboardPage() {
     };
   }, [isPending, user?.id]);
 
-  const jump = (id: keyof PeriodScores) => {
+  const jump = (id: keyof PeriodScores | "challenges") => {
     setBoard(id);
     document.getElementById(`board-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -131,8 +214,11 @@ function LeaderboardPage() {
           <p className="px-4 py-4 text-sm">No accounts yet. Sign in, answer a question, and your name will land here.</p>
         ) : null}
         {leaders && leaders.length > 0
-          ? boards.map((item) => <Board key={item.id} board={item.id} label={item.label} leaders={leaders} />)
+          ? boards.filter((item) => item.id !== "challenges").map((item) => (
+              <Board key={item.id} board={item.id as keyof PeriodScores} label={item.label} leaders={leaders} />
+            ))
           : null}
+        <Challenges userId={user?.id} />
       </section>
     </Shell>
   );

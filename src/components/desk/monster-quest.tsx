@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Badge } from "@/components/desk/badge";
+import { TownTrial } from "@/components/desk/town-trial";
 import { addCard } from "@/lib/cards";
 import { drawQuestionIds } from "@/lib/desk/adapt";
+import { honors, noteRow } from "@/lib/desk/honors";
 import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
@@ -107,6 +109,7 @@ type Battle = {
   moveId?: string;
   guard: boolean;
   boost: boolean;
+  committed?: boolean;
 };
 
 
@@ -381,6 +384,7 @@ export function MonsterQuest({
   const [caseOpen, setCaseOpen] = useState(false);
   const [sheet, setSheet] = useState<"party" | "dex" | null>(null);
   const [nurse, setNurse] = useState(false);
+  const [trialOpen, setTrialOpen] = useState(false);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [notice, setNotice] = useState("");
   const [evo, setEvo] = useState("");
@@ -487,6 +491,7 @@ export function MonsterQuest({
       menu: null,
       guard: false,
       boost: false,
+      committed: false,
     });
   };
 
@@ -540,6 +545,7 @@ export function MonsterQuest({
       menu: null,
       guard: false,
       boost: false,
+      committed: false,
     });
   };
 
@@ -597,6 +603,7 @@ export function MonsterQuest({
       saveBankProgress(progress);
     }
     logActivity("questions");
+    noteRow(correct);
     if (correct) logCorrect();
     else {
       addCard(
@@ -636,17 +643,20 @@ export function MonsterQuest({
       hp = Math.min(youMax, hp + Math.max(0, youMax - battle.youMax));
     } else hp = Math.max(0, hp - (battle.guard ? 1 : 4));
     lead.hp = hp;
+    const right = battle.right + (correct ? 1 : 0);
+    const last = battle.index + 1 >= battle.ids.length;
+    const accurate = right / battle.ids.length >= battle.need;
     let prize = "";
-    const wonFight = hp > 0 && battle.foeKind !== "wild" && (foeHp <= 0 || (battle.index + 1 >= battle.ids.length && (battle.right + (correct ? 1 : 0)) / battle.ids.length >= battle.need));
-    const wildDown = hp > 0 && battle.foeKind === "wild" && foeHp <= 0;
+    const wonFight = last && hp > 0 && battle.foeKind !== "wild" && accurate;
+    const wildDown = last && hp > 0 && battle.foeKind === "wild" && foeHp <= 0;
     if (wonFight || wildDown) {
-      const amount = wonFight ? 16 + (battle.right + (correct ? 1 : 0)) * 2 : 10;
+      const amount = wonFight ? 16 + right * 2 : 10;
       prize = payExp(current, amount);
       youMax = maxHp(lead, current);
       hp = Math.min(youMax, lead.hp);
       lead.hp = hp;
     }
-    if (hp <= 0) {
+    if (hp <= 0 && !last) {
       const bench = current.party.slice(1).find((creature) => creature.hp > 0);
       if (bench) {
         current.party = [bench, ...current.party.filter((creature) => creature.id !== bench.id)];
@@ -657,19 +667,14 @@ export function MonsterQuest({
     }
     saveBag(current);
     setBag(loadBag());
-    const right = battle.right + (correct ? 1 : 0);
-    const last = battle.index + 1 >= battle.ids.length;
-    const fainted = hp <= 0;
-    const ko = foeHp <= 0;
-    const accurate = right / battle.ids.length >= battle.need;
     let over: string | null = null;
-    if (!fainted && battle.foeKind !== "wild" && (ko || (last && accurate))) {
+    if (wonFight) {
       seal(true);
       over = prize ? `You won. ${prize}` : "You won.";
-    } else if (!fainted && battle.foeKind === "wild" && ko) {
+    } else if (wildDown) {
       seal(false);
       over = prize ? `It fainted. ${prize} Throw a ball while it still has HP.` : "It fainted. Throw a ball while it still has HP.";
-    } else if (!fainted && last && battle.foeKind !== "wild") {
+    } else if (last && battle.foeKind !== "wild") {
       if (!prize) {
         prize = payExp(current, 8);
         saveBag(current);
@@ -677,6 +682,9 @@ export function MonsterQuest({
       }
       seal(false);
       over = prize ? `Not enough. ${prize}` : "Not enough. You can try again.";
+    } else if (last) {
+      seal(false);
+      over = "It got away.";
     }
     const hit = !spent
       ? "No PP left."
@@ -693,12 +701,15 @@ export function MonsterQuest({
       you: hp,
       youMax,
       foeHp,
-      fainted,
+      fainted: false,
       guard: correct && move?.power === 0 ? true : correct ? battle.guard : false,
       boost: correct ? false : battle.boost,
       menu: null,
-      moveId: undefined,
-      reveal: { correct, note: [hit, grew, prize].filter(Boolean).join(" ") },
+      moveId: battle.committed ? battle.moveId : undefined,
+      reveal: {
+        correct,
+        note: [hit, grew, prize, `Correct: ${"ABCDE"[question.answer]}. ${question.choices[question.answer]}`].filter(Boolean).join(" "),
+      },
       over,
     });
     const evoText = [grew, prize].filter((note) => note.includes("evolved")).join(" ");
@@ -707,7 +718,6 @@ export function MonsterQuest({
 
   const advance = () => {
     if (!battle?.reveal) return;
-    if (battle.fainted && !battle.over) return;
     if (battle.over) {
       const wonRival = battle.over.startsWith("You won") && battle.title.startsWith("Rival:");
       busyRef.current = false;
@@ -723,7 +733,7 @@ export function MonsterQuest({
       setBattle({ ...battle, over: battle.foeKind === "wild" ? "It got away." : "Not enough. You can try again.", menu: null });
       return;
     }
-    setBattle({ ...battle, index: battle.index + 1, reveal: null, menu: null });
+    setBattle({ ...battle, index: battle.index + 1, reveal: null, menu: battle.committed ? "ask" : null });
   };
 
   const run = () => {
@@ -1050,9 +1060,14 @@ export function MonsterQuest({
       ) : null}
       <div className="flex items-center justify-between gap-3 border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
         <h2 className="font-serif text-xl">{city ? `${city.city} · ${city.element}` : "Championship"}</h2>
-        <button type="button" onClick={() => setSheet((open) => (open ? null : "party"))} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
-          Start
-        </button>
+        <div className="flex gap-2">
+          {city && scene === "town" && !battle ? (
+            <button type="button" onClick={() => setTrialOpen(true)} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Trial</button>
+          ) : null}
+          <button type="button" onClick={() => setSheet((open) => (open ? null : "party"))} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
+            Start
+          </button>
+        </div>
       </div>
       {battle ? (
         <div>
@@ -1099,8 +1114,11 @@ export function MonsterQuest({
           <div className="mt-3 border-4 border-double border-black bg-[#f8f8d8] p-3">
             <p className="text-xs font-bold uppercase">{battle.title}</p>
             {battle.menu === "ask" && question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
-            {!battle.menu && !battle.reveal ? <p className="mt-2 text-sm font-bold">What will {lead ? nameOf(lead) : "you"} do?</p> : null}
+            {!battle.menu && !battle.reveal && !battle.committed ? <p className="mt-2 text-sm font-bold">Fight the whole set, or run. This is the only time it asks.</p> : null}
             {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
+            {battle.reveal && question ? (
+              <p className="mt-2 text-sm font-bold">Correct answer: {"ABCDE"[question.answer]}. {question.choices[question.answer]}</p>
+            ) : null}
             {battle.reveal && question ? <p className="mt-1 max-h-24 overflow-auto text-xs leading-relaxed">{question.explanation}</p> : null}
             {battle.reveal && question?.objective ? (
               <p className="mt-2 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
@@ -1109,7 +1127,7 @@ export function MonsterQuest({
               </p>
             ) : null}
             {battle.over ? <p className="mt-2 text-sm font-bold">{battle.over} {battle.right}/{battle.ids.length}.</p> : null}
-            {!battle.reveal && !battle.fainted && !battle.over && !battle.menu ? (
+            {!battle.reveal && !battle.fainted && !battle.over && !battle.menu && !battle.committed ? (
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => setBattle({ ...battle, menu: "fight" })} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Fight</button>
                 <button type="button" onClick={run} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Run</button>
@@ -1122,7 +1140,7 @@ export function MonsterQuest({
                     key={move.id}
                     type="button"
                     disabled={move.pp <= 0}
-                    onClick={() => setBattle({ ...battle, menu: "ask", moveId: move.id })}
+                    onClick={() => setBattle({ ...battle, committed: true, menu: "ask", moveId: move.id })}
                     className="min-h-14 border-4 border-black bg-white px-2 text-left text-sm font-bold disabled:opacity-40"
                   >
                     {move.def.name}
@@ -1201,6 +1219,16 @@ export function MonsterQuest({
           {notice ? <p className="mt-1 text-sm">{notice}</p> : null}
           <p className="mt-1 text-xs">West door is the shop. The door with the red cross is the Center. It heals everyone, free. {bag?.repelLeft ? `Repel ${bag.repelLeft}. ` : ""}{badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
           <p className="mt-2 text-xs font-bold">Out follows you and fights. Tap Switch to change who is out. One Rare Candy is shared. You have {bag?.candies ?? 0}.</p>
+          <div className="mt-3">
+            <p className="text-xs font-bold">HONORS</p>
+            <div className="mt-1 flex gap-1 overflow-x-auto">
+              {honors().map((honor) => (
+                <span key={honor.id} className={`shrink-0 border-4 px-2 py-1 text-[11px] font-bold ${honor.earned ? "border-black bg-[#fff4a8]" : "border-[#c8b56a] text-[#8a7a48]"}`}>
+                  {honor.name}
+                </span>
+              ))}
+            </div>
+          </div>
           {bag ? (
             <div className="mt-2 flex gap-2 overflow-x-auto">
               {bag.party.map((creature, index) => (
@@ -1286,6 +1314,7 @@ export function MonsterQuest({
           </ul>
         </div>
       ) : null}
+      {trialOpen && city ? <TownTrial city={city} onClose={() => setTrialOpen(false)} /> : null}
       {nurse ? (
         <div className="absolute inset-x-0 top-16 z-20 border-4 border-black bg-[#f8f8d8] p-3 text-black">
           <p className="text-sm font-bold">We can heal your party. Shall we?</p>
