@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type QuestTile = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type QuestTile = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type QuestFace = "up" | "down" | "left" | "right";
 export type ActorKind = "player" | "trainer" | "leader" | "rival" | "wild";
 
@@ -47,7 +47,7 @@ function blit(ctx: CanvasRenderingContext2D, name: string, x: number, y: number,
 export function drawGround(ctx: CanvasRenderingContext2D, tile: QuestTile, x: number, y: number, building: boolean, frame: number) {
   const px = x * TILE;
   const py = y * TILE;
-  const ground = tile === 1 || tile === 5 ? "path" : tile === 3 ? "water" : tile === 6 ? "tall" : tile === 4 || (tile === 2 && building) ? "wall" : "grass";
+  const ground = tile === 1 || tile === 5 ? "path" : tile === 3 ? "water" : tile === 6 ? "tall" : tile === 4 || tile === 7 || tile === 8 || (tile === 2 && building) ? "wall" : "grass";
   if (ground === "water" || ground === "tall") {
     ctx.save();
     ctx.beginPath();
@@ -64,7 +64,7 @@ export function drawProp(ctx: CanvasRenderingContext2D, tile: QuestTile, x: numb
   const px = x * TILE;
   const py = y * TILE;
   if (tile === 2 && !building) blit(ctx, "tree", px - 6, py - TILE * 0.95, TILE + 12, TILE * 2);
-  if (tile === 4) blit(ctx, "door", px, py - 6, TILE, TILE + 6);
+  if (tile === 4 || tile === 7) blit(ctx, "door", px, py - 6, TILE, TILE + 6);
   if (tile === 5) blit(ctx, "sign", px + 2, py - TILE * 0.45, TILE - 4, TILE * 1.45);
 }
 
@@ -83,6 +83,31 @@ export function drawActor(ctx: CanvasRenderingContext2D, tx: number, ty: number,
     ctx.translate(-baseX, 0);
   }
   blit(ctx, kind, x, y, width, height);
+  ctx.restore();
+}
+
+export function drawCreature(ctx: CanvasRenderingContext2D, tx: number, ty: number, file: string, face: QuestFace, step: number) {
+  const key = `mon:${file}`;
+  if (!art[key]) {
+    const img = new Image();
+    img.src = file;
+    art[key] = img;
+  }
+  const bob = step > 0 && Math.floor(step * 8) % 2 ? 2 : 0;
+  const height = TILE * 1.15;
+  const width = height * 0.7;
+  const baseX = tx * TILE;
+  const baseY = ty * TILE;
+  const x = baseX + (TILE - width) / 2;
+  const y = baseY + TILE - height + 6 - bob;
+  const img = art[key].complete && art[key].naturalWidth > 0 ? art[key] : null;
+  ctx.save();
+  if (face === "left") {
+    ctx.translate(baseX + TILE, 0);
+    ctx.scale(-1, 1);
+    ctx.translate(-baseX, 0);
+  }
+  if (img) ctx.drawImage(img, x, y, width, height);
   ctx.restore();
 }
 

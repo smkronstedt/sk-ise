@@ -9,14 +9,42 @@ import { useDesk } from "@/lib/desk/provider";
 import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, TestBlock } from "@/lib/desk/types";
-import { drawActor, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
+import { drawActor, drawCreature, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
+import { questCash } from "@/lib/desk/purse";
+import {
+  BAG_KEY,
+  buyItem,
+  catchChance,
+  drink,
+  foeHealth,
+  grantExp,
+  keepCatch,
+  levelOf,
+  lines,
+  loadBag,
+  makeLead,
+  masterStock,
+  maxHp,
+  monSrc,
+  nameOf,
+  saveBag,
+  shopItems,
+  stageOf,
+  strike,
+  swapBox,
+  takeBall,
+  wildSpecies,
+  type Ball,
+  type QuestBag,
+  type SpeciesId,
+} from "@/lib/desk/quest-bag";
 
 const COLS = 13;
 const ROWS = 11;
 const STEP = 0.16;
 const RIVAL = "Reed Calder";
 
-type Tile = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type Tile = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 type Face = "up" | "down" | "left" | "right";
 type Scene = "town" | "gym" | "route";
 
@@ -46,14 +74,19 @@ type Battle = {
   ids: string[];
   index: number;
   you: number;
+  youMax: number;
   foeHp: number;
+  foeMax: number;
   right: number;
   foeName: string;
   foeKind: "trainer" | "leader" | "rival" | "wild";
+  foeSpecies?: SpeciesId;
   title: string;
   need: number;
   reveal: { correct: boolean; note: string } | null;
   over: string | null;
+  fainted: boolean;
+  menu: "item" | null;
 };
 
 
@@ -128,42 +161,70 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
   }
 
   if (scene === "route") {
+    openGround(tiles);
     for (let y = 1; y <= 9; y++) tiles[y][6] = 1;
     tiles[1][6] = 5;
-    for (let y = 3; y <= 7; y++) {
-      tiles[y][4] = 6;
-      tiles[y][5] = 6;
-      tiles[y][7] = 6;
-      tiles[y][8] = 6;
+    const band = cities.findIndex((item) => item.id === city.id);
+    if (band % 3 !== 2) {
+      for (let y = 4; y <= 7; y++) {
+        tiles[y][3] = 6;
+        tiles[y][4] = 6;
+      }
+      tiles[3][4] = 2;
+      tiles[8][3] = 2;
+    } else {
+      tiles[6][8] = 6;
+      tiles[6][9] = 6;
+      tiles[7][8] = 6;
+      tiles[4][3] = 2;
+      tiles[8][9] = 2;
+    }
+    if (band % 2 === 0) {
+      tiles[3][8] = 6;
+      tiles[4][8] = 6;
+      tiles[4][9] = 6;
+    } else {
+      tiles[3][9] = 2;
+      tiles[7][9] = 2;
+      tiles[8][8] = 2;
     }
     return { tiles, npcs, start: { x: 6, y: 9 } };
   }
 
   openGround(tiles);
   for (let y = 1; y <= 9; y++) tiles[y][6] = 1;
-  for (let x = 2; x <= 10; x++) tiles[5][x] = 1;
-  for (let x = 4; x <= 8; x++) tiles[1][x] = 2;
+  for (let x = 1; x <= 11; x++) {
+    tiles[3][x] = 1;
+    tiles[5][x] = 1;
+    tiles[7][x] = 1;
+  }
+  tiles[1][5] = 8;
   tiles[1][6] = 4;
-  tiles[3][3] = 1;
-  tiles[3][4] = 1;
-  tiles[3][5] = 1;
-  tiles[3][7] = 1;
-  tiles[3][8] = 1;
-  tiles[3][9] = 1;
-  tiles[7][3] = 1;
-  tiles[7][4] = 1;
-  tiles[7][5] = 1;
-  tiles[7][7] = 1;
-  tiles[7][8] = 1;
-  tiles[7][9] = 1;
-  for (let y = 1; y <= 9; y++) tiles[y][11] = 2;
-  if (rivalDone) tiles[5][11] = 5;
+  tiles[1][7] = 8;
+  tiles[4][1] = 8;
+  tiles[4][2] = 8;
+  tiles[4][3] = 7;
+  tiles[8][2] = 8;
+  tiles[8][3] = 8;
+  tiles[2][9] = 8;
+  tiles[2][10] = 8;
+  tiles[8][9] = 8;
+  tiles[8][10] = 8;
+  tiles[2][4] = 2;
+  tiles[6][9] = 2;
+  const townIndex = cities.findIndex((item) => item.id === city.id);
+  if (townIndex % 2 === 0) {
+    tiles[9][8] = 3;
+    tiles[9][9] = 3;
+    tiles[8][8] = 3;
+  }
+  tiles[5][11] = rivalDone ? 5 : 8;
 
   const spots: { x: number; y: number; face: Face }[] = [
-    { x: 3, y: 3, face: "right" },
-    { x: 9, y: 3, face: "left" },
-    { x: 3, y: 7, face: "right" },
-    { x: 9, y: 7, face: "left" },
+    { x: 2, y: 3, face: "right" },
+    { x: 10, y: 3, face: "left" },
+    { x: 2, y: 7, face: "right" },
+    { x: 10, y: 7, face: "left" },
   ];
   city.trainers.forEach((trainer, index) => {
     const spot = spots[index];
@@ -213,7 +274,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
 function canWalk(world: World, x: number, y: number) {
   if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return false;
   const tile = world.tiles[y][x];
-  if (tile === 2 || tile === 3) return false;
+  if (tile === 2 || tile === 3 || tile === 8) return false;
   return !world.npcs.some((npc) => npc.x === x && npc.y === y);
 }
 
@@ -224,7 +285,7 @@ function clearLane(world: World, npc: Npc, x: number, y: number) {
   let cy = npc.y + stepY;
   while (cx !== x || cy !== y) {
     const tile = world.tiles[cy]?.[cx];
-    if (tile === 2 || tile === 3) return false;
+    if (tile === 2 || tile === 3 || tile === 8) return false;
     if (world.npcs.some((other) => other !== npc && other.x === cx && other.y === cy)) return false;
     cx += stepX;
     cy += stepY;
@@ -284,6 +345,15 @@ export function MonsterQuest({
   const [caseOpen, setCaseOpen] = useState(false);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [notice, setNotice] = useState("");
+  const [bag, setBag] = useState<QuestBag | null>(null);
+  const [shopOpen, setShopOpen] = useState(false);
+  const bagRef = useRef<QuestBag | null>(null);
+  bagRef.current = bag;
+
+  useEffect(() => {
+    if (!localStorage.getItem(BAG_KEY)) saveBag(loadBag());
+    setBag(loadBag());
+  }, []);
 
   const frontier = cities.findIndex((city, index) => {
     const trainer = stops.find((stop) => stop.kind === "trainer" && stop.city.id === city.id);
@@ -292,12 +362,23 @@ export function MonsterQuest({
   });
   const city = hold ? (cities.find((item) => item.id === hold) ?? null) : frontier === -1 ? null : cities[frontier];
   cityRef.current = city;
-  pausedRef.current = caseOpen || Boolean(battle);
+  pausedRef.current = caseOpen || shopOpen || Boolean(battle);
 
   const go = (next: Scene, x: number, y: number) => {
     posRef.current = { x, y, scene: next, cityId: city?.id ?? "league" };
     setScene(next);
-    setLine(next === "route" ? "Tall grass is one unused question." : next === "gym" ? "The aisle is the leader's line of sight." : "Walk across a trainer's line. They will see you.");
+    setLine(next === "route" ? "Grass shows up in patches. A correct answer weakens a wild one. Then throw a ball." : next === "gym" ? "The aisle is the leader's line of sight." : "The west door is the shop. Trainers watch the streets.");
+  };
+
+  const readyLead = () => {
+    const current = loadBag();
+    const lead = current.party[0];
+    if (!lead || lead.hp <= 0) {
+      busyRef.current = false;
+      setNotice("Your lead is out of HP. Heal it, or switch who is in front.");
+      return null;
+    }
+    return { current, lead };
   };
 
   const startBattle = async (npc: Npc) => {
@@ -310,6 +391,8 @@ export function MonsterQuest({
       setLine(npc.line);
       return;
     }
+    const ready = readyLead();
+    if (!ready) return;
     busyRef.current = true;
     setNotice("");
     await loadCatalog();
@@ -332,13 +415,16 @@ export function MonsterQuest({
       busyRef.current = false;
       return;
     }
+    const foeMax = foeHealth(npc.kind, ids.length, Math.max(0, cities.findIndex((item) => item.id === city?.id)));
     setLine(npc.line);
     setBattle({
       testId,
       ids,
       index: 0,
-      you: ids.length,
-      foeHp: ids.length,
+      you: ready.lead.hp,
+      youMax: maxHp(ready.lead, ready.current),
+      foeHp: foeMax,
+      foeMax,
       right: 0,
       foeName: npc.name,
       foeKind: npc.kind,
@@ -346,14 +432,18 @@ export function MonsterQuest({
       need: npc.need,
       reveal: null,
       over: null,
+      fainted: false,
+      menu: null,
     });
   };
 
   const startWild = async () => {
     if (!city || busyRef.current) return;
+    const ready = readyLead();
+    if (!ready) return;
     busyRef.current = true;
     await loadCatalog();
-    const ids = drawQuestionIds(desk.state, topicIdsFor(city.id), "unused", 1, false);
+    const ids = drawQuestionIds(desk.state, topicIdsFor(city.id), "unused", 3, false);
     if (!ids.length) {
       busyRef.current = false;
       setLine("The grass is quiet. Recycle used questions from Build.");
@@ -365,32 +455,46 @@ export function MonsterQuest({
       adaptive: false,
       topicIds: topicIdsFor(city.id),
       pool: "unused",
-      count: 1,
+      count: ids.length,
       questionIds: ids,
     });
     if (!testId) {
       busyRef.current = false;
       return;
     }
+    const cityIndex = Math.max(0, cities.findIndex((item) => item.id === city.id));
+    const species = wildSpecies(cityIndex);
+    const level = 3 + cityIndex;
+    const foeMax = foeHealth("wild", ids.length, cityIndex);
     setBattle({
       testId,
       ids,
       index: 0,
-      you: 1,
-      foeHp: 1,
+      you: ready.lead.hp,
+      youMax: maxHp(ready.lead, ready.current),
+      foeHp: foeMax,
+      foeMax,
       right: 0,
-      foeName: "Wild question",
+      foeName: lines[species].names[stageOf(level)],
       foeKind: "wild",
+      foeSpecies: species,
       title: "Tall grass",
       need: 1,
       reveal: null,
       over: null,
+      fainted: false,
+      menu: null,
     });
   };
 
   apiRef.current.talk = (npc) => void startBattle(npc);
   apiRef.current.wild = () => void startWild();
   apiRef.current.enter = (tile) => {
+    if (tile === 7 && scene === "town") {
+      setShopOpen(true);
+      setLine("Shop. Buying here spends Quest money only.");
+      return;
+    }
     if (tile === 4 && scene === "town") go("gym", 6, 8);
     else if (tile === 4 && scene === "gym") go("town", 6, 2);
     else if (tile === 5 && scene === "town") go("route", 6, 9);
@@ -402,8 +506,21 @@ export function MonsterQuest({
     }
   };
 
+  const seal = (win: boolean) => {
+    if (!battle) return;
+    desk.patchTest(battle.testId, (current) => {
+      const answered = battle.ids.filter((id) => current.answers[id]?.submitted);
+      return {
+        ...current,
+        questionIds: win && answered.length ? answered : current.questionIds,
+        status: "done",
+        finishedAt: Date.now(),
+      };
+    });
+  };
+
   const grade = (choice: number) => {
-    if (!battle || battle.reveal || battle.over) return;
+    if (!battle || battle.reveal || battle.over || battle.fainted) return;
     const id = battle.ids[battle.index];
     const question = getQuestion(id);
     if (!question) return;
@@ -435,32 +552,55 @@ export function MonsterQuest({
       );
     }
     desk.consume(id);
+    const current = loadBag();
+    const lead = current.party[0];
+    if (!lead) return;
+    const dealt = correct ? strike(lead, current) : 0;
+    const foeHp = Math.max(0, battle.foeHp - dealt);
+    let grew = "";
+    let hp = battle.you;
+    let youMax = battle.youMax;
+    if (correct) {
+      grew = grantExp(lead, 5);
+      youMax = maxHp(lead, current);
+      hp = Math.min(youMax, hp + Math.max(0, youMax - battle.youMax));
+    } else hp = Math.max(0, hp - 4);
+    lead.hp = hp;
+    saveBag(current);
+    setBag(loadBag());
     const right = battle.right + (correct ? 1 : 0);
-    const you = battle.you - (correct ? 0 : 1);
-    const foeHp = battle.foeHp - (correct ? 1 : 0);
     const last = battle.index + 1 >= battle.ids.length;
-    if (last) {
-      desk.patchTest(battle.testId, (current) => ({
-        ...current,
-        index: battle.index,
-        answers: { ...current.answers, [id]: { choice, submitted: true } },
-        status: "done",
-        finishedAt: Date.now(),
-      }));
+    const fainted = hp <= 0;
+    const ko = foeHp <= 0;
+    const accurate = right / battle.ids.length >= battle.need;
+    let over: string | null = null;
+    if (!fainted && battle.foeKind !== "wild" && (ko || (last && accurate))) {
+      seal(true);
+      over = "You won.";
+    } else if (!fainted && battle.foeKind === "wild" && ko) {
+      seal(false);
+      over = "It fainted. Throw a ball while it still has HP.";
+    } else if (!fainted && last && battle.foeKind !== "wild") {
+      seal(false);
+      over = "Not enough. You can try again.";
     }
-    const won = right / battle.ids.length >= battle.need;
+    const hit = correct ? `Hit for ${dealt}.` : "The other side hit you.";
     setBattle({
       ...battle,
       right,
-      you,
+      you: hp,
+      youMax,
       foeHp,
-      reveal: { correct, note: correct ? "Hit." : "The other side hit you." },
-      over: last ? (won ? "You won." : "Not enough. You can try again.") : null,
+      fainted,
+      menu: null,
+      reveal: { correct, note: [hit, grew].filter(Boolean).join(" ") },
+      over,
     });
   };
 
   const advance = () => {
     if (!battle?.reveal) return;
+    if (battle.fainted && !battle.over) return;
     if (battle.over) {
       const wonRival = battle.over === "You won." && battle.title.startsWith("Rival:");
       busyRef.current = false;
@@ -471,7 +611,12 @@ export function MonsterQuest({
       }
       return;
     }
-    setBattle({ ...battle, index: battle.index + 1, reveal: null });
+    if (battle.index + 1 >= battle.ids.length) {
+      seal(false);
+      setBattle({ ...battle, over: battle.foeKind === "wild" ? "It got away." : "Not enough. You can try again.", menu: null });
+      return;
+    }
+    setBattle({ ...battle, index: battle.index + 1, reveal: null, menu: null });
   };
 
   const run = () => {
@@ -479,7 +624,60 @@ export function MonsterQuest({
     desk.patchTest(battle.testId, (current) => ({ ...current, status: "done", finishedAt: Date.now() }));
     busyRef.current = false;
     setBattle(null);
-    setLine("You got away.");
+    setLine(battle.foeKind === "wild" ? "You got away." : "You backed out.");
+  };
+
+  const giveUp = () => {
+    if (!battle) return;
+    seal(false);
+    busyRef.current = false;
+    setBattle(null);
+    setLine("You blacked out. Heal at the shop, then try again.");
+  };
+
+  const throwBall = (ball: Ball) => {
+    if (!battle || battle.over) return;
+    if (battle.foeKind !== "wild" || !battle.foeSpecies) {
+      setNotice("Balls are for wild ones.");
+      return;
+    }
+    if (battle.foeHp <= 0) {
+      setNotice("It already fainted.");
+      return;
+    }
+    if (!takeBall(ball)) {
+      setNotice("You don't have that ball.");
+      setBag(loadBag());
+      return;
+    }
+    setBag(loadBag());
+    const chance = catchChance(ball, battle.foeHp, battle.foeMax);
+    if (Math.random() <= chance) {
+      const cityIndex = Math.max(0, cities.findIndex((item) => item.id === city?.id));
+      const note = keepCatch(battle.foeSpecies, 3 + cityIndex);
+      seal(false);
+      setBag(loadBag());
+      setBattle({ ...battle, menu: null, over: "Caught.", reveal: { correct: true, note } });
+      return;
+    }
+    setNotice("It broke free.");
+    setBattle({ ...battle, menu: null });
+  };
+
+  const healLead = (kind: "potion" | "super") => {
+    const note = drink(kind, 0);
+    const next = loadBag();
+    setBag(next);
+    setNotice(note);
+    const lead = next.party[0];
+    if (!battle || !lead) return;
+    setBattle({
+      ...battle,
+      you: lead.hp,
+      youMax: maxHp(lead, next),
+      fainted: lead.hp <= 0,
+      menu: null,
+    });
   };
 
   useEffect(() => {
@@ -570,7 +768,7 @@ export function MonsterQuest({
             else {
               if (tile === 6) {
                 grassSteps += 1;
-                if (grassSteps >= 3 && Math.random() < 0.2) {
+                if (grassSteps >= 4 && Math.random() < 0.22) {
                   grassSteps = 0;
                   apiRef.current.wild();
                 }
@@ -603,6 +801,12 @@ export function MonsterQuest({
         }
       }
       const stepPhase = moving > 0 ? walked + t : 0;
+      const lead = bagRef.current?.party[0];
+      if (lead) {
+        const behindX = player.face === "left" ? 0.8 : player.face === "right" ? -0.8 : 0;
+        const behindY = player.face === "up" ? 0.85 : player.face === "down" ? -0.85 : 0;
+        drawCreature(ctx, drawX + behindX, drawY + behindY, monSrc(lead.species, stageOf(levelOf(lead.exp))), player.face, stepPhase);
+      }
       for (const npc of map.npcs) {
         drawActor(ctx, npc.x, npc.y, npc.kind === "leader" ? "leader" : npc.kind === "rival" ? "rival" : "trainer", 0, npc.face);
         if (bang && bang.id === npc.id && now < bangUntil) {
@@ -628,7 +832,7 @@ export function MonsterQuest({
   }, [battle, scene, city?.id]);
 
   const question = battle ? getQuestion(battle.ids[battle.index] ?? "") : undefined;
-  const maxHp = battle?.ids.length ?? 1;
+  const lead = bag?.party[0];
 
   return (
     <div ref={wrapRef} className="bg-[#1e3a24]">
@@ -647,26 +851,31 @@ export function MonsterQuest({
             <div className="border-4 border-black bg-[#f8f8d8] p-2">
               <p className="text-xs font-bold uppercase">{battle.foeName}</p>
               <div className="mt-1 h-3 border-2 border-black bg-white">
-                <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.foeHp / maxHp) * 100)}%` }} />
+                <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.foeHp / battle.foeMax) * 100)}%` }} />
               </div>
-              <p className="mt-1 text-xs">HP {Math.max(0, battle.foeHp)}/{maxHp}</p>
+              <p className="mt-1 text-xs">HP {Math.max(0, battle.foeHp)}/{battle.foeMax}</p>
             </div>
             <div className="flex flex-col items-center">
-              <PixelActor kind={battle.foeKind} />
+              {battle.foeKind === "wild" && battle.foeSpecies ? (
+                <img src={monSrc(battle.foeSpecies, stageOf(3 + Math.max(0, cities.findIndex((item) => item.id === city?.id))))} alt="" className="h-36 w-auto object-contain [image-rendering:pixelated]" />
+              ) : (
+                <PixelActor kind={battle.foeKind} />
+              )}
               <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
             </div>
           </div>
           <div className="relative mt-2 grid grid-cols-[auto_1fr] items-end gap-2">
             <div className="flex flex-col items-center">
+              {lead ? <img src={monSrc(lead.species, stageOf(levelOf(lead.exp)))} alt="" className="h-28 w-auto object-contain [image-rendering:pixelated]" /> : null}
               <PixelActor kind="player" />
               <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
             </div>
             <div className="border-4 border-black bg-[#f8f8d8] p-2">
-              <p className="text-xs font-bold uppercase">You</p>
+              <p className="text-xs font-bold uppercase">{lead ? `${nameOf(lead)} · Lv ${levelOf(lead.exp)}` : "You"}</p>
               <div className="mt-1 h-3 border-2 border-black bg-white">
-                <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.you / maxHp) * 100)}%` }} />
+                <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.you / battle.youMax) * 100)}%` }} />
               </div>
-              <p className="mt-1 text-xs">HP {Math.max(0, battle.you)}/{maxHp}</p>
+              <p className="mt-1 text-xs">HP {Math.max(0, battle.you)}/{battle.youMax}</p>
             </div>
           </div>
         </div>
@@ -676,7 +885,7 @@ export function MonsterQuest({
             {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
             {battle.reveal && question ? <p className="mt-1 max-h-24 overflow-auto text-xs leading-relaxed">{question.explanation}</p> : null}
             {battle.over ? <p className="mt-2 text-sm font-bold">{battle.over} {battle.right}/{battle.ids.length}.</p> : null}
-            {!battle.reveal && question ? (
+            {!battle.reveal && !battle.fainted && question && battle.menu !== "item" ? (
               <div className="mt-3 flex flex-col gap-2">
                 {question.choices.map((choice, index) => (
                   <button key={choice} type="button" onClick={() => grade(index)} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">
@@ -685,16 +894,33 @@ export function MonsterQuest({
                 ))}
               </div>
             ) : null}
-            <div className="mt-3 flex gap-2">
-              {battle.reveal ? (
+            {battle.menu === "item" ? (
+              <div className="mt-3 flex flex-col gap-2">
+                <button type="button" onClick={() => healLead("potion")} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">Potion ×{bag?.potions ?? 0} · heals 12</button>
+                <button type="button" onClick={() => healLead("super")} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">Super Potion ×{bag?.supers ?? 0} · full heal</button>
+                {(["ball", "great", "ultra", "master"] as const).map((ball) => (
+                  <button key={ball} type="button" onClick={() => throwBall(ball)} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">
+                    {ball === "ball" ? "Ball" : ball === "great" ? "Great Ball" : ball === "ultra" ? "Ultra Ball" : "Master Ball"} ×{bag?.balls[ball] ?? 0}
+                  </button>
+                ))}
+                <button type="button" onClick={() => setBattle({ ...battle, menu: null })} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">Back</button>
+              </div>
+            ) : null}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {battle.reveal && !battle.fainted ? (
                 <button type="button" onClick={advance} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
                   {battle.over ? "Back" : "Next"}
                 </button>
-              ) : (
-                <button type="button" onClick={run} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">
-                  Run
-                </button>
-              )}
+              ) : null}
+              {!battle.over && battle.menu !== "item" ? (
+                <button type="button" onClick={() => setBattle({ ...battle, menu: "item" })} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Item</button>
+              ) : null}
+              {!battle.over && !battle.reveal ? (
+                <button type="button" onClick={run} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Run</button>
+              ) : null}
+              {battle.fainted && !battle.over ? (
+                <button type="button" onClick={giveUp} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Black out</button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -705,7 +931,24 @@ export function MonsterQuest({
         <div className="border-t-4 border-black bg-[#fff4a8] p-3 text-black">
           <p className="text-sm font-bold">{line}</p>
           {notice ? <p className="mt-1 text-sm">{notice}</p> : null}
-          <p className="mt-1 text-xs">Wasd or the pad. A talks. Start, or M, opens the badge case. {badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
+          <p className="mt-1 text-xs">Wasd or the pad. Talk to people. The west door is the shop. Grass is only in patches. {badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
+          {bag ? (
+            <div className="mt-3 flex gap-2 overflow-x-auto">
+              {bag.party.map((creature, index) => (
+                <button key={creature.id} type="button" onClick={() => { makeLead(index); setBag(loadBag()); }} className={`min-w-24 border-4 bg-[#f8f8d8] p-1 text-left ${index === 0 ? "border-black" : "border-[#c8b56a]"}`}>
+                  <img src={monSrc(creature.species, stageOf(levelOf(creature.exp)))} alt="" className="mx-auto h-12 w-auto [image-rendering:pixelated]" />
+                  <p className="truncate text-[11px] font-bold">{nameOf(creature)} Lv {levelOf(creature.exp)}</p>
+                  <p className="text-[11px]">HP {creature.hp}/{maxHp(creature, bag)}</p>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {bag && lead && lead.hp < maxHp(lead, bag) ? (
+            <div className="mt-2 flex gap-2">
+              <button type="button" onClick={() => healLead("potion")} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">Potion ×{bag.potions}</button>
+              <button type="button" onClick={() => healLead("super")} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">Super ×{bag.supers}</button>
+            </div>
+          ) : null}
           <div className="mt-3 flex items-end gap-4">
             <div className="grid grid-cols-3 gap-1">
               <span />
@@ -723,7 +966,26 @@ export function MonsterQuest({
           </div>
         </div>
       ) : null}
-      {caseOpen ? (
+      {shopOpen ? (
+        <div className="border-t-4 border-black bg-[#f8f8d8] p-3 text-black">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-bold tracking-wide uppercase">Town shop · Quest ${questCash()}</p>
+            <button type="button" onClick={() => setShopOpen(false)} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">Close</button>
+          </div>
+          <ul className="mt-2 flex flex-col gap-2">
+            {shopItems.map((item) => {
+              const stock = item.id === "master" ? masterStock(bag ?? loadBag(), badges) : null;
+              return (
+                <li key={item.id} className="flex items-center justify-between gap-2 border-4 border-black bg-white px-2 py-1">
+                  <span className="text-sm"><span className="font-bold">{item.name}</span> ${item.price}. {item.note}{stock != null ? ` Stock ${stock}.` : ""}</span>
+                  <button type="button" onClick={() => { setNotice(buyItem(item.id, badges)); setBag(loadBag()); }} className="min-h-11 shrink-0 border-4 border-black bg-[#fff4a8] px-2 text-sm font-bold">Buy</button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+      {caseOpen && bag ? (
         <div className="border-t-4 border-black bg-[#f8f8d8] p-3 text-black">
           <p className="text-xs font-bold tracking-wide uppercase">Badge case</p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -732,6 +994,18 @@ export function MonsterQuest({
               return <Badge key={item.id} element={item.element} earned={earned} />;
             })}
           </div>
+          {bag.box.length ? (
+            <div className="mt-3">
+              <p className="text-xs font-bold uppercase">Box</p>
+              <div className="mt-1 flex flex-col gap-1">
+                {bag.box.map((creature, index) => (
+                  <button key={creature.id} type="button" onClick={() => { swapBox(index); setBag(loadBag()); }} className="min-h-11 border-4 border-black bg-white px-2 text-left text-sm font-bold">
+                    {nameOf(creature)} Lv {levelOf(creature.exp)} · swap with lead
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -37,6 +37,14 @@ export function questCash(): number {
   return Math.max(0, earnedPurse() - questSpent());
 }
 
+export function spendQuest(amount: number) {
+  if (amount <= 0) return true;
+  if (questCash() < amount) return false;
+  localStorage.setItem(QUEST_SPEND_KEY, String(questSpent() + amount));
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("ise-activity"));
+  return true;
+}
+
 /** Outside the two games, show earnings with nothing spent. */
 export function cashForMode(mode: string): number {
   if (mode === "ops") return opsCash();

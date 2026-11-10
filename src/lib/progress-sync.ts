@@ -4,6 +4,7 @@ import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadDaily, mergeDaily, saveDaily } from "@/lib/desk/daily";
 import type { ItemAnswer, TestBlock } from "@/lib/desk/types";
 import type { Card } from "@/lib/cards";
+import { BAG_KEY, mergeBags } from "@/lib/desk/quest-bag";
 
 const DESK = "callroom-desk-v1";
 const BANK = "callroom-original-bank-v1";
@@ -13,10 +14,10 @@ const TRAIN = "callroom-training-v1";
 const QUEST = "callroom-quest-spend-v1";
 const OWNER = "callroom-owner";
 const DAILY = "callroom-daily-v1";
-const EXTRA = [DAILY, "callroom-activity-v1", "callroom-field-caught-v2", "callroom-fieldnotes-xp", "ise-trail-pos", TRAIN, QUEST];
+const EXTRA = [DAILY, "callroom-activity-v1", "callroom-field-caught-v2", "callroom-fieldnotes-xp", "ise-trail-pos", TRAIN, QUEST, BAG_KEY];
 const SEED = "callroom-correct-seed-v1";
 
-type CardsField = { list?: unknown; ops?: unknown; activity?: Record<string, DayLog>; daily?: Record<string, { id: string; choice?: string; correct?: boolean }>; training?: unknown; questSpend?: number } | unknown[] | null;
+type CardsField = { list?: unknown; ops?: unknown; activity?: Record<string, DayLog>; daily?: Record<string, { id: string; choice?: string; correct?: boolean }>; training?: unknown; questSpend?: number; questBag?: unknown } | unknown[] | null;
 
 type Bundle = {
   desk: unknown;
@@ -25,6 +26,7 @@ type Bundle = {
   ops: unknown;
   training: unknown;
   questSpend: number;
+  questBag: unknown;
 };
 
 function questNumber(value: unknown) {
@@ -54,6 +56,7 @@ function localBundle(): Bundle {
     ops: read(OPS),
     training: read(TRAIN),
     questSpend: questNumber(localStorage.getItem(QUEST)),
+    questBag: read(BAG_KEY),
   };
 }
 
@@ -62,7 +65,8 @@ function hasLocalWork(bundle: Bundle) {
   const bank = bundle.bank as { answers?: Record<string, unknown> } | null;
   const cards = Array.isArray(bundle.cards) ? bundle.cards : [];
   const training = Array.isArray(bundle.training) ? bundle.training : [];
-  return Boolean(desk?.tests?.length || (bank?.answers && Object.keys(bank.answers).length) || cards.length || bundle.ops || training.length || bundle.questSpend > 0);
+  const bag = bundle.questBag as { party?: unknown[] } | null;
+  return Boolean(desk?.tests?.length || (bank?.answers && Object.keys(bank.answers).length) || cards.length || bundle.ops || training.length || bundle.questSpend > 0 || bag?.party?.length);
 }
 
 function apply(bundle: Bundle) {
@@ -72,6 +76,7 @@ function apply(bundle: Bundle) {
   write(OPS, bundle.ops);
   write(TRAIN, bundle.training);
   localStorage.setItem(QUEST, String(bundle.questSpend || 0));
+  if (bundle.questBag) write(BAG_KEY, bundle.questBag);
 }
 
 function clearStudy() {
@@ -92,6 +97,7 @@ function unpack(payload: string) {
     ops: Array.isArray(cardsField) ? null : (cardsField?.ops ?? null),
     training: remoteTraining ?? null,
     questSpend: remoteQuest,
+    questBag: Array.isArray(cardsField) ? null : (cardsField?.questBag ?? null),
   };
   return { remoteBundle, remoteActivity, remoteDaily };
 }
@@ -230,6 +236,7 @@ function mergeBundles(local: Bundle, remote: Bundle): Bundle {
     ops: mergeOps(local.ops && typeof local.ops === "object" ? (local.ops as OpsShape) : null, remote.ops && typeof remote.ops === "object" ? (remote.ops as OpsShape) : null),
     training: mergeTraining(local.training, remote.training),
     questSpend: Math.max(local.questSpend || 0, remote.questSpend || 0),
+    questBag: mergeBags(local.questBag, remote.questBag),
   };
 }
 
@@ -338,7 +345,7 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
     const unpacked = newer?.payload ? unpack(newer.payload) : first;
     restoreSide(unpacked.remoteActivity, unpacked.remoteDaily, true);
     const merged = mergeBundles(localBundle(), unpacked.remoteBundle);
-    const localOnly = mergeBundles(localBundle(), { desk: {}, bank: {}, cards: [], ops: null, training: [], questSpend: 0 });
+    const localOnly = mergeBundles(localBundle(), { desk: {}, bank: {}, cards: [], ops: null, training: [], questSpend: 0, questBag: null });
     const changed = stable(merged) !== stable(localOnly);
     if (changed) {
       apply(merged);
@@ -359,6 +366,6 @@ function pack(bundle: Bundle) {
   return {
     desk: bundle.desk ?? {},
     bank: bundle.bank ?? {},
-    cards: { list: bundle.cards ?? [], ops: bundle.ops ?? null, activity: loadActivity(), daily: loadDaily(), training: bundle.training ?? [], questSpend: bundle.questSpend || 0 },
+    cards: { list: bundle.cards ?? [], ops: bundle.ops ?? null, activity: loadActivity(), daily: loadDaily(), training: bundle.training ?? [], questSpend: bundle.questSpend || 0, questBag: bundle.questBag ?? null },
   };
 }
