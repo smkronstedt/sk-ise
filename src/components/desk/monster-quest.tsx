@@ -18,6 +18,7 @@ import {
   drink,
   foeHealth,
   grantExp,
+  healAll,
   keepCatch,
   levelOf,
   lines,
@@ -27,12 +28,15 @@ import {
   maxHp,
   monSrc,
   nameOf,
+  revive,
   saveBag,
   shopItems,
+  spendBattleItem,
   stageOf,
   strike,
   swapBox,
   takeBall,
+  useRepel,
   wildSpecies,
   type Ball,
   type QuestBag,
@@ -44,7 +48,7 @@ const ROWS = 11;
 const STEP = 0.16;
 const RIVAL = "Reed Calder";
 
-type Tile = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type Tile = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 type Face = "up" | "down" | "left" | "right";
 type Scene = "town" | "gym" | "route";
 
@@ -87,6 +91,8 @@ type Battle = {
   over: string | null;
   fainted: boolean;
   menu: "item" | null;
+  guard: boolean;
+  boost: boolean;
 };
 
 
@@ -114,6 +120,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
   if (!city) {
     openGround(tiles);
     for (let y = 1; y <= 8; y++) tiles[y][6] = 1;
+    tiles[8][2] = 9;
     npcs.push({
       id: "league",
       kind: "leader",
@@ -204,6 +211,8 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
   tiles[4][1] = 8;
   tiles[4][2] = 8;
   tiles[4][3] = 7;
+  tiles[4][9] = 9;
+  tiles[4][10] = 8;
   tiles[8][2] = 8;
   tiles[8][3] = 8;
   tiles[2][9] = 8;
@@ -348,11 +357,14 @@ export function MonsterQuest({
   const [bag, setBag] = useState<QuestBag | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const bagRef = useRef<QuestBag | null>(null);
+  const repelRef = useRef(0);
   bagRef.current = bag;
 
   useEffect(() => {
-    if (!localStorage.getItem(BAG_KEY)) saveBag(loadBag());
-    setBag(loadBag());
+    const next = loadBag();
+    if (!localStorage.getItem(BAG_KEY)) saveBag(next);
+    setBag(localStorage.getItem(BAG_KEY) ? loadBag() : next);
+    repelRef.current = (localStorage.getItem(BAG_KEY) ? loadBag() : next).repelLeft;
   }, []);
 
   const frontier = cities.findIndex((city, index) => {
@@ -434,6 +446,8 @@ export function MonsterQuest({
       over: null,
       fainted: false,
       menu: null,
+      guard: false,
+      boost: false,
     });
   };
 
@@ -484,12 +498,22 @@ export function MonsterQuest({
       over: null,
       fainted: false,
       menu: null,
+      guard: false,
+      boost: false,
     });
   };
 
   apiRef.current.talk = (npc) => void startBattle(npc);
   apiRef.current.wild = () => void startWild();
   apiRef.current.enter = (tile) => {
+    if (tile === 9) {
+      const rested = loadBag();
+      healAll(rested);
+      saveBag(rested);
+      setBag(loadBag());
+      setLine("The Center healed everyone.");
+      return;
+    }
     if (tile === 7 && scene === "town") {
       setShopOpen(true);
       setLine("Shop. Buying here spends Quest money only.");
@@ -555,17 +579,32 @@ export function MonsterQuest({
     const current = loadBag();
     const lead = current.party[0];
     if (!lead) return;
-    const dealt = correct ? strike(lead, current) : 0;
-    const foeHp = Math.max(0, battle.foeHp - dealt);
+    const dealtBase = correct ? strike(lead, current) * (battle.boost ? 2 : 1) : 0;
+    const foeHp = Math.max(0, battle.foeHp - dealtBase);
     let grew = "";
     let hp = battle.you;
     let youMax = battle.youMax;
     if (correct) {
       grew = grantExp(lead, 5);
+      if (current.expShare) {
+        for (const other of current.party.slice(1)) {
+          const shared = grantExp(other, 2);
+          if (shared.includes("evolved")) grew = [grew, shared].filter(Boolean).join(" ");
+        }
+      }
       youMax = maxHp(lead, current);
       hp = Math.min(youMax, hp + Math.max(0, youMax - battle.youMax));
-    } else hp = Math.max(0, hp - 4);
+    } else hp = Math.max(0, hp - (battle.guard ? 1 : 4));
     lead.hp = hp;
+    if (hp <= 0) {
+      const bench = current.party.slice(1).find((creature) => creature.hp > 0);
+      if (bench) {
+        current.party = [bench, ...current.party.filter((creature) => creature.id !== bench.id)];
+        hp = bench.hp;
+        youMax = maxHp(bench, current);
+        grew = [grew, `${nameOf(lead)} fainted. ${nameOf(bench)} stepped in.`].filter(Boolean).join(" ");
+      }
+    }
     saveBag(current);
     setBag(loadBag());
     const right = battle.right + (correct ? 1 : 0);
@@ -584,7 +623,7 @@ export function MonsterQuest({
       seal(false);
       over = "Not enough. You can try again.";
     }
-    const hit = correct ? `Hit for ${dealt}.` : "The other side hit you.";
+    const hit = correct ? `Hit for ${dealtBase}.` : battle.guard ? "The Guard held." : "The other side hit you.";
     setBattle({
       ...battle,
       right,
@@ -592,6 +631,8 @@ export function MonsterQuest({
       youMax,
       foeHp,
       fainted,
+      guard: correct ? battle.guard : false,
+      boost: correct ? false : battle.boost,
       menu: null,
       reveal: { correct, note: [hit, grew].filter(Boolean).join(" ") },
       over,
@@ -632,7 +673,17 @@ export function MonsterQuest({
     seal(false);
     busyRef.current = false;
     setBattle(null);
-    setLine("You blacked out. Heal at the shop, then try again.");
+    const rested = loadBag();
+    healAll(rested);
+    saveBag(rested);
+    setBag(loadBag());
+    if (city) {
+      posRef.current = { x: 9, y: 5, scene: "town", cityId: city.id };
+      setScene("town");
+    } else {
+      posRef.current = { x: 2, y: 7, scene: "town", cityId: "league" };
+    }
+    setLine("You woke up at the Center. Everyone is healed.");
   };
 
   const throwBall = (ball: Ball) => {
@@ -651,7 +702,7 @@ export function MonsterQuest({
       return;
     }
     setBag(loadBag());
-    const chance = catchChance(ball, battle.foeHp, battle.foeMax);
+    const chance = catchChance(ball, battle.foeHp, battle.foeMax, Boolean(loadBag().charm));
     if (Math.random() <= chance) {
       const cityIndex = Math.max(0, cities.findIndex((item) => item.id === city?.id));
       const note = keepCatch(battle.foeSpecies, 3 + cityIndex);
@@ -664,18 +715,53 @@ export function MonsterQuest({
     setBattle({ ...battle, menu: null });
   };
 
+  const wakeLead = (kind: "revive" | "max") => {
+    const note = revive(kind, 0);
+    const next = loadBag();
+    setBag(next);
+    setNotice(note);
+    const front = next.party[0];
+    if (!battle || !front) return;
+    setBattle({
+      ...battle,
+      you: front.hp,
+      youMax: maxHp(front, next),
+      fainted: front.hp <= 0,
+      menu: null,
+    });
+  };
+
+  const arm = (kind: "guard" | "xattack") => {
+    if (!battle || battle.over) return;
+    if (!spendBattleItem(kind)) {
+      setNotice(kind === "guard" ? "No Guards." : "No X Attacks.");
+      return;
+    }
+    setBag(loadBag());
+    setBattle({ ...battle, guard: kind === "guard" ? true : battle.guard, boost: kind === "xattack" ? true : battle.boost, menu: null });
+    setNotice(kind === "guard" ? "The next hit will be weaker." : "Your next hit will be harder.");
+  };
+
+  const spray = () => {
+    const note = useRepel();
+    const next = loadBag();
+    repelRef.current = next.repelLeft;
+    setBag(next);
+    setNotice(note);
+  };
+
   const healLead = (kind: "potion" | "super") => {
     const note = drink(kind, 0);
     const next = loadBag();
     setBag(next);
     setNotice(note);
-    const lead = next.party[0];
-    if (!battle || !lead) return;
+    const front = next.party[0];
+    if (!battle || !front) return;
     setBattle({
       ...battle,
-      you: lead.hp,
-      youMax: maxHp(lead, next),
-      fainted: lead.hp <= 0,
+      you: front.hp,
+      youMax: maxHp(front, next),
+      fainted: front.hp <= 0,
       menu: null,
     });
   };
@@ -764,9 +850,19 @@ export function MonsterQuest({
             posRef.current.x = player.x;
             posRef.current.y = player.y;
             const tile = map.tiles[player.y][player.x];
-            if (tile === 4 || tile === 5) apiRef.current.enter(tile, player.x, player.y);
+            if (repelRef.current > 0) {
+              repelRef.current -= 1;
+              if (repelRef.current === 0) {
+                const worn = loadBag();
+                worn.repelLeft = 0;
+                saveBag(worn);
+                setLine("The Repel wore off.");
+                setBag(loadBag());
+              }
+            }
+            if (tile === 4 || tile === 5 || tile === 7 || tile === 9) apiRef.current.enter(tile, player.x, player.y);
             else {
-              if (tile === 6) {
+              if (tile === 6 && repelRef.current <= 0) {
                 grassSteps += 1;
                 if (grassSteps >= 4 && Math.random() < 0.22) {
                   grassSteps = 0;
@@ -828,6 +924,12 @@ export function MonsterQuest({
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKey);
       keysRef.current.clear();
+      const left = repelRef.current;
+      const stored = loadBag();
+      if (stored.repelLeft !== left) {
+        stored.repelLeft = left;
+        saveBag(stored);
+      }
     };
   }, [battle, scene, city?.id]);
 
@@ -898,6 +1000,10 @@ export function MonsterQuest({
               <div className="mt-3 flex flex-col gap-2">
                 <button type="button" onClick={() => healLead("potion")} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">Potion ×{bag?.potions ?? 0} · heals 12</button>
                 <button type="button" onClick={() => healLead("super")} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">Super Potion ×{bag?.supers ?? 0} · full heal</button>
+                <button type="button" onClick={() => wakeLead("revive")} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">Revive ×{bag?.revives ?? 0} · half, if fainted</button>
+                <button type="button" onClick={() => wakeLead("max")} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">Max Revive ×{bag?.maxRevives ?? 0} · full, if fainted</button>
+                <button type="button" onClick={() => arm("guard")} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">Guard ×{bag?.guards ?? 0}{battle.guard ? " · up" : ""}</button>
+                <button type="button" onClick={() => arm("xattack")} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">X Attack ×{bag?.xAttacks ?? 0}{battle.boost ? " · up" : ""}</button>
                 {(["ball", "great", "ultra", "master"] as const).map((ball) => (
                   <button key={ball} type="button" onClick={() => throwBall(ball)} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">
                     {ball === "ball" ? "Ball" : ball === "great" ? "Great Ball" : ball === "ultra" ? "Ultra Ball" : "Master Ball"} ×{bag?.balls[ball] ?? 0}
@@ -931,7 +1037,7 @@ export function MonsterQuest({
         <div className="border-t-4 border-black bg-[#fff4a8] p-3 text-black">
           <p className="text-sm font-bold">{line}</p>
           {notice ? <p className="mt-1 text-sm">{notice}</p> : null}
-          <p className="mt-1 text-xs">Wasd or the pad. Talk to people. The west door is the shop. Grass is only in patches. {badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
+          <p className="mt-1 text-xs">West door is the shop. The door with the red cross is the Center. It heals everyone, free. {bag?.repelLeft ? `Repel ${bag.repelLeft}. ` : ""}{badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
           {bag ? (
             <div className="mt-3 flex gap-2 overflow-x-auto">
               {bag.party.map((creature, index) => (
@@ -943,10 +1049,13 @@ export function MonsterQuest({
               ))}
             </div>
           ) : null}
-          {bag && lead && lead.hp < maxHp(lead, bag) ? (
-            <div className="mt-2 flex gap-2">
-              <button type="button" onClick={() => healLead("potion")} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">Potion ×{bag.potions}</button>
-              <button type="button" onClick={() => healLead("super")} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">Super ×{bag.supers}</button>
+          {bag && lead && (lead.hp < maxHp(lead, bag) || bag.repels > 0) ? (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {lead.hp < maxHp(lead, bag) ? <button type="button" onClick={() => healLead("potion")} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">Potion ×{bag.potions}</button> : null}
+              {lead.hp < maxHp(lead, bag) ? <button type="button" onClick={() => healLead("super")} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">Super ×{bag.supers}</button> : null}
+              {bag.repels > 0 ? <button type="button" onClick={spray} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">Repel ×{bag.repels}</button> : null}
+              {lead.hp <= 0 ? <button type="button" onClick={() => wakeLead("revive")} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">Revive ×{bag.revives}</button> : null}
+              {lead.hp <= 0 ? <button type="button" onClick={() => wakeLead("max")} className="min-h-11 border-4 border-black bg-white px-2 text-xs font-bold">Max Revive ×{bag.maxRevives}</button> : null}
             </div>
           ) : null}
           <div className="mt-3 flex items-end gap-4">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type QuestTile = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type QuestTile = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 export type QuestFace = "up" | "down" | "left" | "right";
 export type ActorKind = "player" | "trainer" | "leader" | "rival" | "wild";
 
@@ -47,7 +47,7 @@ function blit(ctx: CanvasRenderingContext2D, name: string, x: number, y: number,
 export function drawGround(ctx: CanvasRenderingContext2D, tile: QuestTile, x: number, y: number, building: boolean, frame: number) {
   const px = x * TILE;
   const py = y * TILE;
-  const ground = tile === 1 || tile === 5 ? "path" : tile === 3 ? "water" : tile === 6 ? "tall" : tile === 4 || tile === 7 || tile === 8 || (tile === 2 && building) ? "wall" : "grass";
+  const ground = tile === 1 || tile === 5 ? "path" : tile === 3 ? "water" : tile === 6 ? "tall" : tile === 4 || tile === 7 || tile === 8 || tile === 9 || (tile === 2 && building) ? "wall" : "grass";
   if (ground === "water" || ground === "tall") {
     ctx.save();
     ctx.beginPath();
@@ -64,7 +64,12 @@ export function drawProp(ctx: CanvasRenderingContext2D, tile: QuestTile, x: numb
   const px = x * TILE;
   const py = y * TILE;
   if (tile === 2 && !building) blit(ctx, "tree", px - 6, py - TILE * 0.95, TILE + 12, TILE * 2);
-  if (tile === 4 || tile === 7) blit(ctx, "door", px, py - 6, TILE, TILE + 6);
+  if (tile === 4 || tile === 7 || tile === 9) blit(ctx, "door", px, py - 6, TILE, TILE + 6);
+  if (tile === 9) {
+    ctx.fillStyle = "#e23b3b";
+    ctx.fillRect(px + 12, py - 24, 8, 22);
+    ctx.fillRect(px + 6, py - 18, 20, 8);
+  }
   if (tile === 5) blit(ctx, "sign", px + 2, py - TILE * 0.45, TILE - 4, TILE * 1.45);
 }
 

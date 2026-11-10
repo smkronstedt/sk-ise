@@ -25,6 +25,14 @@ export type QuestBag = {
   balls: Record<Ball, number>;
   potions: number;
   supers: number;
+  revives: number;
+  maxRevives: number;
+  repels: number;
+  repelLeft: number;
+  guards: number;
+  xAttacks: number;
+  expShare: boolean;
+  charm: boolean;
   hpBonus: number;
   power: number;
   mastersBought: number;
@@ -38,9 +46,16 @@ export const shopItems = [
   { id: "great", name: "Great Ball", price: 28, note: "Better when it is hurt." },
   { id: "ultra", name: "Ultra Ball", price: 60, note: "A strong catch." },
   { id: "master", name: "Master Ball", price: 280, note: "Does not miss. Rare." },
+  { id: "revive", name: "Revive", price: 22, note: "A fainted one returns at half HP." },
+  { id: "maxRevive", name: "Max Revive", price: 55, note: "A fainted one returns at full HP." },
+  { id: "repel", name: "Repel", price: 12, note: "No wild ones for 30 steps." },
+  { id: "guard", name: "Guard", price: 14, note: "The next hit you take is weak." },
+  { id: "xattack", name: "X Attack", price: 14, note: "Your next hit hits twice as hard." },
   { id: "hp", name: "HP Up", price: 40, note: "Permanent. +6 max HP." },
   { id: "protein", name: "Protein", price: 45, note: "Permanent. Hits harder." },
   { id: "candy", name: "Rare Candy", price: 50, note: "Permanent. One level. Can evolve." },
+  { id: "share", name: "Exp. Share", price: 75, note: "Once. The rest of the party gains experience." },
+  { id: "charm", name: "Catch Charm", price: 90, note: "Once. Balls work better. Not a Master Ball." },
 ] as const;
 
 export type ShopId = (typeof shopItems)[number]["id"];
@@ -102,6 +117,14 @@ function starterBag(): QuestBag {
     balls: { ball: 8, great: 0, ultra: 0, master: 0 },
     potions: 3,
     supers: 0,
+    revives: 0,
+    maxRevives: 0,
+    repels: 0,
+    repelLeft: 0,
+    guards: 0,
+    xAttacks: 0,
+    expShare: false,
+    charm: false,
     hpBonus: 0,
     power: 0,
     mastersBought: 0,
@@ -161,11 +184,12 @@ export function grantExp(creature: Creature, amount: number) {
   return "";
 }
 
-export function catchChance(ball: Ball, hp: number, max: number) {
+export function catchChance(ball: Ball, hp: number, max: number, charm = false) {
   if (ball === "master") return 1;
   const hurt = 1 - Math.max(0, hp) / Math.max(1, max);
   const base = ball === "ultra" ? 0.55 : ball === "great" ? 0.35 : 0.2;
-  return Math.min(0.95, base + hurt * 0.6);
+  const chance = Math.min(0.95, base + hurt * 0.6);
+  return charm ? Math.min(0.95, chance + 0.12) : chance;
 }
 
 export function wildSpecies(cityIndex: number): SpeciesId {
@@ -183,10 +207,19 @@ export function buyItem(id: ShopId, badges: number): string {
   if (!item) return "Not for sale.";
   const bag = loadBag();
   if (id === "master" && masterStock(bag, badges) <= 0) return "No Master Ball in stock.";
+  if (id === "share" && bag.expShare) return "You already have Exp. Share.";
+  if (id === "charm" && bag.charm) return "You already have a Catch Charm.";
   if (!spendQuest(item.price)) return "Not enough Quest money.";
   const lead = bag.party[0];
   if (id === "potion") bag.potions += 1;
   if (id === "super") bag.supers += 1;
+  if (id === "revive") bag.revives += 1;
+  if (id === "maxRevive") bag.maxRevives += 1;
+  if (id === "repel") bag.repels += 1;
+  if (id === "guard") bag.guards += 1;
+  if (id === "xattack") bag.xAttacks += 1;
+  if (id === "share") bag.expShare = true;
+  if (id === "charm") bag.charm = true;
   if (id === "ball" || id === "great" || id === "ultra" || id === "master") bag.balls[id] += 1;
   if (id === "master") bag.mastersBought += 1;
   if (id === "hp") {
@@ -220,6 +253,50 @@ export function drink(kind: "potion" | "super", index = 0): string {
   }
   saveBag(bag);
   return `${nameOf(creature)} healed.`;
+}
+
+export function healAll(bag: QuestBag) {
+  for (const creature of [...bag.party, ...bag.box]) creature.hp = maxHp(creature, bag);
+}
+
+export function revive(kind: "revive" | "max", index = 0): string {
+  const bag = loadBag();
+  const creature = bag.party[index];
+  if (!creature) return "No one to revive.";
+  if (creature.hp > 0) return `${nameOf(creature)} is still up.`;
+  if (kind === "revive") {
+    if (bag.revives <= 0) return "No Revives.";
+    bag.revives -= 1;
+    creature.hp = Math.ceil(maxHp(creature, bag) / 2);
+  } else {
+    if (bag.maxRevives <= 0) return "No Max Revives.";
+    bag.maxRevives -= 1;
+    creature.hp = maxHp(creature, bag);
+  }
+  saveBag(bag);
+  return `${nameOf(creature)} got back up.`;
+}
+
+export function useRepel(): string {
+  const bag = loadBag();
+  if (bag.repels <= 0) return "No Repels.";
+  bag.repels -= 1;
+  bag.repelLeft = 30;
+  saveBag(bag);
+  return "No wild ones for 30 steps.";
+}
+
+export function spendBattleItem(kind: "guard" | "xattack"): boolean {
+  const bag = loadBag();
+  if (kind === "guard") {
+    if (bag.guards <= 0) return false;
+    bag.guards -= 1;
+  } else {
+    if (bag.xAttacks <= 0) return false;
+    bag.xAttacks -= 1;
+  }
+  saveBag(bag);
+  return true;
 }
 
 export function takeBall(ball: Ball): boolean {
@@ -285,6 +362,8 @@ export function mergeBags(local: unknown, remote: unknown): QuestBag | null {
     hpBonus: Math.max(left.hpBonus, right.hpBonus),
     power: Math.max(left.power, right.power),
     mastersBought: Math.max(left.mastersBought, right.mastersBought),
+    expShare: Boolean(left.expShare || right.expShare),
+    charm: Boolean(left.charm || right.charm),
   });
 }
 
