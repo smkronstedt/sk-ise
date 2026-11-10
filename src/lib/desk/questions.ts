@@ -232,7 +232,7 @@ export const questions: Question[] = [
     ],
     answer: 0,
     explanation:
-      "Microhematuria is 3 or more red cells per high-power field on microscopy, not a dipstick. Anticoagulation and antiplatelet drugs do not explain it away. Risk stratification then decides imaging and cystoscopy. Cytology is not the initial test for everyone. A single dipstick without microscopy is not a diagnosis.",
+      "Microhematuria is 3 or more red cells per high-power field on one properly performed microscopy, not a dipstick. Anticoagulation does not explain it away. The 2025 table then decides the workup: this woman is under 60 with 3 to 10 red cells and, if she has no smoking or other risk factors, she is low risk and repeats the urine within 6 months rather than going straight to CT urography. Cytology is not the first test for everyone.",
     wrong: [
       "",
       "The earlier dipstick had only 1 RBC/HPF and does not meet the definition.",

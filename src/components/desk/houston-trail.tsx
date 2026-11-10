@@ -22,9 +22,17 @@ function passed(name: string, tests: TestBlock[]) {
 }
 
 function roadFor(dest: HoustonStop) {
-  if (dest.id === "hermann") return "/houston/road-rice.jpg";
-  if (dest.id === "helix") return "/houston/road-park.jpg";
-  return "/houston/road-tmc.jpg";
+  const roads = [
+    "/houston/road-rice.jpg",
+    "/houston/road-park.jpg",
+    "/houston/road-tmc.jpg",
+    "/houston/road-oaks.jpg",
+    "/houston/road-boulevard.jpg",
+    "/houston/road-garden.jpg",
+    "/houston/road-plaza.jpg",
+  ];
+  const index = Math.max(0, houstonStops.findIndex((stop) => stop.id === dest.id));
+  return roads[index % roads.length];
 }
 
 function loadImage(src: string) {
