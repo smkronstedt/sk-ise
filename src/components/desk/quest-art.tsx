@@ -64,11 +64,22 @@ export function drawProp(ctx: CanvasRenderingContext2D, tile: QuestTile, x: numb
   const px = x * TILE;
   const py = y * TILE;
   if (tile === 2 && !building) blit(ctx, "tree", px - 6, py - TILE * 0.95, TILE + 12, TILE * 2);
-  if (tile === 4 || tile === 7 || tile === 9) blit(ctx, "door", px, py - 6, TILE, TILE + 6);
+  if (tile === 8) blit(ctx, "wall", px, py - TILE * 0.9, TILE, TILE * 1.9);
+  if (tile === 4 || tile === 7 || tile === 9) blit(ctx, "door", px, py - TILE * 0.9, TILE, TILE * 1.9);
+  if (tile === 7) {
+    ctx.fillStyle = "#e23b3b";
+    ctx.fillRect(px + 4, py - TILE * 0.72, TILE - 8, 6);
+  }
   if (tile === 9) {
     ctx.fillStyle = "#e23b3b";
-    ctx.fillRect(px + 12, py - 24, 8, 22);
-    ctx.fillRect(px + 6, py - 18, 20, 8);
+    ctx.fillRect(px + 12, py - TILE * 0.55, 8, 18);
+    ctx.fillRect(px + 6, py - TILE * 0.4, 20, 8);
+  }
+  if (tile === 4) {
+    ctx.fillStyle = "#f2d15a";
+    ctx.beginPath();
+    ctx.arc(px + TILE / 2, py - TILE * 0.35, 6, 0, Math.PI * 2);
+    ctx.fill();
   }
   if (tile === 5) blit(ctx, "sign", px + 2, py - TILE * 0.45, TILE - 4, TILE * 1.45);
 }
@@ -99,12 +110,12 @@ export function drawCreature(ctx: CanvasRenderingContext2D, tx: number, ty: numb
     art[key] = img;
   }
   const bob = step > 0 && Math.floor(step * 8) % 2 ? 2 : 0;
-  const height = TILE * 1.15;
-  const width = height * 0.7;
+  const height = TILE * 1.7;
+  const width = height * 0.85;
   const baseX = tx * TILE;
   const baseY = ty * TILE;
   const x = baseX + (TILE - width) / 2;
-  const y = baseY + TILE - height + 6 - bob;
+  const y = baseY + TILE - height + 2 - bob;
   const img = art[key].complete && art[key].naturalWidth > 0 ? art[key] : null;
   ctx.save();
   if (face === "left") {
@@ -112,12 +123,7 @@ export function drawCreature(ctx: CanvasRenderingContext2D, tx: number, ty: numb
     ctx.scale(-1, 1);
     ctx.translate(-baseX, 0);
   }
-  if (img) {
-    ctx.beginPath();
-    ctx.arc(x + width / 2, y + height / 2, Math.min(width, height) / 2, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.drawImage(img, x, y, width, height);
-  }
+  if (img) ctx.drawImage(img, x, y, width, height);
   ctx.restore();
 }
 

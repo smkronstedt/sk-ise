@@ -137,3 +137,7 @@ export function portraitFor(number: number, rare = false) {
   if (rare) return RARE[(number - 1) % RARE.length];
   return PORTRAITS[(number - 1) % PORTRAITS.length];
 }
+
+export function spriteFor(number: number, rare = false) {
+  return portraitFor(number, rare).replace("/field/", "/field/cut/").replace(".jpg", ".png");
+}

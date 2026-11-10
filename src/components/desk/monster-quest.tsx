@@ -7,7 +7,7 @@ import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
 import { useDesk } from "@/lib/desk/provider";
 import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
-import { DEX, chooseLead, fieldLead, loadField, portraitFor } from "@/lib/desk/field-dex";
+import { DEX, chooseLead, fieldLead, loadField, portraitFor, spriteFor } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, TestBlock } from "@/lib/desk/types";
 import { drawActor, drawCreature, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
@@ -362,7 +362,7 @@ export function MonsterQuest({
   const followRef = useRef<string | null>(null);
   const repelRef = useRef(0);
   bagRef.current = bag;
-  followRef.current = companion ? portraitFor(companion, loadField().rare.includes(companion)) : null;
+  followRef.current = companion ? spriteFor(companion, loadField().rare.includes(companion)) : null;
 
   useEffect(() => {
     const next = loadBag();
@@ -980,7 +980,7 @@ export function MonsterQuest({
           </div>
           <div className="relative mt-2 grid grid-cols-[auto_1fr] items-end gap-2">
             <div className="flex flex-col items-center">
-              {lead ? <img src={companion ? portraitFor(companion, loadField().rare.includes(companion)) : monSrc(lead.species, stageOf(levelOf(lead.exp)))} alt="" className="h-28 w-auto object-contain" /> : null}
+              {lead ? <img src={companion ? spriteFor(companion, loadField().rare.includes(companion)) : monSrc(lead.species, stageOf(levelOf(lead.exp)))} alt="" className="h-28 w-auto object-contain" /> : null}
               <PixelActor kind="player" />
               <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
             </div>
