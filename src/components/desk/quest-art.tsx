@@ -127,12 +127,12 @@ export function drawCreature(ctx: CanvasRenderingContext2D, tx: number, ty: numb
   ctx.restore();
 }
 
-export function PixelActor({ kind }: { kind: ActorKind }) {
+export function PixelActor({ kind, className = "h-32" }: { kind: ActorKind; className?: string }) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const img = new Image();
     img.onload = () => setReady(true);
     img.src = artSrc[kind];
   }, [kind]);
-  return <img src={artSrc[kind]} alt="" className={`h-44 w-auto object-contain [image-rendering:pixelated] ${ready ? "" : "opacity-0"}`} />;
+  return <img src={artSrc[kind]} alt="" className={`${className} w-auto max-w-none object-contain object-bottom [image-rendering:pixelated] ${ready ? "" : "opacity-0"}`} />;
 }

@@ -978,11 +978,11 @@ export function MonsterQuest({
       </div>
       {battle ? (
         <div>
-        <div className="relative overflow-hidden bg-[#7ec8e3] px-3 pt-4 pb-2 text-black">
-          <div className="absolute inset-x-0 bottom-0 h-28 bg-[#5eae45]" />
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-[#498a36]" />
-          <div className="relative grid grid-cols-[1fr_auto] items-end gap-2">
-            <div className="border-4 border-black bg-[#f8f8d8] p-2">
+        <div className="relative bg-[#7ec8e3] px-3 pt-3 pb-2 text-black">
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-[#5eae45]" />
+          <div className="absolute inset-x-0 bottom-0 h-8 bg-[#498a36]" />
+          <div className="relative grid grid-cols-[1fr_8rem] items-end gap-2">
+            <div className="mb-10 border-4 border-black bg-[#f8f8d8] p-2">
               <p className="text-xs font-bold uppercase">{battle.foeName}</p>
               <div className="mt-1 h-3 border-2 border-black bg-white">
                 <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.foeHp / battle.foeMax) * 100)}%` }} />
@@ -991,17 +991,17 @@ export function MonsterQuest({
             </div>
             <div className="flex flex-col items-center">
               {battle.foeKind === "wild" && battle.foeSpecies ? (
-                <img src={monSrc(battle.foeSpecies, stageOf(3 + Math.max(0, cities.findIndex((item) => item.id === city?.id))))} alt="" className="h-36 w-auto object-contain" />
+                <img src={monSrc(battle.foeSpecies, stageOf(3 + Math.max(0, cities.findIndex((item) => item.id === city?.id))))} alt="" className="h-28 w-auto bg-transparent object-contain" />
               ) : (
-                <PixelActor kind={battle.foeKind} />
+                <PixelActor kind={battle.foeKind} className="h-28" />
               )}
               <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
             </div>
           </div>
-          <div className="relative mt-2 grid grid-cols-[auto_1fr] items-end gap-2">
+          <div className="relative mt-1 grid grid-cols-[8rem_1fr] items-end gap-2">
             <div className="flex flex-col items-center">
-              {lead ? <img src={creatureSrc(lead)} alt="" className="h-28 w-auto object-contain" /> : null}
-              <PixelActor kind="player" />
+              {lead ? <img src={creatureSrc(lead)} alt="" className="h-16 w-auto bg-transparent object-contain" /> : null}
+              <PixelActor kind="player" className="h-24" />
               <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
             </div>
             <div className="border-4 border-black bg-[#f8f8d8] p-2">
