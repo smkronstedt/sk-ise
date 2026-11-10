@@ -246,6 +246,7 @@ function TestPage() {
               {paragraph}
             </p>
           ))}
+          {question.image ? <img src={question.image} alt="Figure shown with this question" className="mb-3 max-h-96 w-full bg-white object-contain" /> : null}
           <AnatomyFigure topic={question.topicId} text={question.stem.join(" ")} />
           {question.labs ? (
             <table className="mb-3 w-full border-collapse text-sm">

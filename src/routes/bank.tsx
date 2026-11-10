@@ -9,6 +9,7 @@ import { useDesk } from "@/lib/desk/provider";
 import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { noteRow } from "@/lib/desk/honors";
 import { linksForBankTopic } from "@/lib/desk/statements";
+import { bankFigures } from "@/lib/desk/bank-figures";
 import {
   emptyBankProgress,
   letters,
@@ -327,6 +328,7 @@ function Practice({
         {item.id}
       </p>
       <p className="mt-2 leading-relaxed">{item.question}</p>
+      {bankFigures[item.id] ? <img src={bankFigures[item.id]} alt="Figure shown with this question" className="mt-3 max-h-96 w-full bg-white object-contain" /> : null}
       <AnatomyFigure topic={item.topic} text={item.question} />
       <div className="mt-3 flex flex-col gap-2">
         {letters.map((letter) => {

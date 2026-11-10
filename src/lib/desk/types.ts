@@ -45,6 +45,8 @@ export type Question = {
   objective: string;
   hard?: boolean;
   figure?: FigureId;
+  /** Scan or photo that belongs with the stem, when the bank item has one. */
+  image?: string;
   /** Which AUA guideline this item teaches, when it is a statement question. */
   guide?: string;
   /** The recommendation being tested, in original wording. */

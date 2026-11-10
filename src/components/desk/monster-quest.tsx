@@ -1122,6 +1122,9 @@ export function MonsterQuest({
           <div className="mt-3 border-4 border-double border-black bg-[#f8f8d8] p-3">
             <p className="text-xs font-bold uppercase">{battle.title}</p>
             {battle.menu === "ask" && question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
+            {question?.image && (battle.menu === "ask" || battle.reveal) ? (
+              <img src={question.image} alt="Figure shown with this question" className="mt-2 max-h-80 w-full bg-white object-contain" />
+            ) : null}
             {!battle.menu && !battle.reveal && !battle.committed ? <p className="mt-2 text-sm font-bold">Fight the whole set, or run. This is the only time it asks.</p> : null}
             {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
             {battle.reveal && question ? (

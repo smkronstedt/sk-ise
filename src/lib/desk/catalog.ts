@@ -2,6 +2,7 @@ import { questionById, questions } from "./questions";
 import type { Question } from "./types";
 import type { BankItem } from "./original-bank";
 import { guideLinks, linksForBankTopic } from "./statements";
+import { bankFigures } from "./bank-figures";
 
 export type CatalogTopic = {
   id: string;
@@ -44,6 +45,7 @@ function toQuestion(item: BankItem): Question {
     objective: item.learning_point || item.source_ref || item.topic,
     hard: item.hard === true,
     guide: Object.entries(guideLinks).find(([, link]) => link.href === linksForBankTopic(item.topic)[0]?.href)?.[0],
+    image: bankFigures[item.id],
   };
 }
 
