@@ -27,7 +27,6 @@ const links = [
   { to: "/guidelines", label: "Guidelines" },
   { to: "/lectures", label: "Lectures" },
   { to: "/cards", label: "Cards" },
-  { to: "/notifications", label: "Notifications" },
 ] as const;
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -154,18 +153,18 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-navy-2 bg-navy text-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <Link to="/" className="font-blackletter text-[2rem] leading-none text-white">
+        <div className="mx-auto flex max-w-6xl flex-nowrap items-center gap-x-2 px-3 py-2">
+          <Link to="/" className="shrink-0 font-blackletter text-2xl leading-none text-white">
             ISE Team Room
           </Link>
-          <p className="hidden items-center gap-2 text-sm text-white/70 sm:flex">
+          <p className="hidden shrink-0 items-center gap-1 text-xs text-white/70 xl:flex">
             Team Guys only X
-            <img src="/ops/bone-frog.png" alt="" className="h-8 w-14 object-contain" />
+            <img src="/ops/bone-frog.png" alt="" className="h-6 w-10 object-contain" />
           </p>
-          <nav className={`ml-auto flex flex-wrap gap-1 ${open ? "" : "hidden"}`}>
+          <nav className={`ml-auto flex shrink-0 flex-nowrap gap-0.5 ${open ? "" : "hidden"}`}>
             <Link
               to="/"
-              className={`rounded px-3 py-2 text-sm font-semibold ${path === "/" ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
+              className={`whitespace-nowrap rounded px-2 py-1.5 text-sm font-semibold ${path === "/" ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
             >
               Desk
             </Link>
@@ -173,7 +172,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setStudyOpen((value) => !value)}
-                className={`rounded px-3 py-2 text-sm font-semibold ${study.some((item) => (item.to === "/tests" ? path === "/tests" || path.startsWith("/test/") : path === item.to)) ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
+                className={`whitespace-nowrap rounded px-2 py-1.5 text-sm font-semibold ${study.some((item) => (item.to === "/tests" ? path === "/tests" || path.startsWith("/test/") : path === item.to)) ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
               >
                 Study
               </button>
@@ -198,21 +197,22 @@ export function Shell({ children }: { children: ReactNode }) {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`rounded px-3 py-2 text-sm font-semibold ${on ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
+                  className={`whitespace-nowrap rounded px-2 py-1.5 text-sm font-semibold ${on ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
                 >
                   {link.label}
                   {link.to === "/cards" && dueCount > 0 ? <span className="ml-1 text-xs">{dueCount}</span> : null}
-                  {link.to === "/notifications" && pendingChallenges > 0 ? <span className="ml-1 text-xs">{pendingChallenges}</span> : null}
                 </Link>
               );
             })}
           </nav>
           {open ? (
-          <div className="text-right text-xs leading-tight">
-            <p className="font-semibold">{tally.correct} correct</p>
-            <p className="font-semibold">{mode === "ops" ? `Ops $${tally.money}` : mode === "notes" ? `Quest $${tally.money}` : `$${tally.money}`}</p>
-            <p className="text-white/70">Today {tally.today}/{DAILY_GOAL}</p>
-          </div>
+          <p className="shrink-0 whitespace-nowrap text-xs font-semibold leading-none">
+            {tally.correct} correct
+            <span className="mx-1 text-white/40">·</span>
+            {mode === "ops" ? `Ops $${tally.money}` : mode === "notes" ? `Quest $${tally.money}` : `$${tally.money}`}
+            <span className="mx-1 text-white/40">·</span>
+            <span className="text-white/70">Today {tally.today}/{DAILY_GOAL}</span>
+          </p>
           ) : null}
           {authEnabled ? (
             session.data?.user ? (
@@ -220,8 +220,8 @@ export function Shell({ children }: { children: ReactNode }) {
                 <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setMenuOpen((open) => !open)}
-                  className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-white/10"
+                  onClick={() => setMenuOpen((value) => !value)}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-white/10"
                   aria-label="Account menu"
                 >
                   {session.data.user.image ? (
@@ -230,11 +230,15 @@ export function Shell({ children }: { children: ReactNode }) {
                     <span className="font-blackletter text-2xl leading-none">{(session.data.user.name || "S").slice(0, 1).toUpperCase()}</span>
                   )}
                 </button>
+                {pendingChallenges > 0 ? <span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-[#c45c4a]" /> : null}
                 {menuOpen ? (
                   <div className="absolute right-0 z-30 mt-2 w-52 rounded border border-line bg-paper py-1 text-ink shadow">
                     <p className="px-3 py-2 text-xs text-muted">{syncNote}</p>
                     <Link to="/profile" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold hover:bg-chip">
                       Profile
+                    </Link>
+                    <Link to="/notifications" onClick={() => setMenuOpen(false)} className={`block px-3 py-2 text-sm font-semibold hover:bg-chip ${path === "/notifications" ? "bg-chip" : ""}`}>
+                      Notifications{pendingChallenges > 0 ? ` ${pendingChallenges}` : ""}
                     </Link>
                     <Link to="/connections" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold hover:bg-chip">
                       Connections
@@ -257,7 +261,7 @@ export function Shell({ children }: { children: ReactNode }) {
                   </div>
                 ) : null}
                 </div>
-                <svg viewBox="0 0 210 78" aria-label="Molon labe" className="h-10 w-auto shrink-0 rounded bg-[#f3efe6]">
+                <svg viewBox="0 0 210 78" aria-label="Molon labe" className="h-8 w-auto shrink-0 rounded bg-[#f3efe6]">
                   <g fill="none" stroke="#1a1814" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 30 L22 10 L30 26 L38 10 L46 30" />
                     <circle cx="64" cy="20" r="10" />
