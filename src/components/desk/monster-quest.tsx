@@ -1024,6 +1024,12 @@ export function MonsterQuest({
             {!battle.menu && !battle.reveal ? <p className="mt-2 text-sm font-bold">What will {lead ? nameOf(lead) : "you"} do?</p> : null}
             {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
             {battle.reveal && question ? <p className="mt-1 max-h-24 overflow-auto text-xs leading-relaxed">{question.explanation}</p> : null}
+            {battle.reveal && question?.objective ? (
+              <p className="mt-2 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
+                <span className="font-semibold">Teaching point. </span>
+                {question.objective}
+              </p>
+            ) : null}
             {battle.over ? <p className="mt-2 text-sm font-bold">{battle.over} {battle.right}/{battle.ids.length}.</p> : null}
             {!battle.reveal && !battle.fainted && !battle.over && !battle.menu ? (
               <div className="mt-3 grid grid-cols-2 gap-2">
