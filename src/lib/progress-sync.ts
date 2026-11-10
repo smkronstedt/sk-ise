@@ -364,22 +364,18 @@ export async function ensureCorrectLog() {
 let syncing: Promise<"synced" | "device"> | null = null;
 let syncAgain = false;
 
-function battleOpen() {
+function playingNow() {
   if (typeof window === "undefined") return false;
   if (window.location.pathname.startsWith("/test")) return true;
   try {
-    return sessionStorage.getItem("ise-battle") === "1";
+    return sessionStorage.getItem("ise-playing") === "1" || sessionStorage.getItem("ise-battle") === "1";
   } catch {
     return false;
   }
 }
 
 function reloadIfIdle() {
-  if (battleOpen()) {
-    sessionStorage.setItem("ise-sync-refresh", "1");
-    return;
-  }
-  sessionStorage.removeItem("ise-sync-refresh");
+  if (playingNow()) return;
   window.location.reload();
 }
 
@@ -429,10 +425,15 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
     const first = unpack(remote.payload);
     const newer = await loadProgress();
     const unpacked = newer?.payload ? unpack(newer.payload) : first;
+    if (playingNow()) {
+      await saveProgress({ data: { payload: JSON.stringify(pack(localBundle())) } });
+      if (userId) localStorage.setItem(OWNER, userId);
+      return "synced";
+    }
     restoreSide(unpacked.remoteActivity, unpacked.remoteDaily, true);
+    const before = stable(localBundle());
     const merged = mergeBundles(localBundle(), unpacked.remoteBundle);
-    const localOnly = mergeBundles(localBundle(), { desk: {}, bank: {}, cards: [], ops: null, training: [], questSpend: 0, questBag: null, side: {} });
-    const changed = stable(merged) !== stable(localOnly);
+    const changed = stable(merged) !== before;
     if (changed) {
       apply(merged);
       localStorage.removeItem(SEED);

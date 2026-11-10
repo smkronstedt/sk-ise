@@ -404,9 +404,17 @@ export function MonsterQuest({
   }, []);
 
   useEffect(() => {
+    sessionStorage.setItem("ise-playing", "1");
+    return () => {
+      sessionStorage.removeItem("ise-playing");
+      sessionStorage.removeItem("ise-battle");
+      sessionStorage.removeItem("ise-sync-refresh");
+    };
+  }, []);
+
+  useEffect(() => {
     if (battle) sessionStorage.setItem("ise-battle", "1");
     else sessionStorage.removeItem("ise-battle");
-    return () => sessionStorage.removeItem("ise-battle");
   }, [battle]);
 
   const frontier = cities.findIndex((city, index) => {
