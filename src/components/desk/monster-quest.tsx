@@ -1134,7 +1134,7 @@ export function MonsterQuest({
           <p className="text-sm font-bold">{line}</p>
           {notice ? <p className="mt-1 text-sm">{notice}</p> : null}
           <p className="mt-1 text-xs">West door is the shop. The door with the red cross is the Center. It heals everyone, free. {bag?.repelLeft ? `Repel ${bag.repelLeft}. ` : ""}{badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
-          <p className="mt-2 text-xs font-bold">Out follows you and fights. Tap Switch to change who is out. Rare Candy is on the card.</p>
+          <p className="mt-2 text-xs font-bold">Out follows you and fights. Tap Switch to change who is out. One Rare Candy is shared. You have {bag?.candies ?? 0}.</p>
           {bag ? (
             <div className="mt-2 flex gap-2 overflow-x-auto">
               {bag.party.map((creature, index) => (
@@ -1151,7 +1151,7 @@ export function MonsterQuest({
                     onClick={() => { setNotice(useHeld("candy", index, false)); setBag(loadBag()); }}
                     className="mt-1 min-h-11 w-full border-4 border-black bg-[#fff4a8] text-[11px] font-bold disabled:opacity-40"
                   >
-                    Candy ×{bag.candies}
+                    Candy
                   </button>
                 </div>
               ))}
@@ -1169,7 +1169,7 @@ export function MonsterQuest({
                     onClick={() => { setNotice(useHeld("candy", index, true)); setBag(loadBag()); }}
                     className="mt-1 min-h-11 w-full border-4 border-black bg-[#fff4a8] text-[11px] font-bold disabled:opacity-40"
                   >
-                    Candy ×{bag.candies}
+                    Candy
                   </button>
                 </div>
               ))}
@@ -1308,6 +1308,7 @@ function FieldSheet({
       </div>
       {sheet === "party" && bag ? (
         <div className="mt-3 flex flex-col gap-2">
+          <p className="text-xs font-bold">Rare Candy left: {bag.candies}. One stack for everyone. Using it spends one.</p>
           {[...bag.party, ...bag.box].map((creature, index) => (
             <div key={creature.id} className="border-4 border-black bg-white p-2">
               <p className="text-sm font-bold">{index < bag.party.length ? `${index + 1}. ` : "Box · "}{nameOf(creature)} · Lv {levelOf(creature.exp)} · HP {creature.hp}/{maxHp(creature, bag)}</p>
@@ -1316,7 +1317,7 @@ function FieldSheet({
               <div className="mt-1 flex flex-wrap gap-1">
                 {bag.candies > 0 ? (
                   <button type="button" onClick={() => { onNote(useHeld("candy", index < bag.party.length ? index : index - bag.party.length, index >= bag.party.length)); onChange(); }} className="min-h-11 border-4 border-black bg-[#fff4a8] px-2 text-xs font-bold">
-                    Rare Candy ×{bag.candies}
+                    Use candy
                   </button>
                 ) : null}
                 {bag.potions > 0 ? (

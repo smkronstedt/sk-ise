@@ -256,7 +256,7 @@ export function loadBag(): QuestBag {
         ultra: parsed.balls?.ultra ?? 0,
         master: parsed.balls?.master ?? 0,
       },
-      candies: parsed.candies ?? 1,
+      candies: parsed.candies ?? 0,
     });
   } catch {
     return starterBag();
@@ -558,7 +558,7 @@ export function mergeBags(local: unknown, remote: unknown): QuestBag | null {
     mastersBought: Math.max(left.mastersBought, right.mastersBought),
     expShare: Boolean(left.expShare || right.expShare),
     charm: Boolean(left.charm || right.charm),
-    candies: Math.max(left.candies ?? 0, right.candies ?? 0),
+    candies: newer.candies ?? older.candies ?? 0,
   });
 }
 
