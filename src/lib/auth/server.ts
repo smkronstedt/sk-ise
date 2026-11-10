@@ -37,7 +37,7 @@ import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { ensureDbReady, getPglite, getSql } from "../db";
 import { isAdminEmail } from "../admin-email";
-import { emailAndPassword } from "./email-password";
+import { emailAndPassword, emailVerification } from "./email-password";
 import { GATE_PROVIDER_ID, gateIdentitySessions } from "./gate-session.server";
 import { GROK_PROVIDERS } from "./providers";
 import { pgliteDialect } from "./pglite-dialect";
@@ -226,7 +226,7 @@ export const auth = betterAuth({
       create: {
         after: async (user) => {
           const sql = await getSql();
-          const status = isAdminEmail(String(user.email ?? "")) ? "approved" : "pending";
+          const status = isAdminEmail(String(user.email ?? "")) ? "approved" : "unverified";
           await sql`
             insert into account_access (user_id, status)
             values (${user.id}, ${status})
@@ -239,6 +239,18 @@ export const auth = betterAuth({
 
   // Local email/password — toggled only via `./email-password` (not a plugin).
   ...(emailAndPassword ? { emailAndPassword } : {}),
+  emailVerification: {
+    ...emailVerification,
+    afterEmailVerification: async (user: { id: string; email: string }) => {
+      if (isAdminEmail(user.email)) return;
+      const sql = await getSql();
+      await sql`
+        update account_access
+        set status = 'pending'
+        where user_id = ${user.id} and status = 'unverified'
+      `;
+    },
+  },
 
   // `__Host-` prefixed cookies: the browser REFUSES any same-named cookie that
   // carries a `Domain` attribute, so a sibling `*.grok.me` app cannot "toss" a

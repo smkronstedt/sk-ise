@@ -19,6 +19,7 @@ function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [needsVerify, setNeedsVerify] = useState(false);
 
   const submit = async () => {
     setError(null);
@@ -35,25 +36,31 @@ function LoginPage() {
         return;
       }
       if (mode === "signup") {
-        const { data, error: err } = await authClient.signUp.email({
+        const { error: err } = await authClient.signUp.email({
           email,
           password,
           name: name.trim() || email.split("@")[0],
+          callbackURL: `${window.location.origin}/`,
         });
         if (err) throw new Error(err.message ?? "Sign up failed");
-        const token = data && "token" in data ? data.token : null;
-        if (typeof token === "string") setBearerToken(token);
-      } else {
-        const { data, error: err } = await authClient.signIn.email({ email, password, rememberMe: true });
-        if (err) throw new Error(err.message ?? "Sign in failed");
-        const token = data && "token" in data ? data.token : null;
-        if (typeof token === "string") setBearerToken(token);
+        setSent(true);
+        return;
       }
+      const { data, error: err } = await authClient.signIn.email({ email, password, rememberMe: true });
+      if (err) throw new Error(err.message ?? "Sign in failed");
+      const token = data && "token" in data ? data.token : null;
+      if (typeof token === "string") setBearerToken(token);
       const session = await authClient.getSession();
       if (!session.data?.user) throw new Error("This browser did not keep the session. Try again.");
       window.location.href = "/";
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      const message = e instanceof Error ? e.message : "Something went wrong";
+      if (message.toLowerCase().includes("not verified")) {
+        setNeedsVerify(true);
+        setError("Confirm that email first. The link goes only to the address you signed up with.");
+      } else {
+        setError(message);
+      }
     } finally {
       setPending(false);
     }
@@ -116,6 +123,22 @@ function LoginPage() {
             )}
             {error ? <p className="text-sm text-wrong">{error}</p> : null}
             {sent && mode === "forgot" ? <p className="text-sm">If that email is on an account, a reset link is on its way to the address on file.</p> : null}
+            {sent && mode === "signup" ? <p className="text-sm">Check that inbox and click the confirm link. After that, the account shows up for approval. The link only goes to the email you just typed.</p> : null}
+            {needsVerify ? (
+              <button
+                type="button"
+                onClick={() => {
+                  void fetch("/api/auth/send-verification-email", {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({ email: email.trim(), callbackURL: `${window.location.origin}/` }),
+                  }).then(() => setSent(true));
+                }}
+                className="text-sm font-semibold text-blue"
+              >
+                Send the confirm link again
+              </button>
+            ) : null}
             <button
               type="submit"
               disabled={pending}

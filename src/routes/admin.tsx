@@ -52,6 +52,7 @@ function AdminPage() {
       {error ? <p className="mb-3 text-sm text-wrong">{error}</p> : null}
       <section className="rounded border border-line bg-paper">
         <h2 className="border-b border-line px-4 py-3 font-semibold">Waiting for approval ({waiting.length})</h2>
+        <p className="px-4 pt-3 text-sm text-muted">Only people who clicked the confirm link on their own email show up here.</p>
         {people === null ? <p className="px-4 py-3 text-sm text-muted">Loading…</p> : null}
         {people && waiting.length === 0 ? <p className="px-4 py-3 text-sm text-muted">No one is waiting.</p> : null}
         <ul>

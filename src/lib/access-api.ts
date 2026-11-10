@@ -33,7 +33,7 @@ export const myAccess = createServerFn({ method: "GET" })
       where u.id = ${context.userId}
     `;
     const status = rows[0]?.status;
-    const known: AccessStatus = status === "pending" || status === "denied" ? status : "approved";
+    const known: AccessStatus = status === "pending" || status === "denied" || status === "unverified" ? (status === "unverified" ? "pending" : status) : "approved";
     return { status: known, admin: isAdminEmail(rows[0]?.email) };
   });
 
@@ -49,6 +49,7 @@ export const listPeople = createServerFn({ method: "GET" })
       from "user" u
       left join account_access a on a.user_id = u.id
       left join user_progress p on p.user_id = u.id
+      where u."emailVerified" = true
       order by case when coalesce(a.status, 'approved') = 'pending' then 0 else 1 end, u."createdAt" desc
     `;
     return {

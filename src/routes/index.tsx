@@ -184,17 +184,18 @@ function Home() {
 
   return (
     <Shell>
-      {mine ? (
       <div className="mb-4 rounded border border-line bg-paper px-4 py-3">
-        <p className="text-xs font-semibold tracking-wide text-muted uppercase">Rank</p>
+        <p className="text-xs font-semibold tracking-wide text-muted uppercase">Rank {rank.index + 1} of {rank.gates.length}</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h1 className="font-serif text-2xl tracking-tight">{rank.title}</h1>
             <div className="mt-1 max-w-xl text-sm text-muted">
-              <p>{deskStanding(bankCorrect, leaders)}</p>
-              <p>
-                Country: {ise2025.percentile}th percentile on the {ise2025.year} in-service, from {ise2025.prior[0].percentile}th in {ise2025.prior[0].year}. That is the national exam. This bank has no country-wide group.
-              </p>
+              <p>{deskStanding(experience, leaders)}</p>
+              {mine ? (
+                <p>
+                  Country: {ise2025.percentile}th percentile on the {ise2025.year} in-service, from {ise2025.prior[0].percentile}th in {ise2025.prior[0].year}. That is the national exam. This bank has no country-wide group.
+                </p>
+              ) : null}
             </div>
           </div>
           <p className="text-sm text-muted">
@@ -208,15 +209,14 @@ function Home() {
           </p>
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded bg-chip">
-          <div className="h-full bg-navy" style={{ width: `${Math.round((experience / experienceTotal) * 100)}%` }} />
+          <div className="h-full bg-navy" style={{ width: `${Math.round(rank.into * 100)}%` }} />
         </div>
         <p className="mt-2 text-sm text-muted">
           {rank.next
-            ? `${rank.left} more correct to ${rank.next}. The last title needs every Bank item and every guideline item.`
-            : "Every item in the bank is correct."}
+            ? `${rank.left} more correct to ${rank.next}.`
+            : "Every item in the bank is correct. Navy SEAL Surgeon."}
         </p>
       </div>
-      ) : null}
 
       <DayPlan
         stats={stats}

@@ -1,4 +1,4 @@
-/** Career ladder. The last title requires every bank item correct. */
+/** Career ladder. Early titles come faster. The last title still needs every item. */
 export const RANKS = [
   "Medical Student",
   "Intern",
@@ -23,13 +23,23 @@ export const RANKS = [
 
 export type RankGate = { title: (typeof RANKS)[number]; at: number };
 
+const EARLY = [0, 15, 40, 80, 150, 250, 400, 600, 900, 1300, 1800];
+
 export function rankGates(total: number): RankGate[] {
-  const steps = RANKS.length - 1;
   const bank = Math.max(1, total);
-  return RANKS.map((title, index) => ({
-    title,
-    at: index === 0 ? 0 : index === steps ? bank : Math.ceil((index / steps) * bank),
-  }));
+  const gates = RANKS.map((title, index) => {
+    if (index === RANKS.length - 1) return { title, at: bank };
+    if (index < EARLY.length) return { title, at: Math.min(EARLY[index], Math.max(0, bank - 1)) };
+    const start = Math.min(EARLY[EARLY.length - 1], Math.max(0, bank - 1));
+    const span = RANKS.length - EARLY.length;
+    const step = index - (EARLY.length - 1);
+    return { title, at: Math.min(bank - 1, Math.round(start + ((bank - start) * step) / (span + 1))) };
+  });
+  for (let index = 1; index < gates.length - 1; index += 1) {
+    if (gates[index].at <= gates[index - 1].at) gates[index].at = gates[index - 1].at + 1;
+  }
+  gates[gates.length - 1].at = bank;
+  return gates;
 }
 
 export function careerRank(correct: number, total: number) {

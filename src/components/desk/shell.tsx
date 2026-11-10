@@ -13,16 +13,19 @@ import { deskModes, loadMode, saveMode, type DeskMode } from "@/lib/desk/modes";
 import { syncDeviceProgress } from "@/lib/progress-sync";
 import { challengeBoard } from "@/lib/challenges-api";
 
-const links = [
-  { to: "/", label: "Desk" },
+const study = [
   { to: "/bank", label: "Bank" },
   { to: "/create", label: "Build" },
   { to: "/tests", label: "Tests" },
-  { to: "/log", label: "Log" },
+  { to: "/booklets", label: "Booklets" },
   { to: "/items", label: "Items" },
+] as const;
+
+const links = [
+  { to: "/", label: "Desk" },
+  { to: "/log", label: "Log" },
   { to: "/guidelines", label: "Guidelines" },
   { to: "/lectures", label: "Lectures" },
-  { to: "/booklets", label: "Booklets" },
   { to: "/cards", label: "Cards" },
   { to: "/notifications", label: "Notifications" },
 ] as const;
@@ -39,6 +42,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const [access, setAccess] = useState<AccessStatus | "unknown">("unknown");
   const [admin, setAdmin] = useState(false);
   const [pendingChallenges, setPendingChallenges] = useState(0);
+  const [studyOpen, setStudyOpen] = useState(false);
 
   useEffect(() => {
     const read = () => {
@@ -159,8 +163,37 @@ export function Shell({ children }: { children: ReactNode }) {
             <img src="/ops/bone-frog.png" alt="" className="h-8 w-14 object-contain" />
           </p>
           <nav className={`ml-auto flex flex-wrap gap-1 ${open ? "" : "hidden"}`}>
-            {links.map((link) => {
-              const on = link.to === "/tests" ? path === "/tests" || path.startsWith("/test/") : path === link.to;
+            <Link
+              to="/"
+              className={`rounded px-3 py-2 text-sm font-semibold ${path === "/" ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
+            >
+              Desk
+            </Link>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setStudyOpen((value) => !value)}
+                className={`rounded px-3 py-2 text-sm font-semibold ${study.some((item) => (item.to === "/tests" ? path === "/tests" || path.startsWith("/test/") : path === item.to)) ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
+              >
+                Study
+              </button>
+              {studyOpen ? (
+                <div className="absolute left-0 z-30 mt-1 w-40 rounded border border-line bg-paper py-1 text-ink shadow">
+                  {study.map((item) => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setStudyOpen(false)}
+                      className={`block px-3 py-2 text-sm font-semibold hover:bg-chip ${path === item.to || (item.to === "/tests" && path.startsWith("/test/")) ? "bg-chip" : ""}`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            {links.filter((link) => link.to !== "/").map((link) => {
+              const on = path === link.to;
               return (
                 <Link
                   key={link.to}
