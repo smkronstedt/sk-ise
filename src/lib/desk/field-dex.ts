@@ -121,13 +121,24 @@ export function syncCatches(tests: TestBlock[]): {
 }
 
 const PORTRAITS = [
+  "/field/sprout.jpg",
+  "/field/fox.jpg",
+  "/field/frog.jpg",
+  "/field/bird.jpg",
+  "/field/turtle.jpg",
+  "/field/cat.jpg",
+  "/field/fish.jpg",
+  "/field/owl.jpg",
+  "/field/cap.jpg",
+  "/field/bee.jpg",
+  "/field/rabbit.jpg",
+  "/field/mouse.jpg",
+  "/field/ember.jpg",
+  "/field/drop.jpg",
   "/field/stone.jpg",
   "/field/lantern.jpg",
   "/field/reed.jpg",
   "/field/crab.jpg",
-  "/field/sprout.jpg",
-  "/field/drop.jpg",
-  "/field/ember.jpg",
   "/field/cloud.jpg",
 ];
 
@@ -139,5 +150,5 @@ export function portraitFor(number: number, rare = false) {
 }
 
 export function spriteFor(number: number, rare = false) {
-  return portraitFor(number, rare).replace("/field/", "/field/cut/").replace(".jpg", ".png");
+  return portraitFor(number, rare).replace("/field/", "/field/cut/").replace(".jpg", ".png?v=3");
 }
