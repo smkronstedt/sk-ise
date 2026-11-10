@@ -79,7 +79,8 @@ export function CampLoadout({ equipped, owned }: { equipped: Partial<Record<Slot
           </figure>
         ))}
       </div>
-      <p className="mt-2 text-center text-xs text-ops-olive">{shelf.length ? `Shelf: ${shelf.join(", ")}` : "Shelf is empty."}</p>
+      <p className="mt-2 text-center text-xs text-ops-olive">Kit</p>
+      <p className="mt-1 text-center text-xs text-ops-olive">{shelf.length ? `Shelf: ${shelf.join(", ")}` : "Shelf is empty."}</p>
     </div>
   );
 }

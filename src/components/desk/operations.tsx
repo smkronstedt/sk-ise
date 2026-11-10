@@ -402,11 +402,12 @@ export function Operations({ correct, total }: { correct: number; total: number 
       )}
 
       {panel === "camp" && (
-        <div className="grid gap-4 p-4 lg:grid-cols-[minmax(16rem,26rem)_minmax(0,1fr)]">
+        <div className="grid gap-4 p-4 lg:grid-cols-[14rem_minmax(16rem,22rem)_minmax(0,1fr)]">
           <div className="flex flex-col items-center">
-            <CampLoadout equipped={save.equipped} owned={save.owned} />
+            <img src="/ops/operator.jpg" alt="Your operator" className="max-h-96 w-full rounded border border-ops-amber object-cover object-top" />
             <img src="/ops/trident.png" alt="Trident" className="mt-3 h-16 w-auto" />
           </div>
+          <CampLoadout equipped={save.equipped} owned={save.owned} />
           <div>
             <h2 className="font-serif text-2xl">Camp</h2>
             <p className="mt-1 text-sm text-muted">One item per slot. Supplies stay on once you buy them.</p>
