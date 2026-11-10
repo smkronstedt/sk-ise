@@ -36,6 +36,7 @@ function BankPage() {
   const [hardOnly, setHardOnly] = useState(false);
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
+  const [hold, setHold] = useState<string | null>(null);
   const [progress, setProgress] = useState<BankProgress>(emptyBankProgress);
   const [ready, setReady] = useState(false);
   const [banner, setBanner] = useState("");
@@ -103,9 +104,19 @@ function BankPage() {
     });
   }, [items, progress.answers, progress.marks, query, status, topic, setName, hardOnly, desk.state, catalogReady]);
 
+  const shown = useMemo(() => {
+    if (!hold || filtered.some((row) => row.id === hold)) return filtered;
+    const pinned = (items ?? []).find((row) => row.id === hold);
+    if (!pinned) return filtered;
+    const next = filtered.slice();
+    next.splice(Math.min(index, next.length), 0, pinned);
+    return next;
+  }, [filtered, hold, items, index]);
+
   useEffect(() => {
     setIndex(0);
     setPicked(null);
+    setHold(null);
   }, [topic, status, query, view, hardOnly, setName]);
 
   const write = (next: BankProgress) => {
@@ -129,7 +140,7 @@ function BankPage() {
     );
   }
 
-  const item = filtered[Math.min(index, Math.max(filtered.length - 1, 0))];
+  const item = shown[Math.min(index, Math.max(shown.length - 1, 0))];
   const saved = item ? progress.answers[item.id] : undefined;
 
   const submit = () => {
@@ -147,6 +158,7 @@ function BankPage() {
     noteRow(isCorrect);
     desk.consume(item.id);
     if (!isCorrect) addCard(item, "auto");
+    setHold(item.id);
   };
 
   return (
@@ -253,22 +265,24 @@ function BankPage() {
 
       {view === "points" ? (
         <Points items={filtered} />
-      ) : filtered.length === 0 || !item ? (
+      ) : shown.length === 0 || !item ? (
         <p className="mt-4 rounded border border-line bg-paper px-4 py-3">Nothing matches those filters.</p>
       ) : (
         <Practice
           item={item}
-          index={Math.min(index, filtered.length - 1)}
-          total={filtered.length}
+          index={Math.min(index, shown.length - 1)}
+          total={shown.length}
           picked={picked}
           saved={saved}
           marked={Boolean(progress.marks[item.id])}
           note={progress.notes[item.id] ?? ""}
           onPick={setPicked}
           onSubmit={submit}
-          onJump={(next) => {
-            setIndex(next);
+          onJump={(delta) => {
+            const stays = !hold || filtered.some((row) => row.id === hold);
+            setHold(null);
             setPicked(null);
+            setIndex((current) => (delta > 0 && !stays ? current : Math.max(0, current + delta)));
           }}
           onMark={() =>
             write({
@@ -360,7 +374,7 @@ function Practice({
           disabled={!picked || revealed}
           className="min-h-11 rounded bg-blue px-4 font-semibold text-white disabled:opacity-40"
         >
-          Submit
+          {revealed ? "Answered" : "Submit"}
         </button>
         <button type="button" onClick={onMark} className="min-h-11 rounded border border-line px-3 text-sm font-semibold">
           {marked ? "Unmark" : "Mark"}
@@ -375,7 +389,7 @@ function Practice({
         <button
           type="button"
           disabled={index === 0}
-          onClick={() => onJump(index - 1)}
+          onClick={() => onJump(-1)}
           className="min-h-11 rounded border border-line px-3 font-semibold disabled:opacity-40"
         >
           Previous
@@ -383,8 +397,8 @@ function Practice({
         <button
           type="button"
           disabled={index >= total - 1}
-          onClick={() => onJump(index + 1)}
-          className="min-h-11 rounded border border-line px-3 font-semibold disabled:opacity-40"
+          onClick={() => onJump(1)}
+          className={`min-h-11 rounded px-4 font-semibold ${revealed ? "bg-navy text-white" : "border border-line"} disabled:opacity-40`}
         >
           Next
         </button>
