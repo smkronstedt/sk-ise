@@ -20,7 +20,7 @@ import { useDesk } from "@/lib/desk/provider";
 import { careerRank } from "@/lib/desk/ranks";
 import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
-import { CATCH_EVERY, DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
+import { CATCH_EVERY, DEX, chooseLead, fieldLead, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
 import { MODE_EVENT, loadMode, type DeskMode } from "@/lib/desk/modes";
 import { Badge } from "@/components/desk/badge";
 import { RpgMode } from "@/components/desk/game-modes";
@@ -547,6 +547,7 @@ function FieldNotes({
   const [fresh, setFresh] = useState<Creature[]>([]);
   const [toward, setToward] = useState(0);
   const [picked, setPicked] = useState("stones");
+  const [walking, setWalking] = useState<number | null>(null);
   const have = new Set(caught);
   const rareSet = new Set(rare);
 
@@ -556,6 +557,7 @@ function FieldNotes({
     setRare(result.rare);
     setFresh(result.fresh);
     setToward(result.toward);
+    setWalking(fieldLead());
   }, [desk.state.tests]);
 
   return (
@@ -564,7 +566,7 @@ function FieldNotes({
         <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
         <h1 className="font-serif text-3xl tracking-tight">Monster Quest</h1>
         <p className="mt-1 text-sm">
-          One creature for every {CATCH_EVERY} different questions you get right. That is the whole bank divided by 151. {toward}/{CATCH_EVERY} toward the next one. {have.size}/151 caught.
+          One creature for every {CATCH_EVERY} different questions you get right. Open Guide and tap Walk with me. The same row sits on top of the map.
         </p>
         <div className="mt-4 flex gap-2">
           <button
@@ -627,6 +629,20 @@ function FieldNotes({
                   )}
                   <div className="mt-2 font-semibold">{isCaught ? creature.name : "???"}</div>
                   {isRare ? <div className="text-xs font-semibold text-mark">Rare</div> : null}
+                  {isCaught ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        chooseLead(creature.number);
+                        setWalking(creature.number);
+                      }}
+                      className={`mt-2 min-h-11 w-full rounded px-2 text-sm font-semibold ${
+                        walking === creature.number ? "bg-field-stamp text-white" : "border border-field-ink"
+                      }`}
+                    >
+                      {walking === creature.number ? "With you" : "Walk with me"}
+                    </button>
+                  ) : null}
                 </div>
               );
             })}

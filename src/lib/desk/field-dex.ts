@@ -26,8 +26,25 @@ export const DEX: Creature[] = FIRST.flatMap((a) => SECOND.map((b) => `${a}${b}`
 export const CATCH_EVERY = Math.max(8, Math.floor((UQB_TOTAL + questions.length) / DEX.length));
 
 const KEY = "callroom-field-caught-v2";
+const LEAD = "callroom-field-lead";
 
 type Save = { caught: number[]; rare: number[] };
+
+export function loadField() {
+  return load();
+}
+
+export function fieldLead() {
+  const caught = load().caught;
+  const picked = Number(localStorage.getItem(LEAD));
+  if (caught.includes(picked)) return picked;
+  return caught[0] ?? null;
+}
+
+export function chooseLead(number: number) {
+  if (!load().caught.includes(number)) return;
+  localStorage.setItem(LEAD, String(number));
+}
 
 function load(): Save {
   try {
