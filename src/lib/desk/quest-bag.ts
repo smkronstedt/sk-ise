@@ -121,15 +121,13 @@ export function stageOf(level: number): 0 | 1 | 2 {
 }
 
 export function creatureSrc(creature: Creature) {
-  const stage = stageOf(levelOf(creature.exp));
-  if (stage === 0 && creature.dex) return spriteFor(creature.dex, loadField().rare.includes(creature.dex));
-  return monSrc(creature.species, stage);
+  if (creature.dex) return spriteFor(creature.dex, loadField().rare.includes(creature.dex));
+  return monSrc(creature.species, stageOf(levelOf(creature.exp)));
 }
 
 export function nameOf(creature: Creature) {
-  const stage = stageOf(levelOf(creature.exp));
-  if (stage === 0 && creature.dex) return DEX[creature.dex - 1]?.name ?? lines[creature.species].names[0];
-  return lines[creature.species].names[stage];
+  if (creature.dex) return DEX[creature.dex - 1]?.name ?? "Caught";
+  return lines[creature.species].names[stageOf(levelOf(creature.exp))];
 }
 
 export type EvolutionMoment = {
@@ -137,32 +135,48 @@ export type EvolutionMoment = {
   species: SpeciesId;
   from: 0 | 1 | 2;
   to: 0 | 1 | 2;
-  fromName: string;
-  toName: string;
+  name: string;
   level: number;
 };
 
-/** First change is level 8. Final form is level 16. */
+const EVO_LOG = "callroom-evo-log-v1";
+
+export type EvoEntry = { id: string; name: string; level: number; stage: 1 | 2; at: number };
+
+export function loadEvoLog(): EvoEntry[] {
+  try {
+    const raw = localStorage.getItem(EVO_LOG);
+    const parsed = raw ? (JSON.parse(raw) as EvoEntry[]) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function loggedStage(id: string) {
+  return loadEvoLog().reduce((stage, entry) => (entry.id === id ? Math.max(stage, entry.stage) : stage), 0);
+}
+
+/** First change is level 8. Final form is level 16. The creature stays itself. */
 export function evolutionMoment(creature: Creature): EvolutionMoment | null {
   const level = levelOf(creature.exp);
   const to = stageOf(level);
-  const from = creature.seenStage ?? 0;
+  const from = loggedStage(creature.id) as 0 | 1 | 2;
   if (to <= from) return null;
-  return {
-    id: creature.id,
-    species: creature.species,
-    from,
-    to,
-    fromName: lines[creature.species].names[from],
-    toName: lines[creature.species].names[to],
-    level,
-  };
+  return { id: creature.id, species: creature.species, from, to, name: nameOf(creature), level };
 }
 
 export function markEvolutionSeen(creatureId: string) {
   const bag = loadBag();
   const creature = [...bag.party, ...bag.box].find((row) => row.id === creatureId);
-  if (creature) creature.seenStage = stageOf(levelOf(creature.exp));
+  if (!creature) return bag;
+  const stage = stageOf(levelOf(creature.exp));
+  creature.seenStage = stage;
+  if (stage > 0) {
+    const log = loadEvoLog().filter((entry) => !(entry.id === creature.id && entry.stage === stage));
+    log.push({ id: creature.id, name: nameOf(creature), level: levelOf(creature.exp), stage, at: Date.now() });
+    localStorage.setItem(EVO_LOG, JSON.stringify(log));
+  }
   saveBag(bag);
   return loadBag();
 }

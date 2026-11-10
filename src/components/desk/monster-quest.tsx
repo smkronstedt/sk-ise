@@ -1066,12 +1066,12 @@ export function MonsterQuest({
     <div ref={wrapRef} className="relative bg-[#1e3a24]">
       {evo && bag ? (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#f8f8d8]/95 p-6 text-center text-black">
-          <div className="flex items-end justify-center gap-6">
-            <img src={monSrc(evo.species, evo.from)} alt="" className="h-28 w-auto" />
-            <img src={monSrc(evo.species, evo.to)} alt="" className="h-48 w-auto" />
-          </div>
-          <p className="mt-3 font-serif text-2xl">{evo.fromName} evolved into {evo.toName}.</p>
-          <p className="mt-1 text-sm">Level {evo.level}. {evo.to >= 2 ? "Final form." : "The next form is at level 16."}</p>
+          {(() => {
+            const creature = [...bag.party, ...bag.box].find((row) => row.id === evo.id);
+            return creature ? <img src={creatureSrc(creature)} alt="" className="h-48 w-auto" /> : null;
+          })()}
+          <p className="mt-3 font-serif text-2xl">{evo.name} evolved.</p>
+          <p className="mt-1 text-sm">Level {evo.level}. {evo.to >= 2 ? "Final form." : "The next form is at level 16."} Written in the record.</p>
           <button
             type="button"
             onClick={() => {

@@ -26,6 +26,7 @@ type Side = {
   houston?: number;
   trail?: { x?: number; y?: number } | null;
   notes?: { topicId?: string; xp?: number; level?: number; stage?: number }[] | null;
+  evos?: { id: string; name: string; level: number; stage: number; at: number }[] | null;
 };
 
 type CardsField = { list?: unknown; ops?: unknown; activity?: Record<string, DayLog>; daily?: Record<string, { id: string; choice?: string; correct?: boolean }>; training?: unknown; questSpend?: number; questBag?: unknown; side?: Side } | unknown[] | null;
@@ -74,6 +75,7 @@ function readSide(): Side {
     houston: num("houston-trail-at"),
     trail: read("ise-trail-pos") as Side["trail"],
     notes: read("callroom-fieldnotes-xp") as Side["notes"],
+    evos: read("callroom-evo-log-v1") as Side["evos"],
   };
 }
 
@@ -110,6 +112,7 @@ function writeSide(side: Side | null | undefined) {
   if (side.houston) localStorage.setItem("houston-trail-at", String(side.houston));
   if (side.trail) write("ise-trail-pos", side.trail);
   if (side.notes) write("callroom-fieldnotes-xp", side.notes);
+  if (side.evos) write("callroom-evo-log-v1", side.evos);
 }
 
 function apply(bundle: Bundle) {
@@ -279,6 +282,7 @@ function mergeSide(local: Side = {}, remote: Side = {}): Side {
     houston: Math.max(local.houston || 0, remote.houston || 0),
     trail: local.trail ?? remote.trail ?? null,
     notes: [...notes.values()],
+    evos: [...new Map([...(remote.evos ?? []), ...(local.evos ?? [])].map((entry) => [`${entry.id}:${entry.stage}`, entry])).values()],
   };
 }
 function mergeTraining(local: unknown, remote: unknown) {

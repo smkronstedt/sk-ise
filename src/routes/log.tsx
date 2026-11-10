@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Shell } from "@/components/desk/shell";
 import { dayKey, loadActivity, type DayLog } from "@/lib/desk/activity";
 import { loadBankProgress } from "@/lib/desk/original-bank";
+import { loadEvoLog } from "@/lib/desk/quest-bag";
 import { CABINET_PURSE, examProgress, purseFor, YEAR_PURSE } from "@/lib/desk/sasp-exams";
 
 export const Route = createFileRoute("/log")({
@@ -39,6 +40,7 @@ function LogPage() {
   const exams = examProgress(answered);
   const finished = exams.filter((exam) => exam.complete);
   const purse = purseFor(finished.length);
+  const evolutions = loadEvoLog().sort((a, b) => b.at - a.at);
 
   return (
     <Shell>
@@ -116,6 +118,18 @@ function LogPage() {
               Open the bank
             </Link>
           </div>
+        </section>
+        <section className="rounded border border-line bg-paper p-4 lg:col-span-2">
+          <p className="text-xs font-semibold tracking-wide text-muted uppercase">Record</p>
+          <h2 className="font-serif text-2xl">Evolutions</h2>
+          {evolutions.length === 0 ? <p className="mt-2 text-sm text-muted">None yet. A creature evolves at level 8, then again at level 16.</p> : null}
+          <ul className="mt-3 flex flex-col gap-2">
+            {evolutions.map((entry) => (
+              <li key={`${entry.id}-${entry.stage}`} className="text-sm">
+                <span className="font-semibold">{entry.name}</span> evolved at level {entry.level}. {entry.stage >= 2 ? "Final form." : "First form."}
+              </li>
+            ))}
+          </ul>
         </section>
       </div>
     </Shell>
