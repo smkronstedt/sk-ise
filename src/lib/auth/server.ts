@@ -34,7 +34,7 @@ import { bearer, genericOAuth } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { randomBytes } from "node:crypto";
-import { Pool } from "pg";
+import { Pool, neonConfig } from "@neondatabase/serverless";
 import { ensureDbReady, getPglite, getSql } from "../db";
 import { isAdminEmail } from "../admin-email";
 import { emailAndPassword, emailVerification } from "./email-password";
@@ -150,12 +150,9 @@ const grokUserInfoUrl = `${issuerBase}/api/auth/oauth2/userinfo`;
 // the app turns sign-in on.
 const database = databaseUrl
   ? (() => {
-      const pool = new Pool({
-        connectionString: databaseUrl,
-        max: 1,
-        ssl: databaseUrl.includes("localhost") ? undefined : { rejectUnauthorized: false },
-      });
-      pool.on("error", (error) => {
+      neonConfig.poolQueryViaFetch = true;
+      const pool = new Pool({ connectionString: databaseUrl, max: 1 });
+      pool.on("error", (error: unknown) => {
         console.error("[auth-db]", error instanceof Error ? error.message : error);
       });
       return pool;
