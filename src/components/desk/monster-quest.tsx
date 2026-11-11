@@ -121,6 +121,7 @@ type Battle = {
   guard: boolean;
   boost: boolean;
   committed?: boolean;
+  fromId?: string;
 };
 
 
@@ -541,6 +542,8 @@ export function MonsterQuest({
   const bagRef = useRef<QuestBag | null>(null);
   const followRef = useRef<string | null>(null);
   const repelRef = useRef(0);
+  const fleeRef = useRef<string | null>(null);
+  const calmRef = useRef(0);
   bagRef.current = bag;
   followRef.current = bag?.party[0] ? creatureSrc(bag.party[0]) : null;
 
@@ -686,6 +689,7 @@ export function MonsterQuest({
       guard: false,
       boost: false,
       committed: false,
+      fromId: npc.id,
     });
   };
 
@@ -947,13 +951,11 @@ export function MonsterQuest({
 
   const run = () => {
     if (!battle) return;
-    if (battle.foeKind !== "wild") {
-      setNotice("No. You can't run from a trainer.");
-      setBattle({ ...battle, menu: null });
-      return;
-    }
+    fleeRef.current = battle.fromId ?? null;
+    calmRef.current = 8;
     desk.patchTest(battle.testId, (current) => ({ ...current, status: "done", finishedAt: Date.now() }));
     busyRef.current = false;
+    setNotice("");
     setBattle(null);
     setLine("You got away.");
   };
@@ -1234,9 +1236,10 @@ export function MonsterQuest({
                 setBag(loadBag());
               }
             }
+            if (calmRef.current > 0) calmRef.current -= 1;
             if (tile === 4 || tile === 5 || tile === 7 || tile === 9) apiRef.current.enter(tile, player.x, player.y);
             else {
-              if (tile === 6 && repelRef.current <= 0) {
+              if (tile === 6 && repelRef.current <= 0 && calmRef.current <= 0) {
                 grassSteps += 1;
                 if (grassSteps >= 4 && Math.random() < 0.22) {
                   grassSteps = 0;
@@ -1244,8 +1247,12 @@ export function MonsterQuest({
                 }
               }
               const npc = seenBy(map, player.x, player.y);
-              if (npc) spot(npc);
-              else if (pending && path.length === 0 && Math.abs(pending.x - player.x) + Math.abs(pending.y - player.y) === 1) {
+              if (!npc) fleeRef.current = null;
+              else if (npc.id !== fleeRef.current) {
+                fleeRef.current = null;
+                spot(npc);
+              }
+              if (!npc && pending && path.length === 0 && Math.abs(pending.x - player.x) + Math.abs(pending.y - player.y) === 1) {
                 const who = pending;
                 pending = null;
                 apiRef.current.talk(who);
