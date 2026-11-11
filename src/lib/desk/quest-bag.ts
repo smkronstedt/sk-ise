@@ -115,8 +115,8 @@ export function levelOf(exp: number) {
 }
 
 export function stageOf(level: number): 0 | 1 | 2 {
-  if (level >= 16) return 2;
-  if (level >= 8) return 1;
+  if (level >= 14) return 2;
+  if (level >= 6) return 1;
   return 0;
 }
 
@@ -157,7 +157,7 @@ function loggedStage(id: string) {
   return loadEvoLog().reduce((stage, entry) => (entry.id === id ? Math.max(stage, entry.stage) : stage), 0);
 }
 
-/** First change is level 8. Final form is level 16. The creature stays itself. */
+/** First change is level 6. Final form is level 14. The creature stays itself. */
 export function evolutionMoment(creature: Creature): EvolutionMoment | null {
   const level = levelOf(creature.exp);
   const to = stageOf(level);

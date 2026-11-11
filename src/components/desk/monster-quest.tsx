@@ -83,6 +83,9 @@ type Npc = {
   adaptive: boolean;
   testName: string;
   blueprint: BlueprintId | "all";
+  topics?: string[];
+  rematch?: boolean;
+  prostate?: boolean;
   line: string;
   foe: string;
 };
@@ -181,6 +184,8 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       testName: `Gym: ${city.element}`,
       blueprint: city.id,
       line: trainersBeaten ? `${city.subject}. ${city.gymCount} questions. Need 60%.` : "Beat the trainers in town first.",
+      topics: city.gymTopics,
+      prostate: city.id === "oncology",
       foe: "/field/towns/trainer.jpg?v=2",
     });
     return { tiles, npcs, start: { x: 6, y: 8 } };
@@ -247,24 +252,19 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
     tiles[8][8] = 3;
   }
   tiles[5][11] = rivalDone ? 5 : 8;
-  if (townIndex % 4 === 1) {
-    tiles[2][2] = 3;
-    tiles[2][3] = 3;
-    tiles[3][2] = 3;
-  } else if (townIndex % 4 === 2) {
-    tiles[6][2] = 2;
-    tiles[6][4] = 2;
-    tiles[7][3] = 2;
-  } else if (townIndex % 4 === 3) {
-    tiles[8][4] = 3;
-    tiles[8][5] = 3;
-    tiles[9][4] = 3;
+  tiles[9][1] = townIndex > 0 ? 5 : tiles[9][1];
+  if (gymDone && townIndex < cities.length - 1) {
+    tiles[9][8] = 1;
+    tiles[9][9] = 1;
+    tiles[9][10] = 5;
   }
-
   const spots: { x: number; y: number; face: Face }[] = [
     { x: 2, y: 3, face: "right" },
+    { x: 4, y: 3, face: "right" },
+    { x: 8, y: 3, face: "left" },
     { x: 10, y: 3, face: "left" },
     { x: 2, y: 7, face: "right" },
+    { x: 8, y: 7, face: "left" },
     { x: 10, y: 7, face: "left" },
   ];
   city.trainers.forEach((trainer, index) => {
@@ -273,19 +273,23 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
     npcs.push({
       id: trainer.name,
       kind: "trainer",
-      name: trainer.name,
+      name: trainer.label ?? trainer.name,
       x: spot.x,
       y: spot.y,
       face: spot.face,
       sight: 2,
-      done: trainerDone(trainer.name),
+      done: gymDone ? false : trainerDone(trainer.name),
       ready: true,
       count: trainer.count,
       need: 0.6,
       adaptive: false,
       testName: `Route: ${trainer.name}`,
       blueprint: city.id,
-      line: `${trainer.count} questions. Need 60%.`,
+      topics: trainer.topics,
+      rematch: gymDone,
+      line: gymDone
+        ? `Rematch. ${trainer.label ?? trainer.name}. ${trainer.count} questions.`
+        : `${trainer.label ?? trainer.name}. ${trainer.count} questions. Need 60%.`,
       foe: "/field/towns/trainer.jpg?v=2",
     });
   });
@@ -381,7 +385,7 @@ export function MonsterQuest({
   const cityRef = useRef<City | null>(null);
   const apiRef = useRef({ talk: (_npc: Npc) => {}, wild: () => {}, enter: (_tile: Tile, _x: number, _y: number) => {} });
   const [scene, setScene] = useState<Scene>("town");
-  const [hold, setHold] = useState<string | null>(null);
+  const [hold, setHold] = useState<string | null>(() => (typeof localStorage === "undefined" ? null : localStorage.getItem("callroom-quest-city")));
   const [line, setLine] = useState("Walk across a trainer's line. They will see you.");
   const [caseOpen, setCaseOpen] = useState(false);
   const [sheet, setSheet] = useState<"party" | "dex" | null>(null);
@@ -425,14 +429,32 @@ export function MonsterQuest({
     else sessionStorage.removeItem("ise-battle");
   }, [battle]);
 
-  const frontier = cities.findIndex((city, index) => {
-    const trainer = stops.find((stop) => stop.kind === "trainer" && stop.city.id === city.id);
-    const open = index === 0 || Boolean(trainer?.open);
-    return open && !rivalBeaten(desk.state.tests, city);
-  });
-  const city = hold ? (cities.find((item) => item.id === hold) ?? null) : frontier === -1 ? null : cities[frontier];
+  const gymBeaten = (id: string) => stops.some((stop) => stop.kind === "gym" && stop.city.id === id && stop.done);
+  let furthest = 0;
+  for (; furthest < cities.length - 1; furthest += 1) if (!gymBeaten(cities[furthest].id)) break;
+  const wanted = hold ? cities.findIndex((item) => item.id === hold) : furthest;
+  const city = cities[Math.max(0, Math.min(wanted < 0 ? furthest : wanted, furthest))];
   cityRef.current = city;
   pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || nurse;
+
+  const sail = (dir: 1 | -1) => {
+    if (!city) return;
+    const index = cities.findIndex((item) => item.id === city.id);
+    const next = cities[index + dir];
+    if (!next) {
+      setLine(dir > 0 ? "Open water. No further world yet." : "This is the first shore.");
+      return;
+    }
+    if (dir > 0 && !gymBeaten(city.id)) {
+      setLine("The boat stays tied until you beat the gym leader.");
+      return;
+    }
+    localStorage.setItem("callroom-quest-city", next.id);
+    setHold(next.id);
+    posRef.current = { x: 6, y: 8, scene: "town", cityId: next.id };
+    setScene("town");
+    setLine(dir > 0 ? `The boat crosses to ${next.city}. ${city.city} is still behind you.` : `The boat goes back to ${next.city}.`);
+  };
 
   const go = (next: Scene, x: number, y: number) => {
     posRef.current = { x, y, scene: next, cityId: city?.id ?? "league" };
@@ -466,7 +488,15 @@ export function MonsterQuest({
     busyRef.current = true;
     setNotice("");
     await loadCatalog();
-    const ids = drawQuestionIds(desk.state, topicIdsFor(npc.blueprint), "unused", npc.count, npc.adaptive);
+    const topicIds = npc.topics?.length ? npc.topics : topicIdsFor(npc.blueprint);
+    const pool = npc.rematch ? "all" : "unused";
+    let ids = npc.prostate
+      ? [
+          ...drawQuestionIds(desk.state, ["pca", "pca-adv"], pool, Math.ceil(npc.count / 2), true),
+          ...drawQuestionIds(desk.state, topicIds, pool, npc.count, true),
+        ].filter((id, index, all) => all.indexOf(id) === index).slice(0, npc.count)
+      : drawQuestionIds(desk.state, topicIds, pool, npc.count, npc.adaptive);
+    if (!ids.length && pool === "unused") ids = drawQuestionIds(desk.state, topicIds, "all", npc.count, npc.adaptive);
     if (!ids.length) {
       busyRef.current = false;
       setNotice("No unused questions left in that set. On Build, open Used and hit Recycle used.");
@@ -476,7 +506,7 @@ export function MonsterQuest({
       name: npc.testName,
       mode: "tutor",
       adaptive: npc.adaptive,
-      topicIds: topicIdsFor(npc.blueprint),
+      topicIds,
       pool: "unused",
       count: ids.length,
       questionIds: ids,
@@ -567,7 +597,7 @@ export function MonsterQuest({
 
   apiRef.current.talk = (npc) => void startBattle(npc);
   apiRef.current.wild = () => void startWild();
-  apiRef.current.enter = (tile) => {
+  apiRef.current.enter = (tile, _x, y) => {
     if (tile === 9) {
       setNurse(true);
       setLine("Welcome to the Center.");
@@ -580,12 +610,14 @@ export function MonsterQuest({
     }
     if (tile === 4 && scene === "town") go("gym", 6, 8);
     else if (tile === 4 && scene === "gym") go("town", 6, 2);
+    else if (tile === 5 && scene === "town" && (y ?? 0) >= 8) sail(((_x ?? 0) <= 2 ? -1 : 1));
     else if (tile === 5 && scene === "town") go("route", 6, 9);
     else if (tile === 5 && scene === "route") {
-      setHold(null);
-      posRef.current = { x: 6, y: 9, scene: "town", cityId: "next" };
-      setScene("town");
-      setLine("Next town.");
+      if (!city || !gymBeaten(city.id)) {
+        setLine("The far shore stays shut until you beat the gym leader. The boat is in town after that.");
+        return;
+      }
+      sail(1);
     }
   };
 
@@ -648,7 +680,7 @@ export function MonsterQuest({
     let hp = battle.you;
     let youMax = battle.youMax;
     if (correct) {
-      grew = grantExp(lead, 3);
+      grew = grantExp(lead, 10);
       if (current.expShare) {
         for (const other of current.party.slice(1)) {
           const shared = grantExp(other, 2);
@@ -1071,7 +1103,7 @@ export function MonsterQuest({
             return creature ? <img src={creatureSrc(creature)} alt="" className="h-48 w-auto" /> : null;
           })()}
           <p className="mt-3 font-serif text-2xl">{evo.name} evolved.</p>
-          <p className="mt-1 text-sm">Level {evo.level}. {evo.to >= 2 ? "Final form." : "The next form is at level 16."} Written in the record.</p>
+          <p className="mt-1 text-sm">Level {evo.level}. {evo.to >= 2 ? "Final form." : "The next form is at level 14."} Written in the record.</p>
           <button
             type="button"
             onClick={() => {
@@ -1085,7 +1117,12 @@ export function MonsterQuest({
         </div>
       ) : null}
       <div className="flex items-center justify-between gap-3 border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
-        <h2 className="font-serif text-xl">{city ? `${city.city} · ${city.element}` : "Championship"}</h2>
+        <div>
+          <h2 className="font-serif text-xl">{city ? `${city.city} · ${city.element}` : "Championship"}</h2>
+          {city && gymBeaten(city.id) && cities.findIndex((item) => item.id === city.id) < cities.length - 1 ? (
+            <p className="text-xs">Boat at the bottom right goes to the next world. This one stays.</p>
+          ) : null}
+        </div>
         <div className="flex gap-2">
           {city && scene === "town" && !battle ? (
             <button type="button" onClick={() => setTrialOpen(true)} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Trial</button>
@@ -1423,7 +1460,7 @@ function FieldSheet({
           {[...bag.party, ...bag.box].map((creature, index) => (
             <div key={creature.id} className="border-4 border-black bg-white p-2">
               <p className="text-sm font-bold">{index < bag.party.length ? `${index + 1}. ` : "Box · "}{nameOf(creature)} · Lv {levelOf(creature.exp)} · HP {creature.hp}/{maxHp(creature, bag)}</p>
-              <p className="text-xs">{levelOf(creature.exp) >= 16 ? "Final form." : levelOf(creature.exp) >= 8 ? "Evolves at level 16." : "Evolves at level 8."}</p>
+              <p className="text-xs">{levelOf(creature.exp) >= 14 ? "Final form." : levelOf(creature.exp) >= 6 ? "Evolves at level 14." : "Evolves at level 6."}</p>
               <p className="text-xs">{knownMoves(creature).map((move) => `${move.def.name} ${move.pp}/${move.def.pp}`).join(" · ")}</p>
               <div className="mt-1 flex flex-wrap gap-1">
                 {bag.candies > 0 ? (

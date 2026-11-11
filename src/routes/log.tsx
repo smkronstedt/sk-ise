@@ -122,7 +122,7 @@ function LogPage() {
         <section className="rounded border border-line bg-paper p-4 lg:col-span-2">
           <p className="text-xs font-semibold tracking-wide text-muted uppercase">Record</p>
           <h2 className="font-serif text-2xl">Evolutions</h2>
-          {evolutions.length === 0 ? <p className="mt-2 text-sm text-muted">None yet. A creature evolves at level 8, then again at level 16.</p> : null}
+          {evolutions.length === 0 ? <p className="mt-2 text-sm text-muted">None yet. A creature evolves at level 6, then again at level 14.</p> : null}
           <ul className="mt-3 flex flex-col gap-2">
             {evolutions.map((entry) => (
               <li key={`${entry.id}-${entry.stage}`} className="text-sm">
