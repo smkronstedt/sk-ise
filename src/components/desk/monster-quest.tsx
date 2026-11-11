@@ -579,7 +579,7 @@ export function MonsterQuest({
   cityRef.current = city;
   useEffect(() => {
     if (!musicOn()) return;
-    setTownMusic(true, city?.id === "stones" ? "canyon" : "town");
+    setTownMusic(true, "canyon");
   }, [city?.id]);
   pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || nurse;
 
@@ -1385,7 +1385,7 @@ export function MonsterQuest({
           </button>
           <button
             type="button"
-            onClick={() => setTune(setTownMusic(!musicOn(), city?.id === "stones" ? "canyon" : "town"))}
+            onClick={() => setTune(setTownMusic(!musicOn(), "canyon"))}
             className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold"
           >
             {tune || musicOn() ? "Music on" : "Music"}
