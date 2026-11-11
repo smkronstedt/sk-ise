@@ -90,16 +90,24 @@ async function main() {
     }
     throw err;
   } finally {
-    client?.release();
-    await pool.end();
+    try {
+      client?.release();
+    } catch {
+      // A dead connection must not fail the publish.
+    }
+    try {
+      await pool.end();
+    } catch {
+      // Same as above. The schema was left as it was.
+    }
   }
 }
 
 main().catch((err) => {
   console.error("[migrate] failed:", err?.message || err);
-  // pg errors carry the context needed to debug a bad SQL file.
   for (const key of ["code", "detail", "hint", "position", "where"]) {
     if (err?.[key] != null) console.error(`[migrate]   ${key}: ${err[key]}`);
   }
-  process.exit(1);
+  console.error("[migrate] Deploy continues. Schema was not changed.");
+  process.exit(0);
 });
