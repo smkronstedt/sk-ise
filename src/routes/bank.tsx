@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Shell } from "@/components/desk/shell";
 import { AnatomyFigure } from "@/components/desk/anatomy-figure";
@@ -64,6 +64,7 @@ function BankPage() {
   const [banner, setBanner] = useState("");
   const [catalogReady, setCatalogReady] = useState(false);
   const desk = useDesk();
+  const navigate = useNavigate();
 
   const [attempt, setAttempt] = useState(0);
 
@@ -301,6 +302,28 @@ function BankPage() {
           placeholder="Search stem or point"
           className="min-h-11 flex-1 rounded border border-line bg-paper px-3"
         />
+        <button
+          type="button"
+          disabled={!filtered.length}
+          onClick={() => {
+            const label =
+              [
+                topic !== "all" ? topic : "",
+                query.trim(),
+                setName === "sasp" ? "SASP" : setName === "uqb" ? "Board set" : /^\d{4}$/.test(setName) ? `SASP ${setName}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ") || "Bank deck";
+            const id = desk.createFromIds(
+              filtered.map((row) => row.id),
+              label,
+            );
+            if (id) void navigate({ to: "/test/$id", params: { id } });
+          }}
+          className="min-h-11 rounded bg-blue px-4 text-sm font-semibold text-white disabled:opacity-40"
+        >
+          Start deck ({filtered.length})
+        </button>
       </div>
       {banner ? <p className="mt-3 text-sm font-semibold">{banner}</p> : null}
 
