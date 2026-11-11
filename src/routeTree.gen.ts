@@ -16,6 +16,7 @@ import { Route as BookletsRouteImport } from './routes/booklets'
 import { Route as CardsRouteImport } from './routes/cards'
 import { Route as ConnectionsRouteImport } from './routes/connections'
 import { Route as CreateRouteImport } from './routes/create'
+import { Route as FellowshipRouteImport } from './routes/fellowship'
 import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as ItemsRouteImport } from './routes/items'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
@@ -27,6 +28,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetRouteImport } from './routes/reset'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TestsRouteImport } from './routes/tests'
+import { Route as UdsRouteImport } from './routes/uds'
 import { Route as TestIdRouteImport } from './routes/test.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -63,6 +65,11 @@ const ConnectionsRoute = ConnectionsRouteImport.update({
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
   path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FellowshipRoute = FellowshipRouteImport.update({
+  id: '/fellowship',
+  path: '/fellowship',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuidelinesRoute = GuidelinesRouteImport.update({
@@ -120,6 +127,11 @@ const TestsRoute = TestsRouteImport.update({
   path: '/tests',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UdsRoute = UdsRouteImport.update({
+  id: '/uds',
+  path: '/uds',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TestIdRoute = TestIdRouteImport.update({
   id: '/test/$id',
   path: '/test/$id',
@@ -139,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/cards': typeof CardsRoute
   '/connections': typeof ConnectionsRoute
   '/create': typeof CreateRoute
+  '/fellowship': typeof FellowshipRoute
   '/guidelines': typeof GuidelinesRoute
   '/items': typeof ItemsRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -150,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/reset': typeof ResetRoute
   '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
+  '/uds': typeof UdsRoute
   '/test/$id': typeof TestIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -161,6 +175,7 @@ export interface FileRoutesByTo {
   '/cards': typeof CardsRoute
   '/connections': typeof ConnectionsRoute
   '/create': typeof CreateRoute
+  '/fellowship': typeof FellowshipRoute
   '/guidelines': typeof GuidelinesRoute
   '/items': typeof ItemsRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -172,6 +187,7 @@ export interface FileRoutesByTo {
   '/reset': typeof ResetRoute
   '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
+  '/uds': typeof UdsRoute
   '/test/$id': typeof TestIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -184,6 +200,7 @@ export interface FileRoutesById {
   '/cards': typeof CardsRoute
   '/connections': typeof ConnectionsRoute
   '/create': typeof CreateRoute
+  '/fellowship': typeof FellowshipRoute
   '/guidelines': typeof GuidelinesRoute
   '/items': typeof ItemsRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -195,6 +212,7 @@ export interface FileRoutesById {
   '/reset': typeof ResetRoute
   '/settings': typeof SettingsRoute
   '/tests': typeof TestsRoute
+  '/uds': typeof UdsRoute
   '/test/$id': typeof TestIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -208,6 +226,7 @@ export interface FileRouteTypes {
     | '/cards'
     | '/connections'
     | '/create'
+    | '/fellowship'
     | '/guidelines'
     | '/items'
     | '/leaderboard'
@@ -219,6 +238,7 @@ export interface FileRouteTypes {
     | '/reset'
     | '/settings'
     | '/tests'
+    | '/uds'
     | '/test/$id'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -230,6 +250,7 @@ export interface FileRouteTypes {
     | '/cards'
     | '/connections'
     | '/create'
+    | '/fellowship'
     | '/guidelines'
     | '/items'
     | '/leaderboard'
@@ -241,6 +262,7 @@ export interface FileRouteTypes {
     | '/reset'
     | '/settings'
     | '/tests'
+    | '/uds'
     | '/test/$id'
     | '/api/auth/$'
   id:
@@ -252,6 +274,7 @@ export interface FileRouteTypes {
     | '/cards'
     | '/connections'
     | '/create'
+    | '/fellowship'
     | '/guidelines'
     | '/items'
     | '/leaderboard'
@@ -263,6 +286,7 @@ export interface FileRouteTypes {
     | '/reset'
     | '/settings'
     | '/tests'
+    | '/uds'
     | '/test/$id'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -275,6 +299,7 @@ export interface RootRouteChildren {
   CardsRoute: typeof CardsRoute
   ConnectionsRoute: typeof ConnectionsRoute
   CreateRoute: typeof CreateRoute
+  FellowshipRoute: typeof FellowshipRoute
   GuidelinesRoute: typeof GuidelinesRoute
   ItemsRoute: typeof ItemsRoute
   LeaderboardRoute: typeof LeaderboardRoute
@@ -286,6 +311,7 @@ export interface RootRouteChildren {
   ResetRoute: typeof ResetRoute
   SettingsRoute: typeof SettingsRoute
   TestsRoute: typeof TestsRoute
+  UdsRoute: typeof UdsRoute
   TestIdRoute: typeof TestIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -339,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/create'
       fullPath: '/create'
       preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fellowship': {
+      id: '/fellowship'
+      path: '/fellowship'
+      fullPath: '/fellowship'
+      preLoaderRoute: typeof FellowshipRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guidelines': {
@@ -418,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/uds': {
+      id: '/uds'
+      path: '/uds'
+      fullPath: '/uds'
+      preLoaderRoute: typeof UdsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/test/$id': {
       id: '/test/$id'
       path: '/test/$id'
@@ -443,6 +483,7 @@ const rootRouteChildren: RootRouteChildren = {
   CardsRoute: CardsRoute,
   ConnectionsRoute: ConnectionsRoute,
   CreateRoute: CreateRoute,
+  FellowshipRoute: FellowshipRoute,
   GuidelinesRoute: GuidelinesRoute,
   ItemsRoute: ItemsRoute,
   LeaderboardRoute: LeaderboardRoute,
@@ -454,6 +495,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetRoute: ResetRoute,
   SettingsRoute: SettingsRoute,
   TestsRoute: TestsRoute,
+  UdsRoute: UdsRoute,
   TestIdRoute: TestIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

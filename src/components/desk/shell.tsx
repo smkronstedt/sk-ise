@@ -18,6 +18,7 @@ const study = [
   { to: "/create", label: "Build" },
   { to: "/tests", label: "Tests" },
   { to: "/booklets", label: "Booklets" },
+  { to: "/uds", label: "Urodynamics" },
   { to: "/items", label: "Items" },
 ] as const;
 
@@ -204,6 +205,14 @@ export function Shell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
+            {session.data?.user?.email?.toLowerCase() === "shane.kronstedt@bcm.edu" ? (
+              <Link
+                to="/fellowship"
+                className={`whitespace-nowrap rounded px-2 py-1.5 text-sm font-semibold ${path === "/fellowship" ? "bg-white text-navy" : "text-white/85 hover:bg-white/10"}`}
+              >
+                Fellowship
+              </Link>
+            ) : null}
           </nav>
           {open ? (
           <p className="shrink-0 whitespace-nowrap text-xs font-semibold leading-none">

@@ -14,6 +14,7 @@ import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, TestBlock } from "@/lib/desk/types";
 import { drawActor, drawCreature, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
+import { musicOn, setTownMusic } from "@/lib/desk/town-music";
 import { questCash } from "@/lib/desk/purse";
 import {
   BAG_KEY,
@@ -71,7 +72,7 @@ type Scene = "town" | "gym" | "route";
 
 type Npc = {
   id: string;
-  kind: "trainer" | "leader" | "rival";
+  kind: "trainer" | "leader" | "rival" | "townsman";
   name: string;
   x: number;
   y: number;
@@ -294,6 +295,24 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       foe: "/field/towns/trainer.jpg?v=2",
     });
   });
+  npcs.push({
+    id: `town-${city.id}`,
+    kind: "townsman",
+    name: "Local",
+    x: 4,
+    y: 5,
+    face: "down",
+    sight: 0,
+    done: false,
+    ready: false,
+    count: 0,
+    need: 1,
+    adaptive: false,
+    testName: "",
+    blueprint: city.id,
+    line: `${city.city}. Mart is the west door. Center is the east door. Gym is north. After the badge, the boat is the bottom-right tile.`,
+    foe: "/field/towns/walker.jpg?v=2",
+  });
   if (!rivalDone) {
     npcs.push({
       id: `rival-${city.id}`,
@@ -386,6 +405,7 @@ export function MonsterQuest({
   const cityRef = useRef<City | null>(null);
   const apiRef = useRef({ talk: (_npc: Npc) => {}, wild: () => {}, enter: (_tile: Tile, _x: number, _y: number) => {} });
   const [scene, setScene] = useState<Scene>("town");
+  const [tune, setTune] = useState(false);
   const [hold, setHold] = useState<string | null>(() => (typeof localStorage === "undefined" ? null : localStorage.getItem("callroom-quest-city")));
   const [line, setLine] = useState("Walk across a trainer's line. They will see you.");
   const [caseOpen, setCaseOpen] = useState(false);
@@ -475,6 +495,10 @@ export function MonsterQuest({
   };
 
   const startBattle = async (npc: Npc) => {
+    if (npc.kind === "townsman") {
+      setLine(npc.line);
+      return;
+    }
     if (busyRef.current) return;
     if (npc.done) {
       setLine(`${npc.name}: Nothing left to prove.`);
@@ -596,7 +620,13 @@ export function MonsterQuest({
     });
   };
 
-  apiRef.current.talk = (npc) => void startBattle(npc);
+  apiRef.current.talk = (npc) => {
+    if (npc.kind === "townsman") {
+      setLine(npc.line);
+      return;
+    }
+    void startBattle(npc);
+  };
   apiRef.current.wild = () => void startWild();
   apiRef.current.enter = (tile, _x, y) => {
     if (tile === 9) {
@@ -930,11 +960,50 @@ export function MonsterQuest({
       }, 650);
     };
 
+    let path: { x: number; y: number }[] = [];
+    let pending: Npc | null = null;
+
+    const routeTo = (tx: number, ty: number) => {
+      const key = (x: number, y: number) => `${x},${y}`;
+      const prev = new Map<string, string | null>();
+      const queue = [{ x: player.x, y: player.y }];
+      prev.set(key(player.x, player.y), null);
+      let found = false;
+      while (queue.length) {
+        const cur = queue.shift();
+        if (!cur) break;
+        if (cur.x === tx && cur.y === ty) {
+          found = true;
+          break;
+        }
+        for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]] as const) {
+          const nx = cur.x + dx;
+          const ny = cur.y + dy;
+          const id = key(nx, ny);
+          if (prev.has(id) || !canWalk(map, nx, ny)) continue;
+          prev.set(id, key(cur.x, cur.y));
+          queue.push({ x: nx, y: ny });
+        }
+      }
+      if (!found) return;
+      const steps: { x: number; y: number }[] = [];
+      let cursor: string | null = key(tx, ty);
+      while (cursor && cursor !== key(player.x, player.y)) {
+        const [sx, sy] = cursor.split(",").map(Number);
+        steps.push({ x: sx, y: sy });
+        cursor = prev.get(cursor) ?? null;
+      }
+      path = steps.reverse();
+    };
+
     const onKey = (event: KeyboardEvent) => {
       const move = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"];
       if (move.includes(event.key.toLowerCase())) event.preventDefault();
-      if (event.type === "keydown") keysRef.current.add(event.key.toLowerCase());
-      else keysRef.current.delete(event.key.toLowerCase());
+      if (event.type === "keydown") {
+        keysRef.current.add(event.key.toLowerCase());
+        path = [];
+        pending = null;
+      } else keysRef.current.delete(event.key.toLowerCase());
       if (event.type === "keydown" && !event.repeat && (event.key === "Enter" || event.key === " ")) interactRef.current = true;
       if (event.type === "keydown" && event.key.toLowerCase() === "m") setCaseOpen((open) => !open);
     };
@@ -947,19 +1016,35 @@ export function MonsterQuest({
     window.addEventListener("blur", release);
     const onMap = (event: PointerEvent) => {
       keysRef.current.clear();
+      path = [];
+      pending = null;
       if (pausedRef.current || busyRef.current) return;
       const rect = canvas.getBoundingClientRect();
       const x = Math.min(COLS - 1, Math.max(0, Math.floor(((event.clientX - rect.left) / rect.width) * COLS)));
       const y = Math.min(ROWS - 1, Math.max(0, Math.floor(((event.clientY - rect.top) / rect.height) * ROWS)));
       const npc = map.npcs.find((one) => one.x === x && one.y === y);
-      if (npc && Math.abs(npc.x - player.x) + Math.abs(npc.y - player.y) <= 3) {
+      if (npc && Math.abs(npc.x - player.x) + Math.abs(npc.y - player.y) <= 1) {
         apiRef.current.talk(npc);
         return;
       }
+      if (npc) {
+        const nextTo = [[0, -1], [0, 1], [-1, 0], [1, 0]]
+          .map(([dx, dy]) => ({ x: npc.x + dx, y: npc.y + dy }))
+          .filter((spot) => canWalk(map, spot.x, spot.y))
+          .sort((a, b) => Math.abs(a.x - player.x) + Math.abs(a.y - player.y) - (Math.abs(b.x - player.x) + Math.abs(b.y - player.y)))[0];
+        if (nextTo) {
+          pending = npc;
+          routeTo(nextTo.x, nextTo.y);
+        }
+        return;
+      }
       const tile = map.tiles[y]?.[x];
-      const below = map.tiles[y + 1]?.[x];
-      const door = tile === 4 || tile === 5 || tile === 7 || tile === 9 ? tile : below === 4 || below === 5 || below === 7 || below === 9 ? below : 0;
-      if (door && Math.abs(x - player.x) + Math.abs(y - player.y) <= 2) apiRef.current.enter(door, x, y);
+      if (tile === 4 || tile === 5 || tile === 7 || tile === 9) {
+        if (Math.abs(x - player.x) + Math.abs(y - player.y) <= 1) apiRef.current.enter(tile, x, y);
+        else routeTo(x, y);
+        return;
+      }
+      routeTo(x, y);
     };
     canvas.addEventListener("pointerdown", onMap);
     canvas.width = COLS * TILE * 2;
@@ -988,13 +1073,20 @@ export function MonsterQuest({
           if (near) apiRef.current.talk(near);
           else setLine("Stand next to someone, or click them.");
         } else {
-          const step = dir();
+          const keyed = dir();
+          const queued = !keyed && path[0] ? ([path[0].x - player.x, path[0].y - player.y] as const) : null;
+          const step = keyed ?? (queued && Math.abs(queued[0]) + Math.abs(queued[1]) === 1 ? queued : null);
+          if (keyed) {
+            path = [];
+            pending = null;
+          }
           if (step && canWalk(map, player.x + step[0], player.y + step[1])) {
             player.fromX = player.x;
             player.fromY = player.y;
             player.face = step[1] < 0 ? "up" : step[1] > 0 ? "down" : step[0] < 0 ? "left" : "right";
             player.x += step[0];
             player.y += step[1];
+            if (path[0]?.x === player.x && path[0]?.y === player.y) path.shift();
             moving = STEP;
             walked += 1;
             posRef.current.x = player.x;
@@ -1021,6 +1113,11 @@ export function MonsterQuest({
               }
               const npc = seenBy(map, player.x, player.y);
               if (npc) spot(npc);
+              else if (pending && path.length === 0 && Math.abs(pending.x - player.x) + Math.abs(pending.y - player.y) === 1) {
+                const who = pending;
+                pending = null;
+                apiRef.current.talk(who);
+              }
             }
           }
         }
@@ -1044,6 +1141,15 @@ export function MonsterQuest({
           const tile = map.tiles[y][x];
           const building = scene === "gym" || (scene === "town" && y === 1 && tile === 2);
           drawProp(ctx, tile, x, y, building);
+          if (scene === "town") {
+            const label = tile === 7 ? "MART" : tile === 9 ? "CENTER" : tile === 4 ? "GYM" : tile === 5 && y >= 8 ? "BOAT" : "";
+            if (label) {
+              ctx.fillStyle = "#1a1208";
+              ctx.font = "bold 8px sans-serif";
+              ctx.textAlign = "center";
+              ctx.fillText(label, x * TILE + TILE / 2, y * TILE + 14);
+            }
+          }
         }
       }
       const stepPhase = moving > 0 ? walked + t : 0;
@@ -1131,6 +1237,19 @@ export function MonsterQuest({
           <button type="button" onClick={() => setSheet((open) => (open ? null : "party"))} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
             Start
           </button>
+          <button
+            type="button"
+            onClick={() => setTune(setTownMusic(!musicOn()))}
+            className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold"
+          >
+            {tune || musicOn() ? "Music on" : "Music"}
+          </button>
+          <div className="flex gap-0.5">
+            <button type="button" aria-label="Left" onPointerDown={() => keysRef.current.add("arrowleft")} onPointerUp={() => keysRef.current.delete("arrowleft")} onPointerLeave={() => keysRef.current.delete("arrowleft")} className="min-h-11 min-w-11 border-4 border-black bg-white text-sm font-bold">←</button>
+            <button type="button" aria-label="Up" onPointerDown={() => keysRef.current.add("arrowup")} onPointerUp={() => keysRef.current.delete("arrowup")} onPointerLeave={() => keysRef.current.delete("arrowup")} className="min-h-11 min-w-11 border-4 border-black bg-white text-sm font-bold">↑</button>
+            <button type="button" aria-label="Down" onPointerDown={() => keysRef.current.add("arrowdown")} onPointerUp={() => keysRef.current.delete("arrowdown")} onPointerLeave={() => keysRef.current.delete("arrowdown")} className="min-h-11 min-w-11 border-4 border-black bg-white text-sm font-bold">↓</button>
+            <button type="button" aria-label="Right" onPointerDown={() => keysRef.current.add("arrowright")} onPointerUp={() => keysRef.current.delete("arrowright")} onPointerLeave={() => keysRef.current.delete("arrowright")} className="min-h-11 min-w-11 border-4 border-black bg-white text-sm font-bold">→</button>
+          </div>
         </div>
       </div>
       {battle ? (

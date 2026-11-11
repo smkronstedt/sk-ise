@@ -178,11 +178,11 @@ export const topics: Topic[] = [
     guidelines: [g("Genitourinary syndrome of menopause", "https://www.auanet.org/guidelines-and-quality/guidelines/genitourinary-syndrome-of-menopause")],
   },
   {
-    id: "nlutd",
-    title: "Neurogenic LUT dysfunction",
-    short: "NLUTD",
+    id: "uds",
+    title: "Urodynamics bootcamp",
+    short: "UDS",
     blueprintId: "urogyn",
-    blurb: "Risk, storage pressure, autonomic dysreflexia.",
+    blurb: "CMG, videourodynamics, and pressure-flow.",
     guidelines: [g("Adult neurogenic lower urinary tract dysfunction", "https://www.auanet.org/guidelines-and-quality/guidelines/adult-neurogenic-lower-urinary-tract-dysfunction")],
   },
   {
