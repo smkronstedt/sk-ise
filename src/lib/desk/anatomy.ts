@@ -78,7 +78,7 @@ const plates: { src: string; keys: string[]; caption: string }[] = [
   },
   {
     src: "/anatomy/urethra-segments.jpg",
-    keys: ["prostatic urethra", "membranous urethra", "bulbar", "pendulous", "fossa navicular", "posterior urethral valve", "urethral stricture", "urethroplasty"],
+    keys: ["prostatic urethra", "membranous urethra", "pendulous", "fossa navicular", "posterior urethral valve"],
     caption: "Male urethra, proximal to distal: prostatic, membranous (through the pelvic floor, the external sphincter), bulbar, then pendulous in the shaft.",
   },
   {
@@ -113,9 +113,10 @@ function hasTerm(blob: string, key: string) {
   return new RegExp(`(?:^|[^a-z0-9])${escaped}(?:[^a-z0-9]|$)`).test(blob);
 }
 
-/** A plate only when the question is about that structure, not merely the organ. */
+/** A plate only when the question is asking about the structure itself. */
 export function anatomyPlate(_topic: string, text: string): AnatomyPlate | undefined {
   const blob = text.toLowerCase();
+  if (!/which structure|identify the|where (is|does|are)|what layer|which layer|which nerve|which vessel|which zone|anatomic/.test(blob)) return undefined;
   let best: AnatomyPlate & { length: number } | undefined;
   for (const plate of plates) {
     for (const key of plate.keys) {

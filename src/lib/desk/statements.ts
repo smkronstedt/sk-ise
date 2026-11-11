@@ -14,6 +14,8 @@ function q(
   why: string,
   wrong: Four,
 ): Question {
+  const asks = /\?|next step|which |what |choose|choosing|best |most likely|diagnosis|management/i.test(stem);
+  const text = asks ? stem : `${stem.replace(/[.?\s]*$/, "")}. The next step is:`;
   const aligned = ["", "", "", "", ""];
   let n = 0;
   for (let i = 0; i < 5; i++) {
@@ -25,7 +27,7 @@ function q(
     topicId,
     guide,
     statement,
-    stem: [stem],
+    stem: [text],
     choices: [...choices],
     answer,
     explanation: why,
