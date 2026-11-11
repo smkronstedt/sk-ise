@@ -42,7 +42,14 @@ async function main() {
     return;
   }
 
-  const pool = new pg.Pool({ connectionString: databaseUrl, max: 1 });
+  const pool = new pg.Pool({
+    connectionString: databaseUrl,
+    max: 1,
+    ssl: databaseUrl.includes("localhost") ? undefined : { rejectUnauthorized: false },
+  });
+  pool.on("error", (error) => {
+    console.error("[migrate]", error instanceof Error ? error.message : error);
+  });
   const client = await pool.connect();
   try {
     await client.query(
