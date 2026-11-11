@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Shell } from "@/components/desk/shell";
 import { AnatomyFigure } from "@/components/desk/anatomy-figure";
+import { isNlutdTopic, NlutdChart } from "@/components/desk/nlutd-chart";
 import { addCard } from "@/lib/cards";
 import { selectionStatus } from "@/lib/desk/adapt";
 import { loadCatalog } from "@/lib/desk/catalog";
@@ -409,6 +410,7 @@ function Practice({
             {saved?.correct ? "Correct" : "Incorrect"}. Answer {item.answer}. {optionText(item, item.answer)}
           </p>
           <p className="mt-3 leading-relaxed">{item.rationale}</p>
+          {isNlutdTopic(item.topic) ? <NlutdChart /> : null}
           <p className="mt-3 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
             <span className="font-semibold">Learning point. </span>
             {item.learning_point}

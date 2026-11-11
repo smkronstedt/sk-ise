@@ -13,6 +13,7 @@ import { DEX, loadField, portraitFor } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, TestBlock } from "@/lib/desk/types";
 import { drawActor, drawCreature, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
+import { NlutdChart } from "@/components/desk/nlutd-chart";
 import { questCash } from "@/lib/desk/purse";
 import {
   BAG_KEY,
@@ -1183,6 +1184,7 @@ export function MonsterQuest({
               <p className="mt-2 text-sm font-bold">Correct answer: {"ABCDE"[question.answer]}. {question.choices[question.answer]}</p>
             ) : null}
             {battle.reveal && question ? <p className="mt-1 max-h-24 overflow-auto text-xs leading-relaxed">{question.explanation}</p> : null}
+            {battle.reveal && question?.topicId === "nlutd" ? <NlutdChart /> : null}
             {battle.reveal && question?.objective ? (
               <p className="mt-2 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
                 <span className="font-semibold">Teaching point. </span>
