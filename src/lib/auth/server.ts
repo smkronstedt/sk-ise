@@ -149,11 +149,17 @@ const grokUserInfoUrl = `${issuerBase}/api/auth/oauth2/userinfo`;
 // schema from `migrations/auth/0001_auth.sql`, copied into `migrations/` when
 // the app turns sign-in on.
 const database = databaseUrl
-  ? new Pool({
-      connectionString: databaseUrl,
-      max: 1,
-      ssl: databaseUrl.includes("localhost") ? undefined : { rejectUnauthorized: false },
-    })
+  ? (() => {
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        max: 1,
+        ssl: databaseUrl.includes("localhost") ? undefined : { rejectUnauthorized: false },
+      });
+      pool.on("error", (error) => {
+        console.error("[auth-db]", error instanceof Error ? error.message : error);
+      });
+      return pool;
+    })()
   : { dialect: pgliteDialect(() => getPglite()), type: "postgres" as const };
 
 /** Session token cookie name — also read by the live-preview popup completion page. */

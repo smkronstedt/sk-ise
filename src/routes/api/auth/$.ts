@@ -3,7 +3,12 @@ import { auth } from "@/lib/auth/server";
 
 async function handle(request: Request) {
   try {
-    return await auth.handler(request);
+    const response = await auth.handler(request);
+    const body = await response.text();
+    const headers = new Headers(response.headers);
+    headers.delete("content-length");
+    headers.delete("transfer-encoding");
+    return new Response(body, { status: response.status, headers });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Sign-in crashed before it could answer.";
     console.error("[auth]", message);

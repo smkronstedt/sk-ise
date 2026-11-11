@@ -104,6 +104,9 @@ function createNeonSql(): Promise<Sql> {
       max: 1,
       ssl: databaseUrl?.includes("localhost") ? undefined : { rejectUnauthorized: false },
     });
+    pool.on("error", (error) => {
+      console.error("[db]", error instanceof Error ? error.message : error);
+    });
     return toSql(async <T>(text: string, params: unknown[]) => {
       const res = await pool.query(text, params);
       return res.rows as T[];
