@@ -370,17 +370,13 @@ let syncAgain = false;
 
 function playingNow() {
   if (typeof window === "undefined") return false;
-  if (window.location.pathname.startsWith("/test")) return true;
+  const path = window.location.pathname;
+  if (path.startsWith("/test") || path.startsWith("/bank") || path.startsWith("/cards")) return true;
   try {
     return sessionStorage.getItem("ise-playing") === "1" || sessionStorage.getItem("ise-battle") === "1";
   } catch {
     return false;
   }
-}
-
-function reloadIfIdle() {
-  if (playingNow()) return;
-  window.location.reload();
 }
 
 export async function syncDeviceProgress(userId?: string): Promise<"synced" | "device"> {
@@ -415,7 +411,7 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
         restoreSide(unpacked.remoteActivity, unpacked.remoteDaily, false);
       }
       localStorage.setItem(OWNER, userId);
-      reloadIfIdle();
+      window.location.reload();
       return "synced";
     }
     if (!remote?.payload) {
@@ -446,7 +442,6 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
     const fresh = mergeBundles(localBundle(), merged);
     await saveProgress({ data: { payload: JSON.stringify(pack(fresh)) } });
     if (userId) localStorage.setItem(OWNER, userId);
-    if (changed) reloadIfIdle();
     return "synced";
   } catch {
     return "device";
