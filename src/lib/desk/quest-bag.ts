@@ -25,6 +25,8 @@ export type Creature = {
   pending?: string;
   /** Highest evolution stage the player has already been shown. */
   seenStage?: 0 | 1 | 2;
+  /** 0–255. They start happy and love the Center. */
+  joy?: number;
 };
 
 export type QuestBag = {
@@ -481,8 +483,27 @@ export function drink(kind: "potion" | "super", index = 0): string {
   return useHeld(kind, index, false);
 }
 
+export function joyOf(creature: Creature) {
+  return creature.joy ?? 230;
+}
+
+export function joyWord(joy: number) {
+  if (joy >= 250) return "loves the Center";
+  if (joy >= 200) return "very happy";
+  if (joy >= 140) return "happy";
+  return "okay";
+}
+
 export function healAll(bag: QuestBag) {
-  for (const creature of [...bag.party, ...bag.box]) creature.hp = maxHp(creature, bag);
+  for (const creature of [...bag.party, ...bag.box]) {
+    creature.hp = maxHp(creature, bag);
+    knownMoves(creature);
+    for (const slot of creature.moves ?? []) {
+      const def = moveDef(slot.id);
+      if (def) slot.pp = def.pp;
+    }
+    creature.joy = Math.min(255, joyOf(creature) + 20);
+  }
 }
 
 export function revive(kind: "revive" | "max", index = 0): string {

@@ -25,6 +25,8 @@ import {
   foeHealth,
   grantExp,
   healAll,
+  joyOf,
+  joyWord,
   keepCatch,
   levelOf,
   lines,
@@ -69,7 +71,7 @@ const RIVAL = "Reed Calder";
 
 type Tile = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 type Face = "up" | "down" | "left" | "right";
-type Scene = "town" | "gym" | "route";
+type Scene = "town" | "gym" | "route" | "center";
 
 type Npc = {
   id: string;
@@ -91,6 +93,7 @@ type Npc = {
   prostate?: boolean;
   line: string;
   foe: string;
+  sprite?: string;
 };
 
 type World = { tiles: Tile[][]; npcs: Npc[]; start: { x: number; y: number } };
@@ -240,6 +243,48 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
     return { tiles, npcs, start: { x: 6, y: 9 } };
   }
 
+  if (scene === "center") {
+    openGround(tiles);
+    for (let x = 2; x <= 10; x++) tiles[2][x] = 8;
+    tiles[1][5] = 8;
+    tiles[1][6] = 8;
+    tiles[1][7] = 8;
+    tiles[5][1] = 8;
+    tiles[5][11] = 8;
+    tiles[6][1] = 8;
+    tiles[6][2] = 8;
+    tiles[6][10] = 8;
+    tiles[6][11] = 8;
+    tiles[9][6] = 4;
+    const nurses = [
+      { id: "joy-1", name: "Joy", x: 3, sprite: "/quest/joy-b.png", line: "Joy smiles. The whole party can rest here." },
+      { id: "joy-2", name: "Mina", x: 6, sprite: "/quest/joy-a.png", line: "Mina keeps the lights low. They always perk up." },
+      { id: "joy-3", name: "Lila", x: 9, sprite: "/quest/joy-b.png", line: "Lila already has the machine warmed up." },
+    ];
+    for (const nurse of nurses) {
+      npcs.push({
+        id: nurse.id,
+        kind: "townsman",
+        name: nurse.name,
+        x: nurse.x,
+        y: 3,
+        face: "down",
+        sight: 0,
+        done: false,
+        ready: false,
+        count: 0,
+        need: 1,
+        adaptive: false,
+        testName: "",
+        blueprint: city.id,
+        line: nurse.line,
+        foe: nurse.sprite,
+        sprite: nurse.sprite,
+      });
+    }
+    return { tiles, npcs, start: { x: 6, y: 8 } };
+  }
+
   openGround(tiles);
   for (let y = 1; y <= 9; y++) tiles[y][6] = 1;
   for (let x = 1; x <= 11; x++) {
@@ -326,7 +371,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
     adaptive: false,
     testName: "",
     blueprint: city.id,
-    line: `${city.city}. Mart is the west door. Center is the east door. Gym is north. After the badge, the boat is the bottom-right tile.`,
+    line: `${city.city}. Mart is the west door. Walk into the Center on the east. Gym is north. After the badge, the boat is the bottom-right tile.`,
     foe: "/field/towns/walker.jpg?v=2",
   });
   if (!rivalDone) {
@@ -387,6 +432,66 @@ function seenBy(world: World, x: number, y: number) {
     if (aligned && clearLane(world, npc, x, y)) return npc;
   }
   return null;
+}
+
+function drawCenter(ctx: CanvasRenderingContext2D, frame: number) {
+  const width = COLS * TILE;
+  const height = ROWS * TILE;
+  ctx.fillStyle = "#f4b7c8";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "#fff7f4";
+  ctx.fillRect(TILE, TILE, width - TILE * 2, height - TILE * 2);
+  ctx.strokeStyle = "#f3d0da";
+  ctx.lineWidth = 1;
+  for (let y = 1; y < ROWS - 1; y++) {
+    for (let x = 1; x < COLS - 1; x++) ctx.strokeRect(x * TILE + 1, y * TILE + 1, TILE - 2, TILE - 2);
+  }
+  ctx.fillStyle = "#f8e7c9";
+  ctx.fillRect(3 * TILE, 5 * TILE, 7 * TILE, 3 * TILE);
+  ctx.strokeStyle = "#e7a0b8";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(3 * TILE + 4, 5 * TILE + 4, 7 * TILE - 8, 3 * TILE - 8);
+  ctx.fillStyle = "#d7eef8";
+  ctx.fillRect(2 * TILE, 6, 2 * TILE, TILE - 10);
+  ctx.fillRect(9 * TILE, 6, 2 * TILE, TILE - 10);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(5 * TILE + 2, TILE + 8, 3 * TILE - 4, TILE - 12);
+  ctx.fillStyle = "#f48fb1";
+  const blink = frame % 2 ? 14 : 10;
+  ctx.fillRect(6 * TILE + 12, TILE + blink, 8, 12);
+  ctx.fillRect(6 * TILE + 8, TILE + blink + 4, 16, 5);
+  ctx.fillStyle = `rgba(255, 214, 150, ${frame % 2 ? 0.22 : 0.12})`;
+  ctx.beginPath();
+  ctx.arc(6.5 * TILE, 2.4 * TILE, TILE * 2.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(2 * TILE, 2 * TILE + 10, 9 * TILE, TILE - 8);
+  ctx.fillStyle = "#f7b6c8";
+  ctx.fillRect(2 * TILE, 2 * TILE + 10, 9 * TILE, 5);
+  const couch = (x: number) => {
+    ctx.fillStyle = "#e7a0b8";
+    ctx.fillRect(x * TILE + 2, 6 * TILE + 8, TILE * 2 - 4, TILE - 10);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(x * TILE + 6, 6 * TILE + 12, TILE * 2 - 12, 6);
+  };
+  couch(1);
+  couch(10);
+  const plant = (x: number, y: number) => {
+    ctx.fillStyle = "#f7f1e8";
+    ctx.fillRect(x * TILE + 10, y * TILE + 18, 12, 10);
+    ctx.fillStyle = "#3f8f4a";
+    ctx.beginPath();
+    ctx.arc(x * TILE + 16, y * TILE + 14, 9, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  plant(1, 5);
+  plant(11, 5);
+  ctx.fillStyle = "#c98484";
+  ctx.fillRect(6 * TILE + 4, 9 * TILE + 2, TILE - 8, TILE - 4);
+  ctx.fillStyle = "#fff8dc";
+  ctx.font = "bold 7px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("OUT", 6 * TILE + TILE / 2, 9 * TILE + 18);
 }
 
 export function MonsterQuest({
@@ -500,7 +605,7 @@ export function MonsterQuest({
   const go = (next: Scene, x: number, y: number) => {
     posRef.current = { x, y, scene: next, cityId: city?.id ?? "league" };
     setScene(next);
-    setLine(next === "route" ? "Grass shows up in patches. A correct answer weakens a wild one. Then throw a ball." : next === "gym" ? "The aisle is the leader's line of sight." : "The west door is the shop. Trainers watch the streets.");
+    setLine(next === "route" ? "Grass shows up in patches. A correct answer weakens a wild one. Then throw a ball." : next === "gym" ? "The aisle is the leader's line of sight." : next === "center" ? "The Center is warm and quiet. Talk to a nurse. HP and PP come back here. Not at midnight." : "The west door is the shop. Trainers watch the streets.");
   };
 
   const readyLead = () => {
@@ -639,6 +744,11 @@ export function MonsterQuest({
   };
 
   apiRef.current.talk = (npc) => {
+    if (npc.id.startsWith("joy")) {
+      setNurse(true);
+      setLine(npc.line);
+      return;
+    }
     if (npc.kind === "townsman") {
       setLine(npc.line);
       return;
@@ -648,8 +758,12 @@ export function MonsterQuest({
   apiRef.current.wild = () => void startWild();
   apiRef.current.enter = (tile, _x, y) => {
     if (tile === 9) {
-      setNurse(true);
-      setLine("Welcome to the Center.");
+      go("center", 6, 8);
+      return;
+    }
+    if (tile === 4 && scene === "center") {
+      go("town", 9, 5);
+      setLine("They look back at the door. Come again.");
       return;
     }
     if (tile === 7 && scene === "town") {
@@ -859,7 +973,7 @@ export function MonsterQuest({
     } else {
       posRef.current = { x: 2, y: 7, scene: "town", cityId: "league" };
     }
-    setLine("You woke up at the Center. Everyone is healed.");
+    setLine("You woke up at the Center. HP and PP are full. They are glad to be here.");
   };
 
   const throwBall = (ball: Ball) => {
@@ -952,7 +1066,7 @@ export function MonsterQuest({
     const here = cityRef.current;
     const id = here?.id ?? "league";
     if (posRef.current.cityId !== id || posRef.current.scene !== scene) {
-      const start = scene === "gym" ? { x: 6, y: 8 } : scene === "route" ? { x: 6, y: 9 } : { x: 6, y: here ? 9 : 8 };
+      const start = scene === "gym" || scene === "center" ? { x: 6, y: 8 } : scene === "route" ? { x: 6, y: 9 } : { x: 6, y: here ? 9 : 8 };
       posRef.current = { x: start.x, y: start.y, scene, cityId: id };
     }
     const map = buildWorld(scene, here, stopsRef.current, testsRef.current);
@@ -1147,25 +1261,28 @@ export function MonsterQuest({
       ctx.setTransform(2, 0, 0, 2, 0, 0);
       ctx.imageSmoothingEnabled = true;
       ctx.clearRect(0, 0, COLS * TILE, ROWS * TILE);
-      for (let y = 0; y < ROWS; y++) {
-        for (let x = 0; x < COLS; x++) {
-          const tile = map.tiles[y][x];
-          const building = scene === "gym" || (scene === "town" && y === 1 && tile === 2);
-          drawGround(ctx, tile, x, y, building, frame);
+      if (scene === "center") drawCenter(ctx, frame);
+      else {
+        for (let y = 0; y < ROWS; y++) {
+          for (let x = 0; x < COLS; x++) {
+            const tile = map.tiles[y][x];
+            const building = scene === "gym" || (scene === "town" && y === 1 && tile === 2);
+            drawGround(ctx, tile, x, y, building, frame);
+          }
         }
-      }
-      for (let y = 0; y < ROWS; y++) {
-        for (let x = 0; x < COLS; x++) {
-          const tile = map.tiles[y][x];
-          const building = scene === "gym" || (scene === "town" && y === 1 && tile === 2);
-          drawProp(ctx, tile, x, y, building);
-          if (scene === "town") {
-            const label = tile === 7 ? "MART" : tile === 9 ? "CENTER" : tile === 4 ? "GYM" : tile === 5 && y >= 8 ? "BOAT" : "";
-            if (label) {
-              ctx.fillStyle = "#1a1208";
-              ctx.font = "bold 8px sans-serif";
-              ctx.textAlign = "center";
-              ctx.fillText(label, x * TILE + TILE / 2, y * TILE + 14);
+        for (let y = 0; y < ROWS; y++) {
+          for (let x = 0; x < COLS; x++) {
+            const tile = map.tiles[y][x];
+            const building = scene === "gym" || (scene === "town" && y === 1 && tile === 2);
+            drawProp(ctx, tile, x, y, building);
+            if (scene === "town") {
+              const label = tile === 7 ? "MART" : tile === 9 ? "CENTER" : tile === 4 ? "GYM" : tile === 5 && y >= 8 ? "BOAT" : "";
+              if (label) {
+                ctx.fillStyle = "#1a1208";
+                ctx.font = "bold 8px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(label, x * TILE + TILE / 2, y * TILE + 14);
+              }
             }
           }
         }
@@ -1176,9 +1293,20 @@ export function MonsterQuest({
         const behindX = player.face === "left" ? 0.8 : player.face === "right" ? -0.8 : 0;
         const behindY = player.face === "up" ? 0.85 : player.face === "down" ? -0.85 : 0;
         drawCreature(ctx, drawX + behindX, drawY + behindY, follow, player.face, stepPhase);
+        const leadJoy = bagRef.current?.party[0];
+        if (scene === "center" && leadJoy && joyOf(leadJoy) >= 200) {
+          ctx.fillStyle = "#ff6b93";
+          const hx = (drawX + behindX) * TILE + TILE / 2 - 3;
+          const hy = (drawY + behindY) * TILE - 8;
+          ctx.fillRect(hx, hy + 2, 3, 3);
+          ctx.fillRect(hx + 4, hy + 2, 3, 3);
+          ctx.fillRect(hx + 1, hy + 4, 5, 3);
+          ctx.fillRect(hx + 2, hy + 7, 3, 2);
+        }
       }
       for (const npc of map.npcs) {
-        drawActor(ctx, npc.x, npc.y, npc.kind === "leader" ? "leader" : npc.kind === "rival" ? "rival" : "trainer", 0, npc.face);
+        if (npc.sprite) drawCreature(ctx, npc.x, npc.y, npc.sprite, npc.face, 0);
+        else drawActor(ctx, npc.x, npc.y, npc.kind === "leader" ? "leader" : npc.kind === "rival" ? "rival" : "trainer", 0, npc.face);
         if (bang && bang.id === npc.id && now < bangUntil) {
           ctx.fillStyle = "#fff8dc";
           ctx.fillRect(npc.x * TILE + 8, npc.y * TILE - 18, 16, 18);
@@ -1190,7 +1318,7 @@ export function MonsterQuest({
       drawActor(ctx, drawX, drawY, "player", stepPhase, player.face);
       const wash = ["#d7b98a", "#7eb6d6", "#f0e27a", "#7dcea0", "#c39bd3", "#e6d5f2", "#e59866", "#c4a484"][Math.max(0, cities.findIndex((item) => item.id === id)) % 8];
       ctx.fillStyle = wash;
-      ctx.globalAlpha = scene === "town" ? 0.16 : 0.05;
+      ctx.globalAlpha = scene === "center" ? 0 : scene === "town" ? 0.16 : 0.05;
       ctx.fillRect(0, 0, COLS * TILE, ROWS * TILE);
       ctx.globalAlpha = 1;
       raf = requestAnimationFrame(draw);
@@ -1243,7 +1371,7 @@ export function MonsterQuest({
       ) : null}
       <div className="flex items-center justify-between gap-3 border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
         <div>
-          <h2 className="font-serif text-xl">{city ? `${city.city} · ${city.element}` : "Championship"}</h2>
+          <h2 className="font-serif text-xl">{scene === "center" && city ? `${city.city} Center` : city ? `${city.city} · ${city.element}` : "Championship"}</h2>
           {city && gymBeaten(city.id) && cities.findIndex((item) => item.id === city.id) < cities.length - 1 ? (
             <p className="text-xs">Boat at the bottom right goes to the next world. This one stays.</p>
           ) : null}
@@ -1510,7 +1638,8 @@ export function MonsterQuest({
       {trialOpen && city ? <TownTrial city={city} onClose={() => setTrialOpen(false)} /> : null}
       {nurse ? (
         <div className="absolute inset-x-0 top-16 z-20 border-4 border-black bg-[#f8f8d8] p-3 text-black">
-          <p className="text-sm font-bold">We can heal your party. Shall we?</p>
+          <p className="text-sm font-bold">The party looks glad to be here. Heal them?</p>
+          <p className="mt-1 text-xs">HP and every move's PP come back at the Center. A new day does not refill PP.</p>
           <div className="mt-2 flex gap-2">
             <button
               type="button"
@@ -1520,7 +1649,7 @@ export function MonsterQuest({
                 saveBag(rested);
                 setBag(loadBag());
                 setNurse(false);
-                setLine("Your party is fighting fit. We hope to see you again.");
+                setLine("Full HP. Full PP. They love it here.");
               }}
               className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]"
             >
@@ -1600,7 +1729,7 @@ function FieldSheet({
           {[...bag.party, ...bag.box].map((creature, index) => (
             <div key={creature.id} className="border-4 border-black bg-white p-2">
               <p className="text-sm font-bold">{index < bag.party.length ? `${index + 1}. ` : "Box · "}{nameOf(creature)} · Lv {levelOf(creature.exp)} · HP {creature.hp}/{maxHp(creature, bag)}</p>
-              <p className="text-xs">{levelOf(creature.exp) >= 14 ? "Final form." : levelOf(creature.exp) >= 6 ? "Evolves at level 14." : "Evolves at level 6."}</p>
+              <p className="text-xs">{levelOf(creature.exp) >= 14 ? "Final form." : levelOf(creature.exp) >= 6 ? "Evolves at level 14." : "Evolves at level 6."} Mood: {joyWord(joyOf(creature))}.</p>
               <p className="text-xs">{knownMoves(creature).map((move) => `${move.def.name} ${move.pp}/${move.def.pp}`).join(" · ")}</p>
               <div className="mt-1 flex flex-wrap gap-1">
                 {bag.candies > 0 ? (
