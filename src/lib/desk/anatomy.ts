@@ -77,11 +77,6 @@ const plates: { src: string; keys: string[]; caption: string }[] = [
     caption: "Bladder interior. The trigone is the triangle between the two ureteral orifices and the bladder neck. The urachus runs from the dome to the umbilicus.",
   },
   {
-    src: "/anatomy/urethra-segments.jpg",
-    keys: ["prostatic urethra", "membranous urethra", "pendulous", "fossa navicular", "posterior urethral valve"],
-    caption: "Male urethra, proximal to distal: prostatic, membranous (through the pelvic floor, the external sphincter), bulbar, then pendulous in the shaft.",
-  },
-  {
     src: "/anatomy/prostate.jpg",
     keys: ["verumontanum"],
     caption: "Prostate under the bladder, around the urethra.",
