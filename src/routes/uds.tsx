@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Shell } from "@/components/desk/shell";
 import { questions } from "@/lib/desk/questions";
+import { logActivity, logCorrect } from "@/lib/desk/activity";
 
 export const Route = createFileRoute("/uds")({
   component: UdsPage,
@@ -86,7 +87,17 @@ function UdsPage() {
               const tone =
                 !revealed ? "border-line bg-paper" : choiceIndex === item.answer ? "border-correct bg-correct-bg" : picked === choiceIndex ? "border-wrong bg-wrong-bg" : "border-line bg-paper";
               return (
-                <button key={choice} type="button" disabled={revealed} onClick={() => setPicked(choiceIndex)} className={`min-h-11 rounded border px-3 py-2 text-left ${tone}`}>
+                <button
+                  key={choice}
+                  type="button"
+                  disabled={revealed}
+                  onClick={() => {
+                    setPicked(choiceIndex);
+                    logActivity("questions");
+                    if (choiceIndex === item.answer) logCorrect();
+                  }}
+                  className={`min-h-11 rounded border px-3 py-2 text-left ${tone}`}
+                >
                   <span className="mr-2 font-semibold">{"ABCDE"[choiceIndex]}.</span>
                   {choice}
                 </button>

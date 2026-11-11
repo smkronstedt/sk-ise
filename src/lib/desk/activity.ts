@@ -1,4 +1,12 @@
 const KEY = "callroom-activity-v1";
+const LIFE = "callroom-correct-lifetime";
+
+export const MISSIONS = [
+  { id: "ten", label: "10 right", need: 10, pay: 10, kind: "correct" as const },
+  { id: "twentyfive", label: "25 right", need: 25, pay: 25, kind: "correct" as const },
+  { id: "fifty", label: "50 right", need: 50, pay: 50, kind: "correct" as const },
+  { id: "cards", label: "5 cards", need: 5, pay: 5, kind: "cards" as const },
+];
 
 export type DayLog = { questions: number; cards: number; correct?: number };
 
@@ -30,6 +38,31 @@ export function mergeActivity(local: Record<string, DayLog>, remote: Record<stri
     };
   }
   return out;
+}
+
+export function lifetimeCorrect() {
+  const raw = typeof window === "undefined" ? null : localStorage.getItem(LIFE);
+  return raw == null ? 0 : Math.max(0, Number(raw) || 0);
+}
+
+/** First visit keeps every correct answer already on the account. After that, each new one adds. */
+export function ensureLifetime(floor: number) {
+  if (typeof window === "undefined") return Math.max(0, floor);
+  const raw = localStorage.getItem(LIFE);
+  const have = raw == null ? 0 : Number(raw) || 0;
+  const next = Math.max(have, Math.max(0, floor));
+  if (raw == null || have !== next) localStorage.setItem(LIFE, String(next));
+  return next;
+}
+
+export function todayCorrect() {
+  return loadActivity()[dayKey()]?.correct ?? 0;
+}
+
+export function missionPay(row: { correct?: number; cards?: number } | undefined) {
+  const right = row?.correct ?? 0;
+  const cards = row?.cards ?? 0;
+  return MISSIONS.reduce((sum, mission) => sum + ((mission.kind === "cards" ? cards : right) >= mission.need ? mission.pay : 0), 0);
 }
 
 export function saveActivity(days: Record<string, DayLog>) {
@@ -125,6 +158,8 @@ export function prizeStatus(days = typeof window === "undefined" ? {} : loadActi
     monthStreak += 1;
     probe.setMonth(probe.getMonth() - 1);
   }
+  let missions = 0;
+  for (const row of Object.values(days)) missions += missionPay(row);
   return {
     answered,
     today: days[todayKey]?.questions ?? 0,
@@ -137,7 +172,10 @@ export function prizeStatus(days = typeof window === "undefined" ? {} : loadActi
     weekly,
     monthly,
     yearly,
-    purse: daily * DAILY_PRIZE + weekly * WEEK_PRIZE + monthly * MONTH_PRIZE + yearly * YEAR_PRIZE,
+    todayCorrect: days[todayKey]?.correct ?? 0,
+    todayCards: days[todayKey]?.cards ?? 0,
+    todayMissions: missionPay(days[todayKey]),
+    purse: daily * DAILY_PRIZE + weekly * WEEK_PRIZE + monthly * MONTH_PRIZE + yearly * YEAR_PRIZE + missions,
   };
 }
 
@@ -147,6 +185,8 @@ export function logCorrect() {
   const row = days[today] ?? { questions: 0, cards: 0 };
   row.correct = (row.correct ?? 0) + 1;
   days[today] = row;
+  const have = localStorage.getItem(LIFE);
+  localStorage.setItem(LIFE, String((have == null ? 0 : Number(have) || 0) + 1));
   saveActivity(days);
 }
 

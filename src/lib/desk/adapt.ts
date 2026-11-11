@@ -54,6 +54,21 @@ export type BucketStat = {
   suggested: number;
 };
 
+export function uniqueCorrectCount(state: DeskState): number {
+  const ids = new Set<string>();
+  for (const test of state.tests ?? []) {
+    for (const [id, answer] of Object.entries(test.answers ?? {})) {
+      if (!answer?.submitted || answer.choice == null) continue;
+      const question = getQuestion(id);
+      if (question && answer.choice === question.answer) ids.add(id);
+    }
+  }
+  for (const [id, row] of Object.entries(loadBankProgress().answers)) {
+    if (row.correct) ids.add(id);
+  }
+  return ids.size;
+}
+
 export function bucketStats(state: DeskState): BucketStat[] {
   const rows = blueprint.map((bucket) => {
     const mine = questions.filter((q) => topicById[q.topicId]?.blueprintId === bucket.id);

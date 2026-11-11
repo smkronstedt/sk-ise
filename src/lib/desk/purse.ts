@@ -1,5 +1,5 @@
-import { prizeStatus } from "@/lib/desk/activity";
-import { bucketStats } from "@/lib/desk/adapt";
+import { ensureLifetime, prizeStatus } from "@/lib/desk/activity";
+import { uniqueCorrectCount } from "@/lib/desk/adapt";
 import { countBankCorrect } from "@/lib/desk/original-bank";
 import { gearCost } from "@/lib/desk/ops";
 import { trainingSummary } from "@/lib/desk/training";
@@ -9,15 +9,15 @@ export const QUEST_SPEND_KEY = "callroom-quest-spend-v1";
 
 /** Questions, prizes, and training. The same pile for every game. */
 export function earnedPurse(): number {
-  let trainer = 0;
+  let floor = countBankCorrect();
   try {
     const raw = localStorage.getItem("callroom-desk-v1");
     const parsed = raw ? (JSON.parse(raw) as DeskState) : { tests: [], marks: {}, notes: {}, focus: {} };
-    trainer = bucketStats(parsed).reduce((sum, item) => sum + item.correct, 0);
+    floor = uniqueCorrectCount(parsed as DeskState);
   } catch {
-    trainer = 0;
+    floor = countBankCorrect();
   }
-  return countBankCorrect() + trainer + prizeStatus().purse + trainingSummary().purse;
+  return ensureLifetime(floor) + prizeStatus().purse + trainingSummary().purse;
 }
 
 export function questSpent(): number {

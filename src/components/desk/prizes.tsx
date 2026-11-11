@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   DAILY_GOAL,
   DAILY_PRIZE,
+  MISSIONS,
   MONTH_GOAL,
   MONTH_PRIZE,
   WEEK_GOAL,
@@ -32,7 +33,24 @@ export function PrizeLadder() {
         <h2 className="font-serif text-2xl tracking-tight">Study prizes</h2>
         <p className="text-sm font-semibold">${status.purse} earned</p>
       </div>
-      <p className="mt-1 text-sm text-muted">A day pays only after {DAILY_GOAL} submitted questions. Cards do not count. Correct answers still pay $1 on their own.</p>
+      <p className="mt-1 text-sm text-muted">Each correct question pays $1. These missions pay extra and reset at midnight. Fifty right pays the $50 you earned, then another $50.</p>
+      <div className="mt-3 grid gap-2 sm:grid-cols-4">
+        {MISSIONS.map((mission) => {
+          const have = mission.kind === "cards" ? status.todayCards : status.todayCorrect;
+          const done = have >= mission.need;
+          return (
+            <div key={mission.id} className="rounded border border-line px-3 py-2">
+              <p className="text-xs font-semibold tracking-wide text-muted uppercase">Today · resets at midnight</p>
+              <p className="mt-1 font-semibold">{mission.label}</p>
+              <p className="text-sm text-muted">
+                {Math.min(have, mission.need)}/{mission.need}
+                {" · "}
+                {done ? `$${mission.pay} in` : `$${mission.pay} extra`}
+              </p>
+            </div>
+          );
+        })}
+      </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-4">
         {rows.map(([label, progress, prize]) => (
           <div key={label} className="rounded border border-line px-3 py-2">

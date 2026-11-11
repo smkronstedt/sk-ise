@@ -4,11 +4,8 @@ import { authClient, authEnabled, signOut } from "@/lib/auth/client";
 import { myAccess, type AccessStatus } from "@/lib/access-api";
 import { loadCards } from "@/lib/cards";
 import { Cover, Waiting } from "@/components/desk/cover";
-import { DAILY_GOAL, prizeStatus } from "@/lib/desk/activity";
+import { DAILY_GOAL, lifetimeCorrect, prizeStatus } from "@/lib/desk/activity";
 import { cashForMode } from "@/lib/desk/purse";
-import { bucketStats } from "@/lib/desk/adapt";
-import { countBankCorrect } from "@/lib/desk/original-bank";
-import type { DeskState } from "@/lib/desk/types";
 import { deskModes, loadMode, saveMode, type DeskMode } from "@/lib/desk/modes";
 import { syncDeviceProgress } from "@/lib/progress-sync";
 import { challengeBoard } from "@/lib/challenges-api";
@@ -47,16 +44,8 @@ export function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     const read = () => {
       const prizes = prizeStatus();
-      let trainer = 0;
-      try {
-        const raw = localStorage.getItem("callroom-desk-v1");
-        const parsed = raw ? (JSON.parse(raw) as DeskState) : { tests: [], marks: {}, notes: {}, focus: {} };
-        trainer = bucketStats(parsed).reduce((sum, item) => sum + item.correct, 0);
-      } catch {
-        trainer = 0;
-      }
-      const correct = countBankCorrect() + trainer;
-      setTally({ correct, money: cashForMode(loadMode()), today: prizes.today });
+      const money = cashForMode(loadMode());
+      setTally({ correct: lifetimeCorrect(), money, today: prizes.today });
     };
     read();
     window.addEventListener("ise-activity", read);

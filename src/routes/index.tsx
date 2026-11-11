@@ -10,7 +10,8 @@ import { HoustonTrail } from "@/components/desk/houston-trail";
 import { InserviceCard } from "@/components/desk/inservice-card";
 import { isAdminEmail } from "@/lib/admin-email";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { bucketStats, drawQuestionIds, scoreTest } from "@/lib/desk/adapt";
+import { bucketStats, drawQuestionIds, scoreTest, uniqueCorrectCount } from "@/lib/desk/adapt";
+import { ensureLifetime } from "@/lib/desk/activity";
 import { loadCatalog } from "@/lib/desk/catalog";
 import { ise2025 } from "@/lib/desk/ise";
 import { listLeaders, type Leader } from "@/lib/leaderboard-api";
@@ -164,6 +165,7 @@ function Home() {
   const applyFocus = (focus: Record<BlueprintId, Focus>) => desk.setFocusMap(focus);
   const [bankCorrect, setBankCorrect] = useState(0);
   const [leaders, setLeaders] = useState<Leader[] | null>(null);
+  const [pulse, setPulse] = useState(0);
   const { user, isPending } = useCurrentUserState();
   const mine = isAdminEmail(user?.primaryEmail);
   useEffect(() => {
@@ -180,7 +182,17 @@ function Home() {
       stop = true;
     };
   }, []);
-  const experience = bankCorrect + correct;
+  useEffect(() => {
+    const bump = () => setPulse((value) => value + 1);
+    window.addEventListener("ise-activity", bump);
+    window.addEventListener("ise-progress", bump);
+    return () => {
+      window.removeEventListener("ise-activity", bump);
+      window.removeEventListener("ise-progress", bump);
+    };
+  }, []);
+  const experience = ensureLifetime(uniqueCorrectCount(desk.state));
+  void pulse;
   const experienceTotal = BANK_TOTAL + questions.length;
   const rank = careerRank(experience, experienceTotal, mine);
   const oldRank = oldCareerRank(experience, experienceTotal, mine);

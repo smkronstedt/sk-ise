@@ -11,7 +11,7 @@ import { useDesk } from "@/lib/desk/provider";
 import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
 import { DEX, loadField, portraitFor } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
-import type { BlueprintId, TestBlock } from "@/lib/desk/types";
+import type { BlueprintId, DeskState, TestBlock } from "@/lib/desk/types";
 import { drawActor, drawCreature, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
 import { musicOn, setTownMusic } from "@/lib/desk/town-music";
@@ -131,6 +131,21 @@ function openGround(tiles: Tile[][]) {
 function topicIdsFor(blueprint: BlueprintId | "all") {
   if (blueprint === "all") return topics.map((topic) => topic.id);
   return topics.filter((topic) => topic.blueprintId === blueprint).map((topic) => topic.id);
+}
+
+function drawForQuest(state: DeskState, topicIds: string[], count: number, rematch: boolean) {
+  const seen = new Set<string>();
+  if (!rematch) {
+    for (const test of state.tests) {
+      if (!/^(Route|Gym|Rival|Wild): /.test(test.name)) continue;
+      for (const [id, answer] of Object.entries(test.answers)) {
+        if (answer?.submitted) seen.add(id);
+      }
+    }
+  }
+  const all = drawQuestionIds(state, topicIds, "all", 2000, false);
+  const fresh = all.filter((id) => !seen.has(id));
+  return (fresh.length && !rematch ? fresh : all).slice(0, count);
 }
 
 function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestBlock[]): World {
@@ -456,6 +471,10 @@ export function MonsterQuest({
   const wanted = hold ? cities.findIndex((item) => item.id === hold) : furthest;
   const city = cities[Math.max(0, Math.min(wanted < 0 ? furthest : wanted, furthest))];
   cityRef.current = city;
+  useEffect(() => {
+    if (!musicOn()) return;
+    setTownMusic(true, city?.id === "stones" ? "canyon" : "town");
+  }, [city?.id]);
   pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || nurse;
 
   const sail = (dir: 1 | -1) => {
@@ -514,14 +533,12 @@ export function MonsterQuest({
     setNotice("");
     await loadCatalog();
     const topicIds = npc.topics?.length ? npc.topics : topicIdsFor(npc.blueprint);
-    const pool = npc.rematch ? "all" : "unused";
     let ids = npc.prostate
       ? [
-          ...drawQuestionIds(desk.state, ["pca", "pca-adv"], pool, Math.ceil(npc.count / 2), true),
-          ...drawQuestionIds(desk.state, topicIds, pool, npc.count, true),
+          ...drawForQuest(desk.state, ["pca", "pca-adv"], Math.ceil(npc.count / 2), Boolean(npc.rematch)),
+          ...drawForQuest(desk.state, topicIds, npc.count, Boolean(npc.rematch)),
         ].filter((id, index, all) => all.indexOf(id) === index).slice(0, npc.count)
-      : drawQuestionIds(desk.state, topicIds, pool, npc.count, npc.adaptive);
-    if (!ids.length && pool === "unused") ids = drawQuestionIds(desk.state, topicIds, "all", npc.count, npc.adaptive);
+      : drawForQuest(desk.state, topicIds, npc.count, Boolean(npc.rematch));
     if (!ids.length) {
       busyRef.current = false;
       setNotice("No unused questions left in that set. On Build, open Used and hit Recycle used.");
@@ -572,7 +589,7 @@ export function MonsterQuest({
     if (!ready) return;
     busyRef.current = true;
     await loadCatalog();
-    const ids = drawQuestionIds(desk.state, topicIdsFor(city.id), "unused", 3, false);
+    const ids = drawForQuest(desk.state, topicIdsFor(city.id), 3, false);
     if (!ids.length) {
       busyRef.current = false;
       setLine("The grass is quiet. Recycle used questions from Build.");
@@ -1239,7 +1256,7 @@ export function MonsterQuest({
           </button>
           <button
             type="button"
-            onClick={() => setTune(setTownMusic(!musicOn()))}
+            onClick={() => setTune(setTownMusic(!musicOn(), city?.id === "stones" ? "canyon" : "town"))}
             className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold"
           >
             {tune || musicOn() ? "Music on" : "Music"}
