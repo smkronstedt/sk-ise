@@ -4,12 +4,17 @@ export function isNlutdTopic(topic: string) {
 
 export function NlutdChart() {
   return (
-    <figure className="mt-3">
+    <div className="mt-3 flex flex-col gap-3">
       <img
         src="/guidelines/nlutd-risk.png"
-        alt="NLUTD risk stratification. Low, unknown, moderate, and high risk, and the surveillance that follows."
+        alt="NLUTD risk stratification flowchart. Low, unknown, moderate, and high risk, and the surveillance that follows."
         className="max-h-[40rem] w-full bg-white object-contain"
       />
-    </figure>
+      <img
+        src="/guidelines/nlutd-table.png"
+        alt="Table 3. NLUTD risk stratification by renal function, PVR, imaging, and urodynamics."
+        className="w-full bg-white object-contain"
+      />
+    </div>
   );
 }
