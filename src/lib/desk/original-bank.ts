@@ -22,7 +22,7 @@ export type BankProgress = {
 const KEY = "callroom-original-bank-v1";
 
 /** UQB items plus the SASP spreadsheet. The desk's vignettes are separate. */
-export const UQB_TOTAL = 1284;
+export const UQB_TOTAL = 1295;
 export const SASP_TOTAL = 1214;
 export const BANK_TOTAL = UQB_TOTAL + SASP_TOTAL;
 

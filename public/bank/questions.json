@@ -27911,5 +27911,220 @@
    "Re-augmentation is rare (< 10%) but may be needed for inadequate bowel or an hourglass deformity."
   ],
   "source_ref": "Siegal 2026 Posterior urethral valves"
+ },
+ {
+  "id": "SIEGAL-036",
+  "topic": "Pediatrics",
+  "question": "A 15-year-old boy has dysuria and sensation of incomplete bladder emptying over the past year. Neurologic exam is unremarkable. Renal ultrasound demonstrates normal kidneys, a bladder volume of 1000 mL, and a PVR of 600 mL. VCUG images are shown. The most likely diagnosis is:",
+  "options": {
+   "A": "dysfunctional voiding.",
+   "B": "striated sphincter dyssynergia.",
+   "C": "smooth sphincter dyssynergia.",
+   "D": "PUV.",
+   "E": "urethral stricture."
+  },
+  "answer": "A",
+  "rationale": "This patient is having difficulty emptying his bladder, evidenced by his elevated PVR. Failure for the bladder to empty completely stems from decreased bladder contractility, increased outlet resistance, or a combination of these two factors. The VCUG demonstrates a smooth-walled, large-capacity bladder with minimal relaxation of the external urethral sphincter and opening of the bladder neck during voiding. This patient most likely has dysfunctional voiding, in which involuntary contraction of the periurethral striated muscle results in outlet obstruction in neurologically intact patients. Striated sphincter dyssynergia is a urodynamic diagnosis characterized by disruption of the normal synergistic coordination between bladder contraction and external urethral sphincter muscle relaxation during voiding. This commonly occurs in patients with neurologic disease or injury, particularly suprasacral spinal cord injuries. Smooth sphincter dyssynergia is a urodynamic diagnosis characterized by autonomic hyperreflexia in which detrusor overactivity is seen with striated sphincter dyssynergia and is associated with spinal cord lesions above T6. In PUV and urethral stricture disease, the bladder neck and posterior urethra are distended, findings not seen in this patient's study.",
+  "learning_point": "This patient most likely has dysfunctional voiding, in which involuntary contraction of the periurethral striated muscle results in outlet obstruction in neurologically intact patients.",
+  "key_facts": [
+   "Incomplete emptying stems from decreased bladder contractility, increased outlet resistance, or both.",
+   "Striated sphincter dyssynergia occurs with neurologic disease, particularly suprasacral spinal cord injuries.",
+   "In PUV and urethral stricture the bladder neck and posterior urethra are distended, which is not seen here."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-037",
+  "topic": "Pediatrics",
+  "question": "An eight-year-old girl has persistent small volume daytime urinary leakage despite scheduled voiding and constipation management. Uroflow shows staccato pattern with active EMG during voiding. PVR is 100 mL. The next step is timed voiding and:",
+  "options": {
+   "A": "oxybutynin.",
+   "B": "imipramine.",
+   "C": "pelvic floor physiotherapy.",
+   "D": "transcutaneous electrical nerve stimulation.",
+   "E": "onabotulinumtoxinA injection in external urethral sphincter."
+  },
+  "answer": "C",
+  "rationale": "Dysfunctional voiding is a common lower urinary tract pathology seen in children. It is characterized by habitual contraction of the urethral sphincter or pelvic floor during voiding which produces a staccato flow pattern with active pelvic muscle EMG activity during void. Pelvic floor physiotherapy (i.e., biofeedback) effectively treats dysfunctional voiding. The International Children's Continence Society recommends biofeedback as a first-line treatment for daytime urinary incontinence with dysfunctional voiding. Neither oxybutynin nor imipramine would be recommended in this child who already has difficulty emptying. Imipramine is used for refractory nocturnal enuresis, but its use is limited by its cardiotoxic side effects. Transcutaneous electrical nerve stimulation is effective for treating OAB symptoms. There are reports of onabotulinumtoxinA in the external urethral sphincter successfully treating refractory dysfunctional voiding, but this surgical procedure would not be the next step.",
+  "learning_point": "The International Children's Continence Society recommends biofeedback as a first-line treatment for daytime urinary incontinence with dysfunctional voiding.",
+  "key_facts": [
+   "Dysfunctional voiding is habitual sphincter or pelvic floor contraction during voiding, with a staccato flow and active EMG.",
+   "Oxybutynin and imipramine are not recommended when the child already has difficulty emptying.",
+   "Sphincter onabotulinumtoxinA is reported for refractory cases but is not the next step."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-038",
+  "topic": "Pediatrics",
+  "question": "A 16-year-old girl, accompanied by her mother, has recurrent UTIs. Physical examination reveals the presence of an active HPV infection. The next step is to:",
+  "options": {
+   "A": "inform the patient only.",
+   "B": "inform the patient and mother separately.",
+   "C": "inform the patient in mother's presence.",
+   "D": "consult social services to investigate sexual abuse.",
+   "E": "call the primary care physician to reveal diagnosis."
+  },
+  "answer": "A",
+  "rationale": "It is illegal in every state of the U.S. to disclose STI status of an adolescent to the parent. Most practicing urologists are unaware of this requirement and believe it to be \"interpretable\"--that is not the case. In this case, the only legal option is to inform the adolescent without the family present. The adolescent should not be told of the diagnosis with her mother present unless she specifically asks for her parent to be informed. A sexual abuse investigation is not necessary unless there is suspicion elicited during the adolescent girl's history intake or physical exam. The primary care physician may be eventually informed if required for follow-up care, but this should occur only after the adolescent has been informed.",
+  "learning_point": "It is illegal in every state of the U.S. to disclose STI status of an adolescent to the parent.",
+  "key_facts": [
+   "The only legal option is to inform the adolescent without the family present.",
+   "A sexual abuse investigation is not necessary unless suspicion is elicited on history or exam.",
+   "The primary care physician may be informed for follow-up only after the adolescent has been informed."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-039",
+  "topic": "Pediatrics",
+  "question": "A five-year-old boy has passed two kidney stones. A single 24-hour urine showed hypercalciuria and hypocitraturia. Serum testing was normal. In addition to increasing fluid intake and avoiding excess sodium, his treatment should include:",
+  "options": {
+   "A": "observation.",
+   "B": "decreasing dietary calcium.",
+   "C": "thiazide diuretic.",
+   "D": "potassium citrate.",
+   "E": "Vitamin B6 supplementation."
+  },
+  "answer": "D",
+  "rationale": "The medical management of nephrolithiasis in children does not differ dramatically from adults. Children with documented hypocitraturia are usually treated with potassium citrate as citrate has an inhibitory activity by binding to calcium ions and thus reducing calcium oxalate crystallization. In the AUA Guidelines, treatment with potassium citrate is recommended in patients with recurrent calcium stones and hypocitraturia. It would not be advisable at this time to simply alter his diet and fluid as he has had two stones and has documented hypocitraturia. Hypercalciuria alone may respond to increased fluid intake and decreased sodium intake. Thiazides can be used for persistent hypercalciuria. Dietary calcium should not be avoided. Decreased dietary calcium may increase available intestinal oxalate. The resulting increase in oxalate absorption would raise the supersaturation of calcium oxalate. Vitamin B6 (pyridoxine) diverts the conversion of glyoxylate away from oxalate and may be of benefit in patients with primary hyperoxaluria.",
+  "learning_point": "In the AUA Guidelines, treatment with potassium citrate is recommended in patients with recurrent calcium stones and hypocitraturia.",
+  "key_facts": [
+   "Citrate binds calcium ions and reduces calcium oxalate crystallization.",
+   "Dietary calcium should not be avoided, because less dietary calcium can increase oxalate absorption.",
+   "Vitamin B6 (pyridoxine) may benefit patients with primary hyperoxaluria."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-040",
+  "topic": "Pediatrics",
+  "question": "A six-year-old girl has gross hematuria after an MVC. CT scan of the abdomen shows a pelvic fracture and no evidence of renal or intra-abdominal injury. She is hemodynamically stable. Attempts to pass a urethral catheter are unsuccessful. Endoscopy reveals a tear through the bladder neck, vaginal laceration, and anterior rectal wall injury. The next steps are colostomy, suprapubic tube, and:",
+  "options": {
+   "A": "observation.",
+   "B": "urethral catheter.",
+   "C": "urethral catheter and extraperitoneal drain.",
+   "D": "urethral catheter, repair of vagina and rectum.",
+   "E": "repair of bladder neck, vagina, and rectum."
+  },
+  "answer": "E",
+  "rationale": "Bladder neck injuries in the setting of a pelvic fracture are more common in children than in adults and are frequently associated with injuries to the vagina and rectum. Immediate repair of the bladder neck, urethra, and vagina, and diverting colostomy with rectal repair is recommended. Attempts at management with a temporary suprapubic tube, urethral catheters, and delayed repair are associated with a high incidence of persistent bladder neck incompetence, urinary fistula, pelvic abscess, and osteomyelitis. Thus, in a hemodynamically stable patient, immediate repair of all injuries through a combined suprapubic and perineal approach is recommended. Primary diversion with either PCNTs or externalized ureteral stents and urinary catheters is appropriate when the patient is hemodynamically unstable and blood loss is life-threatening.",
+  "learning_point": "In a hemodynamically stable patient, immediate repair of all injuries through a combined suprapubic and perineal approach is recommended.",
+  "key_facts": [
+   "Pediatric pelvic-fracture bladder neck injuries are frequently associated with vaginal and rectal injuries.",
+   "Delayed repair is associated with bladder neck incompetence, urinary fistula, pelvic abscess, and osteomyelitis.",
+   "Primary diversion is appropriate when the patient is unstable and blood loss is life-threatening."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-041",
+  "topic": "Pediatrics",
+  "question": "An asymptomatic ten-day-old boy with a transverse colostomy performed for a high imperforate anus and rectovesical fistula has a serum Cl of 115 mEq/L, Na of 145 mEq/L, K of 4.5 mEq/L, and CO2 of 17 mEq/L. The most likely explanation for these findings is:",
+  "options": {
+   "A": "sepsis.",
+   "B": "renal dysplasia.",
+   "C": "severe hydronephrosis.",
+   "D": "neurogenic bladder dysfunction.",
+   "E": "electrolyte absorption from large bowel."
+  },
+  "answer": "E",
+  "rationale": "Genitourinary anomalies associated with an imperforate anus are common. The most common GU anomalies are vesicoureteral reflux, renal agenesis, renal ectopy, rectourethral or rectal vaginal fistula, neurogenic bladder, and a tethered spinal cord. The latter three, rectourethral fistula, neurogenic bladder, and tethered spinal cord, are more frequently found in patients with a high or supra levator imperforate anus. When a rectourethral fistula exists, urine can flow into the colon, leading to electrolyte resorption and recurrent UTIs, even following the placement of a diverting colostomy. If the electrolyte dysfunction is severe, consideration for a vesicostomy may be necessary to correct the acidosis. CIC in children with a rectourethral fistula is problematic, with the fistula often acting as a false channel. Without clinical symptoms, these labs would not be associated with sepsis. Renal dysplasia and/or severe hydronephrosis are inconsistent with the lab findings.",
+  "learning_point": "When a rectourethral fistula exists, urine can flow into the colon, leading to electrolyte resorption and recurrent UTIs, even following a diverting colostomy.",
+  "key_facts": [
+   "Rectourethral fistula, neurogenic bladder, and tethered cord are more frequent with a high or supra levator imperforate anus.",
+   "Severe electrolyte dysfunction may require a vesicostomy to correct the acidosis.",
+   "Without clinical symptoms, these labs would not be associated with sepsis."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-042",
+  "topic": "Pediatrics",
+  "question": "In the patient whose external genitalia are shown, the arrows denote the urethral meatus. The embryologic origin of the structure that may cause difficulty with catheterization is:",
+  "options": {
+   "A": "Müllerian duct.",
+   "B": "mesonephric duct.",
+   "C": "urorectal septum.",
+   "D": "urogenital sinus.",
+   "E": "urethral plate."
+  },
+  "answer": "A",
+  "rationale": "A prostatic utricle is present in 10-15% of boys with a proximal hypospadias and is the most common cause of difficulty in catheterizing the bladder with proximal hypospadias. The embryologic origin of the utricle is the paramesonephric duct or Müllerian duct. Remnants of the mesonephric duct give rise to Gartner's cyst, whereas the mesonephric duct gives rise to the vas deferens and seminal vesicle. The urorectal septum divides the common cloaca into the hindgut and urogenital sinus. The urethral plate gives rise to the urethra and prostate from the urogenital sinus. A narrow urethral plate does not cause difficulty with catheterization.",
+  "learning_point": "The embryologic origin of the utricle is the paramesonephric duct or Müllerian duct.",
+  "key_facts": [
+   "A prostatic utricle is present in 10-15% of boys with proximal hypospadias and is the usual cause of difficult catheterization.",
+   "Mesonephric duct remnants give rise to Gartner's cyst; the duct itself gives rise to the vas deferens and seminal vesicle.",
+   "A narrow urethral plate does not cause difficulty with catheterization."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-043",
+  "topic": "Pediatrics",
+  "question": "13 y/o male S/P prior orchiectomy at age 2 with contralateral prophylactic orchidopexy presents for release to play football. You should recommend:",
+  "options": {
+   "A": "Avoiding football & all contact sports",
+   "B": "May play football but must wear a cup",
+   "C": "A testicular prosthesis is an option",
+   "D": "A & C",
+   "E": "B & C"
+  },
+  "answer": "E",
+  "rationale": "The lecture marks E. B & C.",
+  "learning_point": "The lecture marks E. B & C.",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-044",
+  "topic": "Pediatrics",
+  "question": "UDS evaluation of a healthy 7 y/o female with no history of UTI & diurnal enuresis likely will reveal:",
+  "options": {
+   "A": "Detrusor overactivity",
+   "B": "Excessive external contraction during bladder filling.",
+   "C": "A lax bladder neck reflecting incompetence.",
+   "D": "Normal external sphincter activity during filling & voiding",
+   "E": "Flaccid, large volume bladder"
+  },
+  "answer": "D",
+  "rationale": "The lecture marks D. Normal external sphincter activity during filling & voiding.",
+  "learning_point": "The lecture marks D. Normal external sphincter activity during filling & voiding.",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-045",
+  "topic": "Pediatrics",
+  "question": "The earliest detectable sign of puberty in a male is:",
+  "options": {
+   "A": "Deepening of the voice",
+   "B": "Presence of pubic hair and body odor",
+   "C": "Testicular enlargement",
+   "D": "Increase in penile length",
+   "E": "Increase in scrotal rugation"
+  },
+  "answer": "C",
+  "rationale": "The lecture marks C. Testicular enlargement.",
+  "learning_point": "The lecture marks C. Testicular enlargement.",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-046",
+  "topic": "Pediatrics",
+  "question": "A 3 y/o child with a duplicated collecting system has reflux to the upper renal segment upon voiding. The most appropriate statement is:",
+  "options": {
+   "A": "this type of anomaly is commonly bilateral",
+   "B": "the ureter to the upper segment is probably ectopic",
+   "C": "the ureter to the lower segment is probably ectopic",
+   "D": "the ureter to the lower segment is probably obstructed",
+   "E": "reflux to the upper system occurs frequently with complete ureteral duplication"
+  },
+  "answer": "B",
+  "rationale": "The lecture marks B. the ureter to the upper segment is probably ectopic.",
+  "learning_point": "The lecture marks B. the ureter to the upper segment is probably ectopic.",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
  }
 ]
