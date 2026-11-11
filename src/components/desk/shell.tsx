@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { authClient, authEnabled, signOut } from "@/lib/auth/client";
 import { myAccess, type AccessStatus } from "@/lib/access-api";
 import { loadCards } from "@/lib/cards";
@@ -26,6 +26,9 @@ const links = [
   { to: "/lectures", label: "Lectures" },
   { to: "/cards", label: "Cards" },
 ] as const;
+
+/** Stop database checks after this much quiet time, so Neon can sleep. */
+const IDLE_MS = 2 * 60 * 1000;
 
 export function Shell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (state) => state.location.pathname });
@@ -85,7 +88,10 @@ export function Shell({ children }: { children: ReactNode }) {
     if (!authEnabled || !session.data?.user || access !== "approved") return;
     let stop = false;
     const userId = session.data.user.id;
+    let lastActive = Date.now();
+    const quiet = () => document.visibilityState !== "visible" || Date.now() - lastActive > IDLE_MS;
     const run = () => {
+      if (quiet()) return;
       void syncDeviceProgress(userId).then((result) => {
         if (!stop) setSyncNote(result === "synced" ? "Synced to your account" : "Saved on this device");
       });
@@ -94,30 +100,65 @@ export function Shell({ children }: { children: ReactNode }) {
     const timer = window.setInterval(run, 30000);
     let debounce = 0;
     const kick = () => {
+      lastActive = Date.now();
       window.clearTimeout(debounce);
       debounce = window.setTimeout(run, 700);
     };
-    const onVisible = () => run();
+    const poke = () => {
+      const wasQuiet = quiet();
+      lastActive = Date.now();
+      if (wasQuiet && document.visibilityState === "visible") run();
+    };
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      lastActive = Date.now();
+      run();
+    };
+    for (const name of ["pointerdown", "keydown", "touchstart"] as const) {
+      window.addEventListener(name, poke);
+    }
     window.addEventListener("ise-progress", kick);
     window.addEventListener("ise-activity", kick);
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("pagehide", run);
     return () => {
       stop = true;
       window.clearInterval(timer);
       window.clearTimeout(debounce);
+      for (const name of ["pointerdown", "keydown", "touchstart"] as const) {
+        window.removeEventListener(name, poke);
+      }
       window.removeEventListener("ise-progress", kick);
       window.removeEventListener("ise-activity", kick);
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("pagehide", run);
     };
   }, [session.data?.user?.id, access]);
+
+  const lastActive = useRef(Date.now());
+  useEffect(() => {
+    const mark = () => {
+      lastActive.current = Date.now();
+    };
+    for (const name of ["pointerdown", "keydown", "touchstart"] as const) {
+      window.addEventListener(name, mark);
+    }
+    const onVisible = () => {
+      if (document.visibilityState === "visible") lastActive.current = Date.now();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      for (const name of ["pointerdown", "keydown", "touchstart"] as const) {
+        window.removeEventListener(name, mark);
+      }
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
 
   useEffect(() => {
     const userId = session.data?.user?.id;
     if (!userId) return;
     let stop = false;
     const load = () => {
+      if (document.visibilityState !== "visible" || Date.now() - lastActive.current > IDLE_MS) return;
       void challengeBoard()
         .then((board) => {
           if (!stop) setPendingChallenges(board.pending);
