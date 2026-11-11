@@ -11322,11 +11322,11 @@
    "E": "renal ultrasound."
   },
   "answer": "E",
-  "rationale": "An obstructed hemivagina with a longitudinal septum and regular menstruation from the contralateral side is the classic OHVIRA complex, which results from a M\u00fcllerian anomaly closely linked to Wolffian duct maldevelopment; roughly 40% of such patients have ipsilateral renal agenesis or another renal anomaly. A renal ultrasound is therefore mandatory to evaluate the kidneys even though the vaginal problem has been relieved. Pelvic MRI can later detail uterine anatomy for reproductive counseling but does not assess the kidneys adequately on its own. VCUG and cystoscopy evaluate the lower urinary tract and do not identify absent or dysplastic kidneys, and no further evaluation would miss a clinically important anomaly.",
-  "learning_point": "M\u00fcllerian duct anomalies such as a duplicated or septate vagina with obstructed hemivagina are strongly associated with ipsilateral renal agenesis (OHVIRA/Herlyn-Werner-Wunderlich), so after relief of the obstruction a renal ultrasound is required to evaluate the upper tracts.",
+  "rationale": "An obstructed hemivagina with a longitudinal septum and regular menstruation from the contralateral side is the classic OHVIRA complex, which results from a Müllerian anomaly closely linked to Wolffian duct maldevelopment; roughly 40% of such patients have ipsilateral renal agenesis or another renal anomaly. A renal ultrasound is therefore mandatory to evaluate the kidneys even though the vaginal problem has been relieved. Pelvic MRI can later detail uterine anatomy for reproductive counseling but does not assess the kidneys adequately on its own. VCUG and cystoscopy evaluate the lower urinary tract and do not identify absent or dysplastic kidneys, and no further evaluation would miss a clinically important anomaly.",
+  "learning_point": "Müllerian duct anomalies such as a duplicated or septate vagina with obstructed hemivagina are strongly associated with ipsilateral renal agenesis (OHVIRA/Herlyn-Werner-Wunderlich), so after relief of the obstruction a renal ultrasound is required to evaluate the upper tracts.",
   "key_facts": [
-   "About 40% of women with M\u00fcllerian duplication anomalies have unilateral renal agenesis; conversely a third of women with URA have genital anomalies.",
-   "Wolffian and M\u00fcllerian duct development are linked, so vaginal/uterine anomalies signal possible renal anomalies on the same side.",
+   "About 40% of women with Müllerian duplication anomalies have unilateral renal agenesis; conversely a third of women with URA have genital anomalies.",
+   "Wolffian and Müllerian duct development are linked, so vaginal/uterine anomalies signal possible renal anomalies on the same side.",
    "Pelvic MRI defines uterine anatomy but does not substitute for renal evaluation.",
    "VCUG does not assess renal presence or upper tract obstruction."
   ],
@@ -15650,10 +15650,10 @@
    "E": "nephrostomy tube drainage trial."
   },
   "answer": "A",
-  "rationale": "The differential pressure is 18 \u2212 7 = 11 cm H2O, which is below the 14 cm H2O threshold and therefore normal, indicating a dilated but non-obstructed system. Intervention with endopyelotomy or pyeloplasty is not justified without demonstrable obstruction. Diuretics are not part of the Whitaker protocol, so a repeat study with furosemide is not meaningful. A nephrostomy drainage trial adds invasiveness without added diagnostic value when the pressure-flow study is already normal; the pain should be investigated for other causes.",
+  "rationale": "The differential pressure is 18 − 7 = 11 cm H2O, which is below the 14 cm H2O threshold and therefore normal, indicating a dilated but non-obstructed system. Intervention with endopyelotomy or pyeloplasty is not justified without demonstrable obstruction. Diuretics are not part of the Whitaker protocol, so a repeat study with furosemide is not meaningful. A nephrostomy drainage trial adds invasiveness without added diagnostic value when the pressure-flow study is already normal; the pain should be investigated for other causes.",
   "learning_point": "A Whitaker test differential pressure (renal pelvis minus bladder) below 14 cm H2O is normal and excludes significant obstruction; a hydronephrotic kidney with a normal pressure-flow study needs no surgical intervention.",
   "key_facts": [
-   "Whitaker cutoffs: < 14 cm H2O normal; 14\u201320 mild; 21\u201334 moderate; > 35 severe obstruction.",
+   "Whitaker cutoffs: < 14 cm H2O normal; 14–20 mild; 21–34 moderate; > 35 severe obstruction.",
    "The test perfuses the renal pelvis at 10 mL/min via a nephrostomy needle while measuring bladder pressure; no diuretic is given.",
    "It is useful when diuretic renography is equivocal or nonconclusive in a dilated system.",
    "A normal Whitaker test in a patient with pain should prompt evaluation for non-urologic sources of pain."
@@ -15672,10 +15672,10 @@
    "E": "renal pelvis lies posterior to the collecting system."
   },
   "answer": "A",
-  "rationale": "Because a horseshoe kidney does not complete its normal medial rotation, the pelvis remains anterior and the calyces point posteriorly, so a posterior approach through a posteriorly directed (frequently upper-pole) calyx provides direct access to the collecting system. The pelvis is anterior, not posterior. The ureters insert in the normal location in the bladder, and the calyceal number is normal. The isthmus is located at the level of L3\u2013L4, immediately below the origin of the inferior mesenteric artery, not at the sacrum.",
-  "learning_point": "In a horseshoe kidney, failure of rotation leaves the renal pelvis anterior and the calyces pointing posteriorly, which dictates percutaneous access (often an upper-pole posterior calyceal puncture); the ureters insert normally and the isthmus lies at L3\u2013L4 below the inferior mesenteric artery.",
+  "rationale": "Because a horseshoe kidney does not complete its normal medial rotation, the pelvis remains anterior and the calyces point posteriorly, so a posterior approach through a posteriorly directed (frequently upper-pole) calyx provides direct access to the collecting system. The pelvis is anterior, not posterior. The ureters insert in the normal location in the bladder, and the calyceal number is normal. The isthmus is located at the level of L3–L4, immediately below the origin of the inferior mesenteric artery, not at the sacrum.",
+  "learning_point": "In a horseshoe kidney, failure of rotation leaves the renal pelvis anterior and the calyces pointing posteriorly, which dictates percutaneous access (often an upper-pole posterior calyceal puncture); the ureters insert normally and the isthmus lies at L3–L4 below the inferior mesenteric artery.",
   "key_facts": [
-   "Horseshoe kidney: lower poles fused by an isthmus, usually just caudal to the IMA at about L3\u2013L4.",
+   "Horseshoe kidney: lower poles fused by an isthmus, usually just caudal to the IMA at about L3–L4.",
    "Incomplete rotation places the pelvis anteriorly and the calyces posteriorly; calyceal number is normal.",
    "Ureters cross anterior to the isthmus but insert into the bladder in the normal position.",
    "PCNL access is typically through an upper or posterior calyx because the kidney lies lower and more medial, with less rib interference."
@@ -15795,7 +15795,7 @@
  {
   "id": "UQB-0729",
   "topic": "Stones",
-  "question": "A 16-year-old boy with no symptoms is found on ultrasound to have several 3 mm non-obstructing stones in both kidneys. Serum studies: creatinine 0.7 mg/dL, calcium 10.7 mg/dL (normal 8.5\u201310.5), phosphorus 2.8 mg/dL, bicarbonate 25 mEq/L, potassium 4.0 mEq/L. Urine pH is 6.2. The next step is:",
+  "question": "A 16-year-old boy with no symptoms is found on ultrasound to have several 3 mm non-obstructing stones in both kidneys. Serum studies: creatinine 0.7 mg/dL, calcium 10.7 mg/dL (normal 8.5–10.5), phosphorus 2.8 mg/dL, bicarbonate 25 mEq/L, potassium 4.0 mEq/L. Urine pH is 6.2. The next step is:",
   "options": {
    "A": "potassium citrate.",
    "B": "serum parathyroid hormone.",
@@ -15854,7 +15854,7 @@
    "CheckMate 214: objective response 42% with nivolumab/ipilimumab versus 27% with sunitinib in intermediate/poor-risk patients.",
    "Complete response about 9% with the immunotherapy combination versus 1% with sunitinib.",
    "Median duration of response was not reached with nivolumab/ipilimumab.",
-   "High-dose IL-2 historically yielded complete responses in about 5\u201310%, mostly durable."
+   "High-dose IL-2 historically yielded complete responses in about 5–10%, mostly durable."
   ],
   "source_ref": "SASP 2020 Q131"
  },
@@ -15895,7 +15895,7 @@
   "rationale": "Struvite stones form in the presence of chronic urease-producing bacteriuria, which is inevitable with any indwelling catheter. Removing the catheter is the key preventive step, and in a tetraplegic who cannot catheterize himself, sphincterotomy with external condom drainage is the least invasive way to achieve catheter-free drainage. A suprapubic tube, a larger catheter, or more frequent exchanges all leave a colonized foreign body in place. Suppressive antibiotics alone do not eradicate biofilm-associated bacteriuria and promote resistance. Urinary diversion is the most definitive option but is generally reserved for sphincterotomy failures.",
   "learning_point": "In a tetraplegic man with struvite stones who cannot self-catheterize, eliminating the chronic indwelling catheter via sphincterotomy with condom catheter drainage best reduces the chronic bacteriuria that drives infection stones; antibiotic suppression or changing catheter type does not eliminate colonization.",
   "key_facts": [
-   "Spinal cord injury patients have a 7\u20138-fold higher stone rate, driven by urea-splitting bacteriuria.",
+   "Spinal cord injury patients have a 7–8-fold higher stone rate, driven by urea-splitting bacteriuria.",
    "Any indwelling catheter (urethral or suprapubic) is universally colonized; suppressive antibiotics do not sterilize the urine.",
    "Sphincterotomy with condom catheter drainage removes the foreign body nidus but has imperfect long-term emptying outcomes.",
    "Ileal conduit is the most definitive long-term option but is more invasive."
@@ -15983,7 +15983,7 @@
   "rationale": "The outcome is dichotomous (dry versus not dry) and the comparison is between two independent groups with a large sample, which is exactly the setting for a chi-square test of proportions. Fisher's exact test is reserved for small samples in which expected cell counts fall below five. The t-test and ANOVA compare means of continuous variables, and ANOVA is for three or more groups. Cox regression analyzes time-to-event data, which is not the endpoint here.",
   "learning_point": "When comparing a binary (yes/no) outcome between two independent groups with adequate sample size, the chi-square test is appropriate; Fisher's exact test is for small expected cell counts, t-tests and ANOVA are for continuous outcomes, and regression is for adjusting for covariates.",
   "key_facts": [
-   "Chi-square: categorical outcome, independent groups, expected cell counts \u2265 5.",
+   "Chi-square: categorical outcome, independent groups, expected cell counts ≥ 5.",
    "Fisher's exact: same design but small samples (expected counts < 5).",
    "Unpaired t-test (two groups) or ANOVA (three or more groups): continuous outcome.",
    "Logistic regression: binary outcome with additional predictor variables."
@@ -16071,7 +16071,7 @@
   "rationale": "Anemia and less than one year from diagnosis place this patient in the IMDC intermediate-risk group. Checkpoint inhibitor combinations such as pembrolizumab plus axitinib have demonstrated superior progression-free and overall survival compared with sunitinib in this population and are first-line standard. Upfront cytoreductive nephrectomy is not indicated when the primary is asymptomatic and metastatic disease is symptomatic, consistent with CARMENA. Single-agent sunitinib or pazopanib is inferior to combination immunotherapy, and everolimus is a second-line agent.",
   "learning_point": "Newly diagnosed intermediate- or poor-risk metastatic clear cell RCC with an asymptomatic primary and symptomatic metastases should start immune checkpoint-based combination therapy (e.g., pembrolizumab plus axitinib or nivolumab plus ipilimumab) rather than upfront cytoreductive nephrectomy or single-agent TKI.",
   "key_facts": [
-   "IMDC risk factors: anemia, hypercalcemia, neutrophilia, thrombocytosis, Karnofsky < 80, and < 1 year from diagnosis to treatment; 1\u20132 = intermediate, 3+ = poor.",
+   "IMDC risk factors: anemia, hypercalcemia, neutrophilia, thrombocytosis, Karnofsky < 80, and < 1 year from diagnosis to treatment; 1–2 = intermediate, 3+ = poor.",
    "CARMENA: sunitinib alone was non-inferior to nephrectomy followed by sunitinib in intermediate/poor-risk patients.",
    "KEYNOTE-426 (pembrolizumab/axitinib) and CheckMate 214 (nivolumab/ipilimumab) showed superiority to sunitinib.",
    "Cabozantinib is approved after prior TKI failure or with nivolumab, not with ipilimumab."
@@ -16091,7 +16091,7 @@
   },
   "answer": "A",
   "rationale": "A stone approaching 2 cm in a solitary functioning allograft should be cleared, and PCNL provides the highest single-procedure stone-free rate; the graft's superficial location in the iliac fossa makes access relatively easy. Observation is appropriate only for very small stones. SWL achieves poor clearance in transplant kidneys and frequently requires repeat procedures. Retrograde ureteroscopy is difficult given the anterior reimplanted ureter and is better suited to smaller stones. Pyelolithotomy is unnecessarily invasive.",
-  "learning_point": "A renal allograft stone larger than about 1.5 cm is best treated with percutaneous nephrolithotomy; observation is reserved for small (< 4\u20135 mm) asymptomatic stones with stable function, SWL has poor stone-free rates in allografts, and ureteroscopy suits smaller stones.",
+  "learning_point": "A renal allograft stone larger than about 1.5 cm is best treated with percutaneous nephrolithotomy; observation is reserved for small (< 4–5 mm) asymptomatic stones with stable function, SWL has poor stone-free rates in allografts, and ureteroscopy suits smaller stones.",
   "key_facts": [
    "Transplant kidney is superficial in the iliac fossa, making percutaneous access straightforward.",
    "SWL in allografts often requires additional procedures (about half of patients) and is discouraged as initial therapy.",
@@ -16115,7 +16115,7 @@
   "rationale": "A patient with incidentally discovered FMD whose hypertension is satisfactorily controlled should continue medical therapy and be followed with periodic duplex ultrasound of renal length and cortical thickness to detect progressive ischemic atrophy. Angioplasty becomes indicated only if blood pressure control fails, medications are not tolerated, or the kidney shrinks or loses function. Surgery is reserved for disease not amenable to angioplasty. Renal scintigraphy is no longer recommended for renovascular evaluation, and simply discharging her without surveillance risks missing silent renal loss.",
   "learning_point": "Incidentally found renal artery fibromuscular dysplasia in a patient with long-standing, well-controlled hypertension is managed medically with duplex ultrasound surveillance of kidney size and cortical thickness; angioplasty is reserved for failed medical control, intolerable medications, or declining renal size or function.",
   "key_facts": [
-   "FMD: non-atherosclerotic, non-inflammatory disease of the mid-to-distal renal artery and branches, predominantly in women aged 20\u201360.",
+   "FMD: non-atherosclerotic, non-inflammatory disease of the mid-to-distal renal artery and branches, predominantly in women aged 20–60.",
    "Duplex Doppler surveillance once or twice yearly tracks renal length and cortical thickness.",
    "Percutaneous transluminal angioplasty is indicated for new/difficult hypertension, medication intolerance, or renal deterioration.",
    "Surgical revascularization is for lesions not amenable to angioplasty; captopril renography is no longer a recommended screening test."
@@ -16228,7 +16228,7 @@
    "TURP, HoLEP, and vaporization all carry high rates of retrograde ejaculation.",
    "UroLift and Rezum preserve ejaculatory function (AUA conditional recommendation).",
    "UroLift is traditionally limited by an obstructing median lobe; Rezum can treat the median lobe.",
-   "Rezum is approved for prostates roughly 30\u201380 g."
+   "Rezum is approved for prostates roughly 30–80 g."
   ],
   "source_ref": "SASP 2020 Q148"
  },
@@ -16291,7 +16291,7 @@
   "rationale": "ECG evidence of hyperkalemic cardiotoxicity demands immediate membrane stabilization, which only intravenous calcium provides within minutes by restoring the gap between resting and threshold potentials. Because its effect is brief, it must be followed promptly by insulin/dextrose, bicarbonate, or albuterol to shift potassium into cells, and then by definitive removal with dialysis or exchange resins. None of the potassium-shifting or removal measures acts fast enough to be the first step in a patient with a widened QRS.",
   "learning_point": "Hyperkalemia with ECG changes (loss of P waves, widened QRS) requires immediate intravenous calcium to stabilize the myocardium, followed by potassium-shifting measures (insulin/glucose, bicarbonate, beta-agonists) and then potassium removal (resins or dialysis).",
   "key_facts": [
-   "Calcium antagonizes membrane effects of potassium within minutes but lasts only 30\u201360 minutes.",
+   "Calcium antagonizes membrane effects of potassium within minutes but lasts only 30–60 minutes.",
    "Insulin with glucose, sodium bicarbonate, and albuterol shift potassium intracellularly but take longer to act.",
    "Exchange resins and hemodialysis remove potassium and are definitive but slow to initiate.",
    "Calcium does not lower serum potassium concentration."
@@ -16424,7 +16424,7 @@
   "learning_point": "A postoperative ureterovaginal fistula in which retrograde pyelography outlines the proximal ureter indicates incomplete obstruction; retrograde ureteral stenting is the first step and may allow the fistula to heal, with nephrostomy or delayed repair reserved for stent failure.",
   "key_facts": [
    "Retrograde stent first; antegrade stent or nephrostomy if retrograde fails.",
-   "Delayed repair (often at least 4\u20136 weeks) if leakage persists despite drainage.",
+   "Delayed repair (often at least 4–6 weeks) if leakage persists despite drainage.",
    "Distal ureteral injury is usually repaired by ureteroneocystostomy with or without psoas hitch.",
    "Vaginal drains do not address the fistula."
   ],
@@ -19264,17 +19264,17 @@
   "options": {
    "A": "chronic indwelling urethral catheter.",
    "B": "sacral neuromodulation.",
-   "C": "Cred\u00e9 voiding.",
+   "C": "Credé voiding.",
    "D": "tamsulosin.",
    "E": "bethanechol."
   },
   "answer": "B",
-  "rationale": "Recurrent infections place her in the high-risk retention category, so treatment is warranted, and the etiology is diabetic detrusor underactivity. Sacral neuromodulation has demonstrated efficacy for non-obstructive retention and is appropriate in diabetics. Bethanechol lacks efficacy for detrusor underactivity and carries cardiovascular risk. Cred\u00e9 voiding against a competent sphincter produces high intravesical pressures and is not recommended, and a chronic urethral catheter risks erosion and is inferior to a suprapubic tube if a catheter is ultimately chosen. Alpha-blockade does not restore detrusor contractility.",
-  "learning_point": "A diabetic woman with high-risk chronic urinary retention (recurrent UTIs, PVR over 300 mL) from detrusor underactivity who declines CIC is best treated with sacral neuromodulation; bethanechol is ineffective and unsafe, Cred\u00e9 voiding is hazardous with a competent sphincter, and an indwelling urethral catheter is a poor long-term choice.",
+  "rationale": "Recurrent infections place her in the high-risk retention category, so treatment is warranted, and the etiology is diabetic detrusor underactivity. Sacral neuromodulation has demonstrated efficacy for non-obstructive retention and is appropriate in diabetics. Bethanechol lacks efficacy for detrusor underactivity and carries cardiovascular risk. Credé voiding against a competent sphincter produces high intravesical pressures and is not recommended, and a chronic urethral catheter risks erosion and is inferior to a suprapubic tube if a catheter is ultimately chosen. Alpha-blockade does not restore detrusor contractility.",
+  "learning_point": "A diabetic woman with high-risk chronic urinary retention (recurrent UTIs, PVR over 300 mL) from detrusor underactivity who declines CIC is best treated with sacral neuromodulation; bethanechol is ineffective and unsafe, Credé voiding is hazardous with a competent sphincter, and an indwelling urethral catheter is a poor long-term choice.",
   "key_facts": [
    "AUA chronic urinary retention: PVR over 300 mL for 6 months; high risk if hydronephrosis, CKD, or recurrent UTI/urosepsis.",
    "Sacral neuromodulation is FDA approved for non-obstructive urinary retention and works in detrusor underactivity; diabetes is not a contraindication.",
-   "Cred\u00e9/Valsalva voiding is only appropriate with an incompetent outlet; against a competent sphincter it generates dangerous pressures.",
+   "Credé/Valsalva voiding is only appropriate with an incompetent outlet; against a competent sphincter it generates dangerous pressures.",
    "Bethanechol is non-selective, causes cardiac side effects, and has not been shown to help detrusor underactivity; sphincter botulinum toxin is for dyssynergia."
   ],
   "source_ref": "SASP 2021 Q137"
@@ -27200,5 +27200,716 @@
   "source_ref": "Hard set",
   "hard": true,
   "id": "UQB-1249"
+ },
+ {
+  "id": "SIEGAL-001",
+  "topic": "Pediatrics",
+  "question": "A ten-month-old boy has bilateral non-palpable testes, normal penis, and hypoplastic scrotum. FSH and LH levels are elevated. Müllerian inhibiting substance and inhibin B levels are non-detectable. The next step is:",
+  "options": {
+   "A": "hCG stimulation test.",
+   "B": "abdominal and pelvic MRI scan with gadolinium.",
+   "C": "referral to endocrinologist.",
+   "D": "bilateral inguinal exploration.",
+   "E": "diagnostic laparoscopy."
+  },
+  "answer": "C",
+  "rationale": "This boy has vanishing testis syndrome due to bilateral prenatal torsion. Testicular function was present during early fetal development, allowing for normal sexual development. The laboratory findings are diagnostic of anorchia (Müllerian inhibiting substance and inhibin B are undetectable, and LH/FSH levels are elevated). Therefore, neither surgery nor hCG stimulation test are necessary. The latter is, in fact, less reliable than the four hormone levels given. Imaging is not indicated for non-palpable testes. Referral to endocrinology is indicated to discuss possible testosterone administration to support pubertal development.",
+  "learning_point": "The laboratory findings are diagnostic of anorchia (Müllerian inhibiting substance and inhibin B are undetectable, and LH/FSH levels are elevated).",
+  "key_facts": [
+   "Vanishing testis syndrome is due to bilateral prenatal torsion.",
+   "Anorchia labs: undetectable Müllerian inhibiting substance and inhibin B with elevated LH/FSH.",
+   "Neither surgery nor hCG stimulation testing is necessary; hCG stimulation is less reliable than the four hormone levels.",
+   "Imaging is not indicated for non-palpable testes; endocrinology referral is for possible testosterone to support puberty."
+  ],
+  "source_ref": "Siegal 2026 DSD"
+ },
+ {
+  "id": "SIEGAL-002",
+  "topic": "Pediatrics",
+  "question": "An infant with prenatal ultrasound showing upper pole hydroureteronephrosis has low urine output and a palpable abdominal mass. A bladder ultrasound is shown. The next step is:",
+  "options": {
+   "A": "VCUG.",
+   "B": "diuretic renography.",
+   "C": "ureterocele puncture.",
+   "D": "vesicostomy.",
+   "E": "ureteral reimplantation."
+  },
+  "answer": "C",
+  "rationale": "This baby has a ureterocele. In a duplex system, they are associated with the upper pole of the duplex system and can cause obstruction of that moiety. The prenatal imaging on this patient suggests this may be occurring but could be better evaluated with imaging such as a VCUG to look for VUR and diuretic renography to look at renal function and drainage. Indications for urgent intervention of a ureterocele, however, would be if there is concern the ureterocele is leading to bladder outlet obstruction due to obstructing the bladder neck/urethra. In this setting, proceeding directly to a ureterocele puncture would be appropriate. A VCUG is not required prior to puncture in this case. Diuretic renography results would not alter the clinical concern for bladder obstruction and is not performed in a child so young. A vesicostomy may drain the bladder; however, it is more invasive than simply a transurethral ureterocele puncture and is not a definitive treatment of the ureterocele. Ureteral reimplantation would address the ureterocele; however, it is the most invasive management and not reasonable in such a young patient. It might be necessary pending the outcome of the ureterocele puncture in the event of iatrogenic VUR.",
+  "learning_point": "In this setting, proceeding directly to a ureterocele puncture would be appropriate.",
+  "key_facts": [
+   "In a duplex system, they are associated with the upper pole of the duplex system and can cause obstruction of that moiety.",
+   "A VCUG is not required prior to puncture in this case.",
+   "Ureteral reimplantation is the most invasive management and not reasonable in such a young patient."
+  ],
+  "source_ref": "Siegal 2026 Hydronephrosis"
+ },
+ {
+  "id": "SIEGAL-003",
+  "topic": "Pediatrics",
+  "question": "A nine-month-old boy with his first febrile UTI has an ultrasound of the right kidney as shown. His VCUG demonstrates non-dilating bilateral VUR. The MAG-3 diuretic renogram shows 35% differential function of the right kidney with no evidence of hydroureter; drainage curve is shown. The next step is:",
+  "options": {
+   "A": "antibiotic prophylaxis and follow-up studies in six months.",
+   "B": "right pyeloplasty.",
+   "C": "bilateral non-refluxing ureteral reimplantation.",
+   "D": "right pyeloplasty and bilateral subureteric endoscopic injection.",
+   "E": "right pyeloplasty and bilateral non-refluxing ureteral reimplantation."
+  },
+  "answer": "B",
+  "rationale": "This child has a right UPJ obstruction with associated VUR. The ultrasound demonstrates SFU grade 4 hydronephrosis with thinned renal parenchyma, while the renogram demonstrates compromised relative right renal function of 35% and no washout on the diuretic phase of the renogram. The ultrasound and renogram findings are consistent with a high-grade UPJ obstruction which should be corrected; thus, given the febrile UTI and the reduced ipsilateral function, repeat imaging and antibiotic prophylaxis are not appropriate. Further, this child has bilateral VUR. Reflux is found in up to 40% of children with UPJ obstruction. Most often, this reflux is low-grade and does not contribute to upper urinary tract obstruction; however, when the reflux is high-grade, it may cause a secondary kinking of the UPJ, which results in obstruction. In this particular case, however, since the refluxing ureter is of normal caliber on both VCUG and MAG-3, it is unlikely that the VUR is significantly contributing to the UPJ obstruction. If the reflux is not contributing to the UPJ obstruction and the renal function is significantly compromised with evidence of poor washout on the diuretic phase of the renogram, then a pyeloplasty should be undertaken. It is generally not recommended that an operation on the UVJ and the UPJ be performed simultaneously to reduce the chances of harm to the ureteral blood supply. While one could argue that an attempt at an endoscopic correction of the reflux at the time of pyeloplasty would be reasonable, it is important to remember that boys have particularly high rates of spontaneous VUR resolution. Thus, the best option at this time is to repair the UPJ obstruction and observe the VUR.",
+  "learning_point": "Thus, the best option at this time is to repair the UPJ obstruction and observe the VUR.",
+  "key_facts": [
+   "Reflux is found in up to 40% of children with UPJ obstruction.",
+   "It is generally not recommended that an operation on the UVJ and the UPJ be performed simultaneously to reduce the chances of harm to the ureteral blood supply.",
+   "Boys have particularly high rates of spontaneous VUR resolution."
+  ],
+  "source_ref": "Siegal 2026 Hydronephrosis"
+ },
+ {
+  "id": "SIEGAL-004",
+  "topic": "Pediatrics",
+  "question": "A two-day-old boy with a history of prenatal right moderate hydronephrosis undergoes a renal ultrasound as shown. The next step is:",
+  "options": {
+   "A": "no further follow-up.",
+   "B": "prophylactic antibiotics.",
+   "C": "repeat ultrasound in three months.",
+   "D": "VCUG.",
+   "E": "diuretic renography in six weeks."
+  },
+  "answer": "C",
+  "rationale": "The image represents a normal-appearing kidney for an infant. The sonolucent areas are not hydronephrosis but rather the renal medullary pyramids consistent with a normal, well-developed renal medulla. Although the image shows a normal-appearing kidney, an ultrasound performed within the first 72 hours will commonly underestimate the degree of dilation due to oliguria from intravascular volume depletion that occurs after delivery. The baby should undergo repeat imaging within three months due to potential false negative results from obtaining the early ultrasound within the first 72 hours. VCUG is only indicated for confirmed prominent postnatal hydronephrosis to rule out VUR. Similarly, prophylactic antibiotics are not warranted in low-grades of hydronephrosis, unless the baby were to subsequently present with UTIs. Diuretic renography is used to assess for renal obstruction, which would not be indicated for low-grade hydronephrosis or prior to six weeks of life.",
+  "learning_point": "The baby should undergo repeat imaging within three months due to potential false negative results from obtaining the early ultrasound within the first 72 hours.",
+  "key_facts": [
+   "The sonolucent areas are not hydronephrosis but rather the renal medullary pyramids consistent with a normal, well-developed renal medulla.",
+   "An ultrasound performed within the first 72 hours will commonly underestimate the degree of dilation due to oliguria from intravascular volume depletion that occurs after delivery.",
+   "Diuretic renography would not be indicated for low-grade hydronephrosis or prior to six weeks of life."
+  ],
+  "source_ref": "Siegal 2026 Hydronephrosis"
+ },
+ {
+  "id": "SIEGAL-005",
+  "topic": "Pediatrics",
+  "question": "A six-month-old boy undergoes pyeloplasty for UPJ obstruction with ipsilateral reduced function. The most appropriate ureteral stent to use is:",
+  "options": {
+   "A": "4.8 Fr x 6 cm.",
+   "B": "6 Fr x 6 cm.",
+   "C": "4.8 Fr x 10 cm.",
+   "D": "6 Fr x 10 cm.",
+   "E": "4.8 Fr x 12 cm."
+  },
+  "answer": "C",
+  "rationale": "The average ureteral length in a neonate is 6 cm; by six months of age, 8-10 cm length is common. The formula (age in years + 10) is a rough rule of thumb that can be used to estimate the most appropriate length of a ureteral stent. Likewise, the average diameter of the ureteral lumen in a neonate is 1-1.5 mm; by six months of age, a ureteral stent size of 4.8 Fr (or 1.6 mm diameter) should pass without difficulty, while a 6 Fr stent will be too big.",
+  "learning_point": "The formula (age in years + 10) is a rough rule of thumb that can be used to estimate the most appropriate length of a ureteral stent.",
+  "key_facts": [
+   "The average ureteral length in a neonate is 6 cm; by six months of age, 8-10 cm length is common.",
+   "The average diameter of the ureteral lumen in a neonate is 1-1.5 mm.",
+   "By six months of age, a ureteral stent size of 4.8 Fr (or 1.6 mm diameter) should pass without difficulty, while a 6 Fr stent will be too big."
+  ],
+  "source_ref": "Siegal 2026 Hydronephrosis"
+ },
+ {
+  "id": "SIEGAL-006",
+  "topic": "Pediatrics",
+  "question": "A postnatal ultrasound in a one-day-old girl shows a duplicated left kidney with a dysplastic upper pole, a normal lower pole, and a normal right kidney. Creatinine is 0.9 mg/dL. VCUG shows no ureterocele and no VUR. MAG-3 renal scan reveals poor function in the left upper pole moiety. Follow-up is indicated to assess for development of:",
+  "options": {
+   "A": "urosepsis.",
+   "B": "proteinuria.",
+   "C": "incontinence.",
+   "D": "renal insufficiency.",
+   "E": "cysts in the contralateral kidney."
+  },
+  "answer": "C",
+  "rationale": "The dysplastic left upper pole has minimal function per radiographic studies, likely related to ureteral obstruction and abnormal development of this moiety in utero. Upper pole ureters are often associated with an ectopic insertion. Studies such as MR urography or cystoscopy might confirm the presence of ectopia but require anesthesia, which should be avoided in a newborn unless the procedure is urgent. Follow-up is needed to assure that this child develops continence, as urinary incontinence may be caused by an ectopic ureter in a girl (not in a boy as the ectopic ureter inserts proximal to the external sphincter). If the patient develops continuous urinary incontinence after toilet training, an ectopic ureter would be suspected. This could be corrected surgically to achieve continence. This patient's imaging reveals a healthy left lower pole and right kidney, and therefore, development of renal insufficiency is very unlikely. Her creatinine is elevated but reflects maternal creatinine in the newborn's first couple days of life and should nadir over the course of the next several days. Development of cysts in the contralateral kidney and proteinuria are also not commonly seen with this anatomy. Urosepsis can be a risk for infants with a dilated upper pole and ureter due to partial obstruction and urinary stasis. When these findings are seen on initial postnatal ultrasound, initiation of antibiotic prophylaxis should be considered. However, in this setting with no hydronephrosis, the risk of urosepsis is minimal. In a dysplastic upper pole with poor function, urine production by this moiety is likely minimal, and may never result in a hydrometer.",
+  "learning_point": "Follow-up is needed to assure that this child develops continence, as urinary incontinence may be caused by an ectopic ureter in a girl (not in a boy as the ectopic ureter inserts proximal to the external sphincter).",
+  "key_facts": [
+   "Upper pole ureters are often associated with an ectopic insertion.",
+   "Continuous incontinence after toilet training in a girl suggests an ectopic ureter, which can be corrected surgically.",
+   "A newborn creatinine of 0.9 mg/dL reflects maternal creatinine and should nadir over the next several days."
+  ],
+  "source_ref": "Siegal 2026 Hydronephrosis"
+ },
+ {
+  "id": "SIEGAL-007",
+  "topic": "Pediatrics",
+  "question": "A newborn boy with a history of left prenatal hydroureteronephrosis develops gram negative urosepsis despite prophylactic amoxicillin. VCUG is normal. Renal ultrasound and MAG-3 renal scan are shown. The differential renal function is 74/26 (right/left). The next step is:",
+  "options": {
+   "A": "observation.",
+   "B": "change prophylaxis to trimethoprim/sulfamethoxazole.",
+   "C": "cutaneous pyelostomy.",
+   "D": "distal cutaneous ureterostomy.",
+   "E": "tapered ureteral reimplantation."
+  },
+  "answer": "D",
+  "rationale": "Gram-negative sepsis in a child under three months of age has a mortality approaching 15-20%. An infant under three months of age with a gram-negative UTI has a 30% chance of a recurrent UTI over the next six months. In this infant with an obstructing primary megaureter and ipsilateral decreased renal function, surgical intervention is indicated, rather than observation, at this time. A tapered ureteral reimplantation would be technically very difficult at this age and should be deferred until older than one year of age. The preferred treatment is a distal cutaneous ureterostomy. Altering prophylaxis to trimethoprim/sulfamethoxazole should not be done in infants under three months of age due to the risk of kernicterus and hematopoietic dysfunction. The level of obstruction, as demonstrated by the ultrasound and renal scan, is at the level of the UVJ, so although a cutaneous pyeloplasty could relieve the obstruction, it would eventually need to be taken down, and surgery at the bladder level would need to be done to reimplant the ureter. Therefore, there is no need at this time to operate on the kidney/renal pelvis which could potentially increase the risk of compromise to the ureteral blood supply during a subsequent ureteral reimplantation.",
+  "learning_point": "The preferred treatment is a distal cutaneous ureterostomy.",
+  "key_facts": [
+   "Gram-negative sepsis under three months of age has a mortality approaching 15-20%.",
+   "An infant under three months with a gram-negative UTI has a 30% chance of recurrent UTI over the next six months.",
+   "Trimethoprim/sulfamethoxazole is avoided under three months because of kernicterus and hematopoietic dysfunction."
+  ],
+  "source_ref": "Siegal 2026 Hydronephrosis"
+ },
+ {
+  "id": "SIEGAL-008",
+  "topic": "Pediatrics",
+  "question": "A seven-year-old boy has stranguria. CT scan is shown. Transurethral biopsy shows rhabdomyosarcoma. Metastatic work-up is negative. The next step is:",
+  "options": {
+   "A": "chemotherapy.",
+   "B": "XRT.",
+   "C": "nerve-sparing radical prostatectomy.",
+   "D": "radical cystoprostatectomy.",
+   "E": "radical cystoprostatectomy, adjuvant chemotherapy, and XRT."
+  },
+  "answer": "A",
+  "rationale": "Imaging shows prostatic rhabdomyosarcoma confirmed by biopsy. The initial step, under both COG and European protocols, is to place a urethral catheter if unable to void effectively and then proceed with chemotherapy. Although radical surgical excision was the first effective treatment for rhabdomyosarcoma, the accumulated evidence from multiple collaborative study groups has documented the effectiveness of chemotherapy as the initial treatment; thus, the goal of modern therapy is to initially excise the tumor ONLY if that can be accomplished with negative margins (R0 resection) and minimal impact on form or function. Resection of this tumor would almost certainly not involve a negative margin and would likewise have a negative impact on urinary and sexual function. As the treatment of rhabdomyosarcoma has evolved, most patients undergo only a biopsy as the initial procedure, followed by chemotherapy (typically with vincristine, actinomycin, and cyclophosphamide). After completing the initial round of chemotherapy, restaging is performed and additional treatment tailored to the clinical response of the patient. For example, if the tumor has continued to grow or is nonresponsive, then resection may be an appropriate option after discussion with experienced urologists and review at a multidisciplinary tumor board. After restaging following initial chemotherapy, local control with radiotherapy or surgery would be appropriate.",
+  "learning_point": "The initial step, under both COG and European protocols, is to place a urethral catheter if unable to void effectively and then proceed with chemotherapy.",
+  "key_facts": [
+   "Upfront excision is appropriate only for an R0 resection with minimal impact on form or function.",
+   "Initial chemotherapy is typically vincristine, actinomycin, and cyclophosphamide, followed by restaging.",
+   "Local control with radiotherapy or surgery is considered after restaging, or resection if the tumor grows or is nonresponsive."
+  ],
+  "source_ref": "Siegal 2026 Malignancy"
+ },
+ {
+  "id": "SIEGAL-009",
+  "topic": "Pediatrics",
+  "question": "A ten-year-old boy has self-limited scrotal pain. An ultrasound is shown. The next step is:",
+  "options": {
+   "A": "observation.",
+   "B": "ultrasound and tumor markers in six months.",
+   "C": "CT scan of chest and abdomen.",
+   "D": "biopsy.",
+   "E": "radical orchiectomy."
+  },
+  "answer": "A",
+  "rationale": "This child has diffuse testicular microlithiasis with a typical radiographic appearance. There is no need to consider any type of treatment in this child. The most important aspect of his care will be close observation and the need for self-exam. Testicular microlithiasis is present in more than 5% of healthy young men. Most studies now demonstrate that it does not appear to be a premalignant lesion although the importance of self-exam needs to be emphasized to these patients. Further evaluation with tumor markers or imaging is not indicated. Thus, similar to adults, the most important aspect of follow-up is the need for self-exam in older children and parental exam in younger children. There is no indication for surgical intervention, including biopsy or radical orchiectomy.",
+  "learning_point": "Similar to adults, follow-up of diffuse testicular microlithiasis is self-exam in older children and parental exam in younger children.",
+  "key_facts": [
+   "Testicular microlithiasis is present in more than 5% of healthy young men.",
+   "Most studies do not show it to be a premalignant lesion, and tumor markers or further imaging are not indicated.",
+   "Biopsy and radical orchiectomy are not indicated."
+  ],
+  "source_ref": "Siegal 2026 Malignancy"
+ },
+ {
+  "id": "SIEGAL-010",
+  "topic": "Pediatrics",
+  "question": "A three-year-old boy has acute abdominal pain. CT images are shown. In the Children's Oncology Group protocols, preoperative chemotherapy would be considered in the setting of:",
+  "options": {
+   "A": "lung metastases.",
+   "B": "right varicocele.",
+   "C": "hemihypertrophy.",
+   "D": "cutaneous leiomyomas.",
+   "E": "anaplasia on needle biopsy."
+  },
+  "answer": "C",
+  "rationale": "The age of the child and the CT suggest Wilms tumor. In the Children's Oncology Group (COG) protocols, surgical and pathologic staging from immediate radical nephrectomy determines treatment. However, preoperative chemotherapy is recommended in some situations: inoperable tumors, bilateral tumors, and in children with unilateral tumors at high risk for bilateral disease or renal failure. Many Wilms tumors are too large at initial diagnosis for partial nephrectomy. Preoperative chemotherapy may allow for partial nephrectomy in those individuals who are at high risk for bilateral disease or renal failure. Several syndromes are associated with bilateral Wilms tumor risk including hemihypertrophy, Beckwith-Wiedemann, Perlman, WAGR, and Denys-Drash. The presence of a varicocele may indicate IVC obstruction from a tumor thrombus but itself is not an indicator for preoperative chemotherapy. In addition to review of preoperative imaging, the renal vein and IVC should be palpated at the time of nephrectomy to exclude intravascular tumor extension before vessel ligation. IVC involvement would not be an indication for preoperative chemotherapy unless deemed inoperable. If preoperative imaging suggests high-volume lung metastases, suspicious lung nodules may be biopsied or removed at time of nephrectomy. Cutaneous leiomyomas as well as uterine fibroids (if female) are seen in individuals with hereditary leiomyomatosis and renal cell carcinoma syndrome (HLRCC), but not Wilms tumor. If imaging is consistent with Wilms tumor and preoperative chemotherapy is planned, biopsy is not recommended. In contrast to the COG protocols, protocols from the International Society of Pediatric Oncology (SIOP) give preoperative therapy before surgery. Anaplasia on needle biopsy is not an indication for preoperative chemotherapy and these tumors are often chemo resistant.",
+  "learning_point": "Several syndromes are associated with bilateral Wilms tumor risk including hemihypertrophy, Beckwith-Wiedemann, Perlman, WAGR, and Denys-Drash.",
+  "key_facts": [
+   "In COG protocols, preoperative chemotherapy is recommended for inoperable tumors, bilateral tumors, and unilateral tumors at high risk for bilateral disease or renal failure.",
+   "A varicocele may indicate IVC obstruction from tumor thrombus but is not itself an indication for preoperative chemotherapy.",
+   "Anaplasia on needle biopsy is not an indication for preoperative chemotherapy and these tumors are often chemo resistant."
+  ],
+  "source_ref": "Siegal 2026 Malignancy"
+ },
+ {
+  "id": "SIEGAL-011",
+  "topic": "Pediatrics",
+  "question": "A three-year-old boy develops straining with urination. Urinalysis shows microscopic hematuria. KUB is normal. Renal bladder ultrasound shows mild bilateral hydronephrosis and a full bladder. The next step is:",
+  "options": {
+   "A": "timed voiding.",
+   "B": "CT scan of abdomen and pelvis.",
+   "C": "UDS.",
+   "D": "VCUG.",
+   "E": "cystoscopy."
+  },
+  "answer": "B",
+  "rationale": "New onset of stranguria in a three-year-old boy, particularly in the setting of bilateral hydronephrosis and hematuria, should raise concern for bladder/prostate rhabdomyosarcoma. The most appropriate next step would be to obtain cross-sectional imaging. While either MR or CT scan would provide such imaging, MR urography will likely require general anesthesia in a three-year-old boy, and therefore CT is the preferred choice as the next step in this patient. A retrograde urethrogram or VCUG may be subsequently obtained if necessary based on the results of the CT scan. Cystoscopy and UDS are not indicated at this time. Timed voiding is inappropriate, as these symptoms and findings in this patient should raise high clinical suspicion for bladder outlet obstruction.",
+  "learning_point": "New onset of stranguria in a three-year-old boy, particularly in the setting of bilateral hydronephrosis and hematuria, should raise concern for bladder/prostate rhabdomyosarcoma.",
+  "key_facts": [
+   "Cross-sectional imaging is the next step when bladder/prostate rhabdomyosarcoma is suspected.",
+   "CT is preferred over MR urography in a three-year-old because MR urography will likely require general anesthesia.",
+   "Cystoscopy, UDS, and timed voiding are not indicated at this time."
+  ],
+  "source_ref": "Siegal 2026 Malignancy"
+ },
+ {
+  "id": "SIEGAL-012",
+  "topic": "Pediatrics",
+  "question": "For renal function surveillance and GFR estimation, cystatin C is more:",
+  "options": {
+   "A": "sensitive than creatinine in all children.",
+   "B": "sensitive than creatinine in children with neurogenic bladder.",
+   "C": "sensitive than creatinine in children with non-neurogenic voiding dysfunction.",
+   "D": "specific than creatinine in children with neurogenic bladder.",
+   "E": "specific than creatinine in all children."
+  },
+  "answer": "B",
+  "rationale": "Cystatin C is made by all nucleated cells, while creatinine is made just by muscle. As a result, cystatin C production varies less than creatinine production between individuals, and blood concentrations of cystatin C are fairly similar between individuals with the same GFR, while creatinine can vary with muscle mass. Thus, in patients with diminished muscle mass, such as those with spina bifida or spinal cord injury, cystatin C provides a more sensitive estimate of GFR because their serum creatinine may be artificially lowered because of lack of production. However, if either cystatin C or creatinine are elevated above normal, both are relatively similar in terms of their specificity for detecting abnormal GFR. In otherwise healthy children, or in children with non-neurogenic voiding dysfunction, muscle mass should not be reduced, and as such, both cystatin C and creatinine are relatively similar in terms of their sensitivity for detecting abnormal GFR.",
+  "learning_point": "In children with neurogenic bladder and reduced muscle mass, cystatin C is more sensitive than creatinine for estimating GFR because creatinine production depends on muscle.",
+  "key_facts": [
+   "Cystatin C is made by all nucleated cells; creatinine is made by muscle.",
+   "Spina bifida or spinal cord injury can artificially lower serum creatinine from low muscle mass.",
+   "When either marker is elevated, specificity for abnormal GFR is similar.",
+   "In healthy children or non-neurogenic voiding dysfunction, sensitivity of cystatin C and creatinine is similar."
+  ],
+  "source_ref": "Siegal 2026 Neurogenic bladder"
+ },
+ {
+  "id": "SIEGAL-013",
+  "topic": "Pediatrics",
+  "question": "A 15-year-old girl with a history of bladder augmentation irrigates her bladder daily with 60 mL of saline. She has recurrent bladder stones. Renal ultrasound is normal. Following stone removal, the next step is:",
+  "options": {
+   "A": "increase irrigation volume to 240 mL daily.",
+   "B": "correct abnormalities on 24-hour urine testing.",
+   "C": "add mucolytic agent to irrigation.",
+   "D": "ranitidine.",
+   "E": "antibiotic prophylaxis."
+  },
+  "answer": "A",
+  "rationale": "High-volume daily irrigation with ≥ 240 mL of water or saline daily with CIC at least four times daily has decreased the incidence of stone formation in augmented bladders. Although correction of metabolic abnormalities, the addition of mucolytic agents such as N-acetylcysteine to the irrigant, and H2 blockers (like ranitidine) have been tried, these interventions do not reliably decrease recurrence. Continuous antibiotic prophylaxis runs the risk of causing hyperoxaluria due to the loss of oxalate-degrading bacteria in the gut flora.",
+  "learning_point": "After stone removal from an augmented bladder, increase daily irrigation to at least 240 mL rather than adding mucolytics, H2 blockers, metabolic correction, or continuous antibiotics.",
+  "key_facts": [
+   "Irrigation with ≥ 240 mL of water or saline daily, with CIC at least four times daily, decreases stones in augmented bladders.",
+   "Mucolytics such as N-acetylcysteine, H2 blockers such as ranitidine, and metabolic correction do not reliably decrease recurrence.",
+   "Continuous antibiotic prophylaxis can cause hyperoxaluria by eliminating oxalate-degrading gut bacteria."
+  ],
+  "source_ref": "Siegal 2026 Neurogenic bladder"
+ },
+ {
+  "id": "SIEGAL-014",
+  "topic": "Pediatrics",
+  "question": "A 14-year-old girl with spina bifida has an artificial urinary sphincter placed for primary sphincteric incompetence. Preoperative UDS demonstrated a compliant bladder with good capacity and no VUR. One year later, she is voiding spontaneously and dry but has had several UTIs. A VCUG shows new bilateral grade 3 VUR. The next step is prophylactic antibiotics and:",
+  "options": {
+   "A": "VCUG in one year.",
+   "B": "CIC.",
+   "C": "UDS.",
+   "D": "subureteric injection of bulking agent.",
+   "E": "ureteral reimplantation."
+  },
+  "answer": "C",
+  "rationale": "Increasing the resistance to the bladder outlet can unmask the development of detrusor hostility manifesting with a decrease in bladder compliance or an increase in detrusor overactivity in patients with neurogenic sphincter incompetence. As a result, changes in the upper urinary tract, such as hydronephrosis, have been reported to occur in up to 15% of children after placement of an artificial urinary sphincter. Renal insufficiency can be an end result. Preoperative urodynamic assessment can help to identify children who will be at risk and may require preoperative augmentation. However, it is not always prognostic, and postoperative detrusor hostility can occur. In this patient, the development of UTIs and VUR is worrisome for bladder decompensation and upper tract deterioration. Thus, UDS should be performed to reevaluate this patient's bladder. It would not be appropriate to continue to monitor this patient with annual imaging. While CIC may be required as a management option, the bladder function requires evaluation first. This patient's VUR is likely secondary VUR. Thus, surgical correction (such as endoscopic injection or reimplantation) of the VUR alone is not adequately addressing the issue and is likely to fail.",
+  "learning_point": "New VUR after an artificial urinary sphincter can signal unmasked detrusor hostility, so urodynamics should be repeated before treating the reflux or simply observing.",
+  "key_facts": [
+   "Increasing outlet resistance can decrease compliance or increase detrusor overactivity.",
+   "Hydronephrosis has been reported in up to 15% of children after an artificial urinary sphincter.",
+   "Preoperative UDS is not always prognostic of postoperative detrusor hostility.",
+   "Secondary VUR is likely to persist if only the reflux is corrected."
+  ],
+  "source_ref": "Siegal 2026 Neurogenic bladder"
+ },
+ {
+  "id": "SIEGAL-015",
+  "topic": "Pediatrics",
+  "question": "An eight-year-old boy was treated for lipomyelomeningocele at birth. He is on CIC every four hours and oxybutynin 5 mg BID. He develops new incontinence. The next step is:",
+  "options": {
+   "A": "UDS.",
+   "B": "spinal MRI scan.",
+   "C": "increase CIC frequency.",
+   "D": "increase antimuscarinics.",
+   "E": "start mirabegron."
+  },
+  "answer": "A",
+  "rationale": "This patient should undergo UDS evaluation to assess the etiology of the incontinence. An MRI scan of the spine would be indicated if the UDS shows new abnormal findings or if there is a new onset of lower extremity weakness or other alterations on the neurologic exam. Increasing CIC frequency, increasing antimuscarinics, or considering mirabegron without identifying the cause of the incontinence would be premature.",
+  "learning_point": "New incontinence in a child with lipomyelomeningocele on CIC and oxybutynin should be evaluated with urodynamics before changing therapy or imaging the spine.",
+  "key_facts": [
+   "UDS is the first step to determine why incontinence has recurred.",
+   "Spinal MRI is indicated if UDS is newly abnormal or if there is new lower-extremity weakness or a neurologic change.",
+   "Increasing CIC, increasing antimuscarinics, or starting mirabegron is premature before the cause is identified."
+  ],
+  "source_ref": "Siegal 2026 Neurogenic bladder"
+ },
+ {
+  "id": "SIEGAL-016",
+  "topic": "Pediatrics",
+  "question": "A 25-year-old woman with a history of enterocystoplasty has left flank pain. Prior to CT imaging, the optimal pregnancy test is:",
+  "options": {
+   "A": "pink dye urine test.",
+   "B": "blue dye urine test.",
+   "C": "urine digital pregnancy test.",
+   "D": "qualitative blood pregnancy test.",
+   "E": "quantitative blood pregnancy test."
+  },
+  "answer": "E",
+  "rationale": "Urine pregnancy tests have a high rate of false positives in patients with a urologic history of intestinal reservoirs or bladder augmentations. Therefore, women with this condition should be educated early on regarding the significant limitations of urine-based pregnancy tests. The first three choices are urinary pregnancy tests; therefore, they are not ideal with a history of bladder augmentation. A qualitative blood pregnancy test is similar to a urine test, evaluating whether hCG is present. Many qualitative blood pregnancy tests only detect hCG levels of 25 mIU/mL or more, which is less sensitive than many early-detection urine pregnancy tests. A quantitative blood pregnancy test is the most accurate assay that specifies the amount of hCG detected.",
+  "learning_point": "After enterocystoplasty, urine pregnancy tests have a high false-positive rate, so a quantitative serum hCG is the most accurate test before CT.",
+  "key_facts": [
+   "Intestinal reservoirs and bladder augmentations cause false-positive urine pregnancy tests.",
+   "Pink dye, blue dye, and digital urine tests are all urine-based and are not ideal.",
+   "Many qualitative blood tests detect hCG only at 25 mIU/mL or higher.",
+   "Quantitative serum hCG reports the amount of hCG and is the most accurate assay."
+  ],
+  "source_ref": "Siegal 2026 Neurogenic bladder"
+ },
+ {
+  "id": "SIEGAL-017",
+  "topic": "Pediatrics",
+  "question": "At the time of a newborn circumcision, the distal ½ of the glans penis is amputated, including the urethra. The prepuce and glans have been kept in iced saline for 4 hours. The best management is:",
+  "options": {
+   "A": "primary anastomosis",
+   "B": "graft of preputial skin for coverage",
+   "C": "discard glans tip and allow secondary healing",
+   "D": "discard the glans tip and re-configure remaining glans",
+   "E": "primary anastomosis with microvascular reconstruction"
+  },
+  "answer": "A",
+  "rationale": "",
+  "learning_point": "",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-018",
+  "topic": "Pediatrics",
+  "question": "Among girls seen for evaluation of a reported straddle injury, which factor mandates an evaluation for sexual abuse:",
+  "options": {
+   "A": "recurrent UTIs",
+   "B": "diurnal enuresis beyond age 6 years",
+   "C": "infrequent voiding",
+   "D": "age under nine months",
+   "E": "encopresis"
+  },
+  "answer": "D",
+  "rationale": "",
+  "learning_point": "",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-019",
+  "topic": "Pediatrics",
+  "question": "A 6 week old, otherwise healthy boy, has a large, palpable right abdominal mass. Ultrasound reveals a fluid-filled mass with multiple cystic lucencies. A renal scan shows no uptake of the RK with a normal LK. He has moderate respiratory distress & an elevated right hemidiaphragm. The most definitive therapy is:",
+  "options": {
+   "A": "R. nephrectomy",
+   "B": "Percutaneous aspiration of cysts",
+   "C": "Cystoscopy with R. retrograde pyelogram",
+   "D": "R. pyeloplasty",
+   "E": "Observation"
+  },
+  "answer": "A",
+  "rationale": "",
+  "learning_point": "",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-020",
+  "topic": "Pediatrics",
+  "question": "A 12 year old prepubertal boy has severe right scrotal pain, 24 hours after being kicked in the groin. There is a blue area over the superior portion of the testis, but exam is difficult due to the presence of a hydrocele. U/A is normal. The next step is:",
+  "options": {
+   "A": "Immediate exploration",
+   "B": "Scrotal doppler ultrasound",
+   "C": "Antibiotic therapy",
+   "D": "Manual detorsion & delayed fixation",
+   "E": "Observation & NSAIDs"
+  },
+  "answer": "B",
+  "rationale": "",
+  "learning_point": "",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-021",
+  "topic": "Pediatrics",
+  "question": "The classic triad of Eagle-Barrett Syndrome is often associated with hypoplasia of the:",
+  "options": {
+   "A": "Testis",
+   "B": "Prostate",
+   "C": "Epididymis",
+   "D": "Vasa deferentia",
+   "E": "Radius"
+  },
+  "answer": "B",
+  "rationale": "",
+  "learning_point": "",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-022",
+  "topic": "Pediatrics",
+  "question": "During a colonic pull-through operation, the left spermatic vessels are incidentally transected above the iliac fossa in a 6 year old boy with normally descended testes. The next step is:",
+  "options": {
+   "A": "Microvascular re-anastamosis",
+   "B": "Left orchiectomy",
+   "C": "Intrasoperative ultrasound of left testis",
+   "D": "Revascularization to epigastric vessels",
+   "E": "Observation"
+  },
+  "answer": "E",
+  "rationale": "",
+  "learning_point": "",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-023",
+  "topic": "Pediatrics",
+  "question": "If the cloacal membrane disappears prematurely after division of the cloaca by the urorectal septum, what may occur?",
+  "options": {
+   "A": "cloacal extrophy",
+   "B": "bladder extrophy",
+   "C": "urachal sinus",
+   "D": "urachal cyst"
+  },
+  "answer": "A",
+  "rationale": "",
+  "learning_point": "",
+  "key_facts": [],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-024",
+  "topic": "Pediatrics",
+  "question": "A seven-year-old girl has had four febrile UTIs and rare urinary incontinence associated with urgency. Her VCUG and DMSA scan are shown. She is started on antibiotic prophylaxis, and one year later the VCUG is unchanged. The next step is:",
+  "options": {
+   "A": "observation off antibiotics.",
+   "B": "continuous antibiotic prophylaxis for one year.",
+   "C": "antibiotic prophylaxis and antimuscarinic.",
+   "D": "right ureteral reimplant.",
+   "E": "right lower pole partial nephrectomy."
+  },
+  "answer": "D",
+  "rationale": "This patient has persistent right grade 3-4 VUR and renal cortical abnormalities in the lower pole of her right kidney. With her history of recurrent febrile UTIs and renal scarring, observation off antibiotics would pose a high risk of future febrile UTIs. Antibiotic prophylaxis would be a reasonable short-term option, but her VUR is unlikely to resolve at her age. Although bladder/bowel dysfunction should be addressed prior to surgical correction of VUR, treatment with an antimuscarinic may worsen bladder/bowel dysfunction. Urinary incontinence associated with urgency in children can be associated with delayed voiding and constipation rather than OAB. Partial nephrectomy in children is sometimes used to remove a non-functioning, non-refluxing moiety of a duplicated collecting system. The best step to decrease recurrent febrile UTIs is right ureteral reimplant.",
+  "learning_point": "The best step to decrease recurrent febrile UTIs is right ureteral reimplant.",
+  "key_facts": [
+   "Persistent right grade 3-4 VUR with lower-pole renal cortical abnormalities and scarring.",
+   "Antibiotic prophylaxis is only a short-term option because VUR is unlikely to resolve at her age.",
+   "Urgency incontinence may reflect delayed voiding and constipation rather than OAB, and an antimuscarinic may worsen bladder/bowel dysfunction."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-025",
+  "topic": "Pediatrics",
+  "question": "A 17-year-old Black man with sickle cell trait has priapism of 26 hours duration. He has previously experienced two similar episodes. Corporal aspiration and phenylephrine injections have failed. The next step is:",
+  "options": {
+   "A": "ketoconazole.",
+   "B": "cold saline irrigation.",
+   "C": "exchange transfusion.",
+   "D": "distal shunt.",
+   "E": "placement of a penile prosthesis."
+  },
+  "answer": "D",
+  "rationale": "Sickle cell disease is associated with episodes of recurrent ischemic priapism (often termed 'stuttering' priapism). Although the condition is distinct from other causes of priapism, individual episodes are managed similarly. In the current example, administration of phenylephrine and saline irrigation/aspiration should be attempted primarily, although they are not likely to be successful given the duration of symptoms. In contrast, cold saline injections should not be performed, as these may further precipitate sickling in the penis. Exchange transfusion may ultimately be required at some point, but it should not preempt primary management of the priapism. Placement of a penile prosthesis is a possible option in the acute setting in certain clinical scenarios. However, this is usually not considered until the priapism has been > 36 hours in duration or if primary attempts at decompression have failed. Ketoconazole has been described in men with recurrent priapic episodes; however, the data are very limited and will not address his acute issue. In the scenario described above, the best option for treatment would be distal shunting. The fact that the patient is 17 years of age does not change management in this scenario.",
+  "learning_point": "In the scenario described above, the best option for treatment would be distal shunting.",
+  "key_facts": [
+   "Cold saline injections should not be performed because they may further precipitate sickling in the penis.",
+   "A penile prosthesis is usually not considered until priapism has been > 36 hours or primary decompression has failed.",
+   "Age 17 does not change management; distal shunting is the next step after failed aspiration and phenylephrine."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-026",
+  "topic": "Pediatrics",
+  "question": "During hypospadias repair the viability of the flap in the image shown is dependent on the:",
+  "options": {
+   "A": "dorsal artery of the penis.",
+   "B": "superficial circumflex artery.",
+   "C": "perineal artery.",
+   "D": "external pudendal artery.",
+   "E": "cavernous artery."
+  },
+  "answer": "D",
+  "rationale": "The superficial penile arteries supply the prepuce (as shown in image) and penile skin. The superficial penile arteries arise from the external pudendal artery, a branch of the femoral artery. The dorsal artery of the penis supplies the glans penis as well as providing a few cortical branches that penetrate the tunica albuginea and is a branch of the dorsal penile artery that arises from the internal pudendal artery. The cavernous artery is also a branch of the dorsal penile artery and supplies the corporal bodies. The perineal artery is a direct branch of the internal pudendal artery and supplies the bulbospongiosus and ischiocavernosus muscles as well as, ultimately, the scrotum. The superficial circumflex iliac artery arises from the femoral artery and travels caudally to supply the abdominal wall skin and muscle.",
+  "learning_point": "The superficial penile arteries arise from the external pudendal artery, a branch of the femoral artery.",
+  "key_facts": [
+   "Superficial penile arteries supply the prepuce and penile skin and arise from the external pudendal artery.",
+   "The dorsal artery of the penis supplies the glans and a few cortical branches to the tunica albuginea.",
+   "The perineal artery supplies the bulbospongiosus and ischiocavernosus muscles and, ultimately, the scrotum."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-027",
+  "topic": "Pediatrics",
+  "question": "A five-month-old boy with imperforate anus and urethral atresia was treated at birth with anal dilation and vesicostomy. He has recurrent pyelonephritis despite multiple courses of prophylactic antibiotics. A cystogram performed through the vesicostomy is shown. To prevent recurrent pyelonephritis, the next step is:",
+  "options": {
+   "A": "initiate CIC via vesicostomy.",
+   "B": "vesicostomy revision.",
+   "C": "fistula closure.",
+   "D": "ureteral reimplantation.",
+   "E": "spinal cord detethering."
+  },
+  "answer": "C",
+  "rationale": "Approximately 50% of patients with anorectal malformations have an associated genitourinary abnormality, including fistulous connections between the gastrointestinal and urinary tracts. This patient's VCUG shows a fistula between the bladder and hindgut, a clear source of enteric bacteria. A poorly functioning vesicostomy that is stenotic could also cause infection but is not the most likely source in the setting of the untreated fistula. Therefore, initiating CIC and revision of the vesicostomy is not necessary, given these VCUG findings. Approximately half of patients with imperforate anus will have spinal cord anomalies. This patient may indeed have a tethered cord. However, the urinary tract is already being treated with the vesicostomy, and further diagnostic imaging such as a spinal MRI scan or spinal cord detethering may be deferred. No reflux or other ureteral anomalies are visualized on the VCUG, so ureteral reimplantation is not warranted.",
+  "learning_point": "This patient's VCUG shows a fistula between the bladder and hindgut, a clear source of enteric bacteria.",
+  "key_facts": [
+   "About 50% of anorectal malformations have an associated genitourinary abnormality, including GI–urinary fistulas.",
+   "CIC or vesicostomy revision is not the next step while the fistula is untreated.",
+   "Spinal cord detethering and ureteral reimplantation are not indicated from these VCUG findings."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-028",
+  "topic": "Pediatrics",
+  "question": "A six-year-old boy has urinary urgency, frequency, occasional incontinence, and functional constipation. After resolution of constipation, his urinary symptoms persist. The next step is:",
+  "options": {
+   "A": "KUB.",
+   "B": "uroflow/EMG.",
+   "C": "spinal MRI scan.",
+   "D": "pelvic floor physiotherapy.",
+   "E": "oxybutynin."
+  },
+  "answer": "B",
+  "rationale": "In this scenario, the International Children's Continence Society recommends a non-invasive uroflowmetry/EMG. This will help identify urine flow patterns that will be useful in guiding therapy and the potential need for further studies. A KUB may be of some utility if it's believed that the patient had either persistent or questionable symptoms of constipation. The other choices may be reasonable once an abnormality in flow is identified. For example, a tower shaped curve may indicate an overactive bladder requiring antimuscarinic therapy. A staccato-shaped curve may indicate dysfunctional voiding for which pelvic floor physiotherapy may be useful. Spinal MRI scan would be indicated if the physical exam demonstrated lower back or sacral abnormalities, or the patient had persistent symptoms refractory to treatment.",
+  "learning_point": "In this scenario, the International Children's Continence Society recommends a non-invasive uroflowmetry/EMG.",
+  "key_facts": [
+   "Uroflowmetry/EMG identifies flow patterns that guide therapy and the need for further studies.",
+   "A tower shaped curve may indicate overactive bladder; a staccato-shaped curve may indicate dysfunctional voiding.",
+   "Spinal MRI is indicated for lower back or sacral abnormalities, or symptoms refractory to treatment."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-029",
+  "topic": "Pediatrics",
+  "question": "A six-month-old girl has prenatally detected left renal agenesis and a normal physical exam. On renal ultrasound, the right kidney shows compensatory hypertrophy with no hydronephrosis or ureteral dilation. Pelvic and bladder ultrasound are normal. The next step is:",
+  "options": {
+   "A": "pelvic ultrasound at puberty.",
+   "B": "VCUG.",
+   "C": "DMSA.",
+   "D": "cystoscopy and vaginoscopy.",
+   "E": "diagnostic laparoscopy."
+  },
+  "answer": "A",
+  "rationale": "Unilateral renal agenesis is often associated with Wolffian and Müllerian abnormalities. Reproductive anomalies occur in between 20-40% of individuals with unilateral renal agenesis. Abnormalities such as unicornuate or bicornuate uterus with lack of development or rudimentary development of the ipsilateral horn and fallopian tube or vaginal agenesis may be associated with unilateral renal agenesis in a girl but will be difficult to detect in an infant. A pelvic ultrasound at puberty (particularly after thelarche but before menarche) would rule-out Müllerian anomalies and any obstruction that could occur as a result. The acronym OHVIRA is used in the case of Obstructed HemiVagina and Ipsilateral Renal Anomaly. Symptoms of an obstructed Müllerian system would be cyclical abdominal pain. Performing a cystoscopy and vaginoscopy or diagnostic laparoscopy in an infant without symptoms and with a normal external exam is not indicated. A VCUG or DMSA may be considered if a child has anomalies in the solitary kidney or if compensatory renal hypertrophy is not visible, since unilateral renal agenesis may be associated with vesicoureteral reflux or UPJ obstruction but is not necessary in this asymptomatic child.",
+  "learning_point": "A pelvic ultrasound at puberty (particularly after thelarche but before menarche) would rule-out Müllerian anomalies and any obstruction that could occur as a result.",
+  "key_facts": [
+   "Reproductive anomalies occur in between 20-40% of individuals with unilateral renal agenesis.",
+   "OHVIRA means Obstructed HemiVagina and Ipsilateral Renal Anomaly; obstruction causes cyclical abdominal pain.",
+   "VCUG or DMSA is not necessary when the solitary kidney shows compensatory hypertrophy and no hydronephrosis."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-030",
+  "topic": "Pediatrics",
+  "question": "A 17-year-old girl with dysuria and hematuria undergoes biopsy of bladder lesions showing Michaelis-Gutmann bodies. The next step is:",
+  "options": {
+   "A": "observation.",
+   "B": "long-term antibiotics.",
+   "C": "antifungal.",
+   "D": "corticosteroids.",
+   "E": "transurethral resection of the lesions."
+  },
+  "answer": "B",
+  "rationale": "Malacoplakia is an unusual inflammatory disease originally described in the bladder. Diagnosis is made by biopsy and shows large histiocytes known as von Hansemann cells, and small basophilic extracytoplasmic or intracytoplasmic calculospherules called Michaelis-Gutmann bodies. Diagnosis in pediatric patients is unusual and often follows recurrent E. coli UTIs. Treatment is directed at control of the UTIs to stabilize the disease process, so long-term antibiotics are warranted. Observation would not be appropriate in this symptomatic patient. Antifungals and corticosteroids would not prevent the recurrent UTIs. Transurethral resection would be too aggressive, and the malacoplakia can return if recurrent UTIs are not well controlled.",
+  "learning_point": "Treatment is directed at control of the UTIs to stabilize the disease process, so long-term antibiotics are warranted.",
+  "key_facts": [
+   "Malacoplakia biopsy shows von Hansemann cells and Michaelis-Gutmann bodies.",
+   "Pediatric malacoplakia is unusual and often follows recurrent E. coli UTIs.",
+   "Transurethral resection is too aggressive, and disease can return if UTIs are not controlled."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-031",
+  "topic": "Pediatrics",
+  "question": "A two-day-old boy underwent circumcision. The pediatrician placed several sutures in the remaining ventral shaft skin as shown, which resulted in distal penile shaft edema and failure to achieve shaft skin coverage. After removal of these sutures, the next step is:",
+  "options": {
+   "A": "wet-to-dry dressings and observation.",
+   "B": "bury ventral aspect of penis in scrotum.",
+   "C": "buccal mucosa graft.",
+   "D": "split-thickness skin graft.",
+   "E": "full-thickness skin graft."
+  },
+  "answer": "A",
+  "rationale": "The most common cause of penile trauma in the pediatric patient is iatrogenic during circumcision. Most often excess penile skin removal can be treated by wet-to-dry dressings and antibiotic ointment with healing by secondary intention leading to excellent cosmetic outcome. If the penis is totally degloved, the penile shaft skin if salvaged can be defatted and replaced on the penis as a full-thickness skin graft. The other options listed are not required at this time.",
+  "learning_point": "Most often excess penile skin removal can be treated by wet-to-dry dressings and antibiotic ointment with healing by secondary intention leading to excellent cosmetic outcome.",
+  "key_facts": [
+   "The most common cause of pediatric penile trauma is iatrogenic injury during circumcision.",
+   "Excess skin removal usually heals by secondary intention with wet-to-dry dressings and antibiotic ointment.",
+   "If the penis is totally degloved, salvaged shaft skin can be defatted and replaced as a full-thickness skin graft."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-032",
+  "topic": "Pediatrics",
+  "question": "A 15-year-old boy with a history of straddle injury has a 1 cm bulbar urethral stricture. He undergoes endoscopic urethrotomy, but subsequently has two episodes of epididymitis. Physical exam reveals a circumcised penis and normal scrotal exam. Combined VCUG/RUG is shown. The next step is:",
+  "options": {
+   "A": "urethral dilation.",
+   "B": "repeat visual internal urethrotomy.",
+   "C": "excision and primary anastomosis.",
+   "D": "Orandi flap urethroplasty.",
+   "E": "buccal tube graft urethroplasty."
+  },
+  "answer": "C",
+  "rationale": "This patient has a recurrent traumatic urethral stricture that has failed endoscopic management. Neither urethral dilation nor repeat endoscopic incision has been shown to be beneficial following two attempts at urethrotomy. The stricture is short (up to 2 cm) and would be amenable to excision and end-to-end anastomosis. Longer strictures are better managed with flap or graft procedures. With prior circumcision, there is not an abundance of penile skin available for an Orandi-type procedure. Long grafts that require a grafting procedure are usually managed in a staged manner rather than a long tube graft in a single stage.",
+  "learning_point": "The stricture is short (up to 2 cm) and would be amenable to excision and end-to-end anastomosis.",
+  "key_facts": [
+   "Neither dilation nor repeat endoscopic incision is beneficial after two urethrotomies.",
+   "Short strictures (up to 2 cm) are managed with excision and end-to-end anastomosis.",
+   "Prior circumcision limits penile skin for an Orandi flap; long grafts are usually staged rather than a single-stage tube graft."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-033",
+  "topic": "Pediatrics",
+  "question": "A two-year-old boy undergoes a left ureteral reimplant. The preoperative VCUG and renal ultrasound are shown in the first two images. A routine postoperative ultrasound at one month is shown in the last image. He is asymptomatic. The next step is:",
+  "options": {
+   "A": "follow-up renal ultrasound in two months.",
+   "B": "VCUG.",
+   "C": "MAG-3 renal scan with LasixTM.",
+   "D": "PCNT.",
+   "E": "cystoscopy and ureteral stent."
+  },
+  "answer": "A",
+  "rationale": "Edema after ureteral reimplant is not uncommon one month after surgery. Observation is indicated as long as the patient is asymptomatic. The patient should remain on prophylactic antibiotics and a follow-up sonogram should be obtained four to six weeks after surgery. If the hydronephrosis has not resolved at further follow-up, then a MAG-3 Lasix renogram should be completed to evaluate ureteral obstruction. If the patient developed acute abdominal pain with nausea or vomiting, then a more rapid MAG-3 followed by PCN or an attempt at ureteral stent placement may be considered. VCUG may be considered to evaluate whether VUR is persistent after surgery but is not the correct next step to evaluate the significant hydronephrosis. Importantly, pre-existing hydronephrosis, perhaps due to dilating VUR, usually implies that there is a greater likelihood of hydronephrosis post-operatively and helps guide in determining whether there is obstruction or expected post-operative dilation.",
+  "learning_point": "Edema after ureteral reimplant is not uncommon one month after surgery.",
+  "key_facts": [
+   "Asymptomatic postoperative edema is observed on prophylactic antibiotics with a sonogram in four to six weeks.",
+   "MAG-3 Lasix renogram is used if hydronephrosis persists, or sooner with pain, nausea, or vomiting.",
+   "Pre-existing hydronephrosis from dilating VUR increases the chance of expected postoperative dilation."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-034",
+  "topic": "Pediatrics",
+  "question": "A five-year-old boy has intermittent, painless gross hematuria. Ultrasound and scout film from his VCUG are shown. The next step is:",
+  "options": {
+   "A": "observation.",
+   "B": "SWL.",
+   "C": "ureteroscopy and lithotripsy.",
+   "D": "percutaneous antegrade ureteroscopy and lithotripsy.",
+   "E": "ureterolithotomy."
+  },
+  "answer": "E",
+  "rationale": "This five-year-old boy has a 3 cm distal right ureteral calculus that is relatively asymptomatic. Although there is no associated hydronephrosis or ureteral dilation, a large stone of this size is unlikely to pass spontaneously. Observation would not be an option. The size and location of the calculus in this boy make SWL and endoscopic approaches difficult and unlikely to be successful in achieving a stone-free state. In addition, there would be a significant risk of retained stone fragment(s) and/or ureteral injury with either of these modalities. Open ureterolithotomy via lower abdominal muscle splitting (Gibson) incision or laparoscopic/robotic ureterolithotomy would be most likely to achieve a stone-free state, least likely to cause a complication, such as urethral stricture, and would also allow inspection of the distal ureter for any anatomical abnormality predisposing to stone formation in this location.",
+  "learning_point": "Open ureterolithotomy via lower abdominal muscle splitting (Gibson) incision or laparoscopic/robotic ureterolithotomy would be most likely to achieve a stone-free state, least likely to cause a complication, such as urethral stricture, and would also allow inspection of the distal ureter for any anatomical abnormality predisposing to stone formation in this location.",
+  "key_facts": [
+   "A 3 cm distal ureteral calculus is unlikely to pass even without hydronephrosis or ureteral dilation.",
+   "SWL and endoscopic approaches are unlikely to clear a stone of this size and location and risk retained fragments or ureteral injury.",
+   "Ureterolithotomy also allows inspection of the distal ureter for an anatomic cause of stone formation."
+  ],
+  "source_ref": "Siegal 2026 Other topics"
+ },
+ {
+  "id": "SIEGAL-035",
+  "topic": "Pediatrics",
+  "question": "A seven-year-old boy with posterior urethral valves and CKD stage 3 has new onset urinary incontinence and worsening creatinine after augmentation cystoplasty and Mitrofanoff. He manages his bladder with CIC every three hours during the day. UDS demonstrates leak at volumes of 250 mL. UDS tracing and video image at time of leak are shown. The next step is:",
+  "options": {
+   "A": "overnight catheter drainage.",
+   "B": "oxybutynin.",
+   "C": "augmentation revision.",
+   "D": "onabotulinumtoxinA injection.",
+   "E": "bladder neck reconstruction."
+  },
+  "answer": "C",
+  "rationale": "In this patient, leakage and worsened renal function is likely due to high pressures in the augmented bladder, as demonstrated by the UDS. Bladder neck reconstruction in this setting may exacerbate underlying hostile bladder parameters. Given the presence of leakage between catheterizations as well as previous augmentation, overnight drainage alone is unlikely to improve overall bladder dynamics. Additionally, given the absence of significant detrusor contractions or bowel segment peristalsis, oxybutynin and onabotulinumtoxinA are not likely to be effective in reducing bladder pressures or increasing capacity and compliance. Revision of the augment with the possible addition of an ileal segment is the best option in this case. While re-augmentation is rare, with reported rates of < 10%, it may be necessary when inadequate bowel is used, or there is the presence of an \"hourglass\" deformity following the initial augmentation.",
+  "learning_point": "Revision of the augment with the possible addition of an ileal segment is the best option in this case.",
+  "key_facts": [
+   "Leakage and worsened renal function are from high pressure in the augmented bladder.",
+   "Bladder neck reconstruction may exacerbate hostile bladder parameters.",
+   "Oxybutynin and onabotulinumtoxinA are unlikely to help without significant detrusor contractions or bowel peristalsis.",
+   "Re-augmentation is rare (< 10%) but may be needed for inadequate bowel or an hourglass deformity."
+  ],
+  "source_ref": "Siegal 2026 Posterior urethral valves"
  }
 ]

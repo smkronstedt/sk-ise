@@ -111,8 +111,9 @@ function BankPage() {
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return (items ?? []).filter((item) => {
-      if (setName === "uqb" && item.id.startsWith("SASP")) return false;
+      if (setName === "uqb" && (item.id.startsWith("SASP") || item.id.startsWith("SIEGAL"))) return false;
       if (setName === "sasp" && !item.id.startsWith("SASP")) return false;
+      if (setName === "siegal" && !item.id.startsWith("SIEGAL")) return false;
       if (/^\d{4}$/.test(setName) && !item.id.startsWith(`SASP${setName}`)) return false;
       if (topic !== "all" && item.topic !== topic) return false;
       const result = selectionStatus(desk.state, item.id);
@@ -240,6 +241,7 @@ function BankPage() {
         >
           <option value="all">Every set</option>
           <option value="sasp">SASP, all years</option>
+          <option value="siegal">Siegal 2026 peds</option>
           <option value="uqb">Older board set</option>
           {["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2025"].map((year) => (
             <option key={year} value={year}>
@@ -310,7 +312,7 @@ function BankPage() {
               [
                 topic !== "all" ? topic : "",
                 query.trim(),
-                setName === "sasp" ? "SASP" : setName === "uqb" ? "Board set" : /^\d{4}$/.test(setName) ? `SASP ${setName}` : "",
+                setName === "sasp" ? "SASP" : setName === "siegal" ? "Siegal 2026" : setName === "uqb" ? "Board set" : /^\d{4}$/.test(setName) ? `SASP ${setName}` : "",
               ]
                 .filter(Boolean)
                 .join(" · ") || "Bank deck";
