@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Shell } from '@/components/desk/shell';
 import { AnatomyFigure } from '@/components/desk/anatomy-figure';
 import { isNlutdTopic, NlutdChart } from '@/components/desk/nlutd-chart';
+import { DsdFigure, isDsdText } from '@/components/desk/dsd-figure';
 import {
   loadCards,
   saveCards,
@@ -273,6 +274,7 @@ function CardsPage() {
                 <p className="mt-1">{current.back}</p>
               </div>
               {isNlutdTopic(current.topic) || /neurogenic bladder|\bnlutd\b/i.test(`${current.front} ${current.back}`) ? <NlutdChart /> : null}
+              {isDsdText(`${current.front} ${current.back}`) ? <DsdFigure /> : null}
               <div className="mt-5 flex flex-wrap gap-2">
                 <button className="bg-red-600 text-white px-3 py-2 rounded" onClick={() => rate('again')}>
                   Again 25m

@@ -11,6 +11,7 @@ import { useDesk } from "@/lib/desk/provider";
 import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
 import { guideLinks } from "@/lib/desk/statements";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
+import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
 import { topicById } from "@/lib/desk/topics";
 import type { TestBlock } from "@/lib/desk/types";
 import { addCard } from "@/lib/cards";
@@ -352,6 +353,7 @@ function Explanation({ test, questionId }: { test: TestBlock; questionId: string
       ) : null}
       <p className="mt-3 leading-relaxed">{question.explanation}</p>
       {question.topicId === "nlutd" ? <NlutdChart /> : null}
+      {isDsdText([question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <DsdFigure /> : null}
       {question.figure ? <Figure id={question.figure} /> : null}
       {question.wrong.some((line) => line) ? (
         <div className="mt-3">
