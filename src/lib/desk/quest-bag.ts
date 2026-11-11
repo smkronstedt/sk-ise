@@ -3,7 +3,7 @@ import { DEX, loadField, spriteFor } from "@/lib/desk/field-dex";
 
 export const BAG_KEY = "callroom-quest-bag-v1";
 
-export type SpeciesId = "sprout" | "pebble" | "wick" | "drop";
+export type SpeciesId = "sprout" | "pebble" | "wick" | "drop" | "pip" | "coal" | "dew" | "spark";
 export type Ball = "ball" | "great" | "ultra" | "master";
 
 export const lines: Record<SpeciesId, { names: [string, string, string] }> = {
@@ -11,6 +11,10 @@ export const lines: Record<SpeciesId, { names: [string, string, string] }> = {
   pebble: { names: ["Pebble", "Ridge", "Crag"] },
   wick: { names: ["Wick", "Kindle", "Pyre"] },
   drop: { names: ["Drop", "Brook", "Tide"] },
+  pip: { names: ["Pip", "Grove", "Arbor"] },
+  coal: { names: ["Coal", "Blaze", "Inferno"] },
+  dew: { names: ["Dew", "Coral", "Levi"] },
+  spark: { names: ["Spark", "Volt", "Storm"] },
 };
 
 export type KnownMove = { id: string; pp: number };
@@ -48,6 +52,9 @@ export type QuestBag = {
   mastersBought: number;
   candies: number;
   updatedAt: number;
+  /** The exclusive starter this trainer chose. Missing means they still need to pick. */
+  starter?: SpeciesId;
+  nurseDay?: Record<string, string>;
 };
 
 export const shopItems = [
@@ -76,6 +83,10 @@ const cute: Record<SpeciesId, [string, string, string]> = {
   pebble: ["/field/cut/stone.png?v=4", "/field/cut/ridge.png?v=4", "/field/cut/crag.png?v=4"],
   wick: ["/field/cut/ember.png?v=4", "/field/cut/kindle.png?v=4", "/field/cut/pyre.png?v=4"],
   drop: ["/field/cut/drop.png?v=4", "/field/cut/brook.png?v=4", "/field/cut/tide.png?v=4"],
+  pip: ["/field/cut/pip.png?v=1", "/field/cut/grove.png?v=1", "/field/cut/arbor.png?v=1"],
+  coal: ["/field/cut/coal.png?v=1", "/field/cut/blaze.png?v=1", "/field/cut/inferno.png?v=1"],
+  dew: ["/field/cut/dew.png?v=1", "/field/cut/coral.png?v=1", "/field/cut/levi.png?v=1"],
+  spark: ["/field/cut/spark.png?v=1", "/field/cut/volt.png?v=1", "/field/cut/storm.png?v=1"],
 };
 
 export function monSrc(species: SpeciesId, stage: 0 | 1 | 2) {
@@ -87,6 +98,10 @@ export const speciesType: Record<SpeciesId, string> = {
   pebble: "Rock",
   wick: "Fire",
   drop: "Water",
+  pip: "Grass",
+  coal: "Fire",
+  dew: "Water",
+  spark: "Electric",
 };
 
 export function effectiveness(move: string, foe: string) {
@@ -184,14 +199,27 @@ export function markEvolutionSeen(creatureId: string) {
   return loadBag();
 }
 
+export function isStarterSpecies(species: SpeciesId) {
+  return species === "pip" || species === "coal" || species === "dew" || species === "spark";
+}
+
+export const STARTERS: { id: SpeciesId; type: string; line: string }[] = [
+  { id: "pip", type: "Grass", line: "Pip, then Grove at level 6, Arbor at 14." },
+  { id: "coal", type: "Fire", line: "Coal, then Blaze at level 6, Inferno at 14." },
+  { id: "dew", type: "Water", line: "Dew, then Coral at level 6, Levi at 14." },
+  { id: "spark", type: "Electric", line: "Spark, then Volt at level 6, Storm at 14." },
+];
+
 export function maxHp(creature: Creature, bag: Pick<QuestBag, "hpBonus">) {
   const level = levelOf(creature.exp);
-  return 20 + bag.hpBonus + stageOf(level) * 6 + level * 2;
+  const bonus = isStarterSpecies(creature.species) ? 10 : 0;
+  return 20 + bag.hpBonus + bonus + stageOf(level) * 6 + level * 2;
 }
 
 export function strike(creature: Creature, bag: Pick<QuestBag, "power">) {
   const level = levelOf(creature.exp);
-  return 3 + bag.power + stageOf(level) + Math.floor(level / 5);
+  const bonus = isStarterSpecies(creature.species) ? 2 : 0;
+  return 3 + bag.power + bonus + stageOf(level) + Math.floor(level / 5);
 }
 
 export type MoveDef = { id: string; name: string; kind: string; power: number; pp: number; level: number; species?: SpeciesId };
@@ -208,6 +236,14 @@ export const moveBook: MoveDef[] = [
   { id: "quake", name: "Ground Crack", kind: "Rock", power: 12, pp: 8, level: 22, species: "pebble" },
   { id: "blaze", name: "Blaze", kind: "Fire", power: 12, pp: 8, level: 22, species: "wick" },
   { id: "surge", name: "Surge", kind: "Water", power: 12, pp: 8, level: 22, species: "drop" },
+  { id: "vine", name: "Vine Whip", kind: "Grass", power: 9, pp: 15, level: 8, species: "pip" },
+  { id: "royal", name: "Royal Bloom", kind: "Grass", power: 16, pp: 5, level: 22, species: "pip" },
+  { id: "cinder", name: "Cinder", kind: "Fire", power: 9, pp: 15, level: 8, species: "coal" },
+  { id: "crownfire", name: "Crownfire", kind: "Fire", power: 16, pp: 5, level: 22, species: "coal" },
+  { id: "bubble", name: "Bubble", kind: "Water", power: 9, pp: 15, level: 8, species: "dew" },
+  { id: "tidal", name: "Tidal", kind: "Water", power: 16, pp: 5, level: 22, species: "dew" },
+  { id: "jolt", name: "Jolt", kind: "Electric", power: 9, pp: 15, level: 8, species: "spark" },
+  { id: "thunder", name: "Thunder", kind: "Electric", power: 16, pp: 5, level: 22, species: "spark" },
 ];
 
 export function moveDef(id: string) {
@@ -289,10 +325,8 @@ export function makeCreature(species: SpeciesId, level: number, hpBonus = 0): Cr
 }
 
 function starterBag(): QuestBag {
-  const starter = makeCreature("sprout", 5, 0);
-  starter.id = "starter-sprout";
   return {
-    party: [starter],
+    party: [],
     box: [],
     balls: { ball: 8, great: 0, ultra: 0, master: 0 },
     potions: 3,
@@ -310,6 +344,7 @@ function starterBag(): QuestBag {
     mastersBought: 0,
     candies: 0,
     updatedAt: 1,
+    nurseDay: {},
   };
 }
 
@@ -326,8 +361,10 @@ export function loadBag(): QuestBag {
     return clamp({
       ...starterBag(),
       ...parsed,
-      party: parsed.party?.length ? parsed.party : starterBag().party,
+      party: Array.isArray(parsed.party) ? parsed.party : [],
       box: parsed.box ?? [],
+      starter: parsed.starter,
+      nurseDay: parsed.nurseDay ?? {},
       balls: {
         ball: parsed.balls?.ball ?? 8,
         great: parsed.balls?.great ?? 0,
@@ -555,6 +592,7 @@ export function takeBall(ball: Ball): boolean {
 }
 
 export function keepCatch(species: SpeciesId, level: number): string {
+  if (isStarterSpecies(species)) return "That one only leaves with a new trainer.";
   const bag = loadBag();
   const creature = makeCreature(species, level, bag.hpBonus);
   const home = bag.party.length < 6 ? "party" : "box";
@@ -562,6 +600,60 @@ export function keepCatch(species: SpeciesId, level: number): string {
   else bag.box.push(creature);
   saveBag(bag);
   return home === "party" ? `${nameOf(creature)} joined you.` : `${nameOf(creature)} went to the box.`;
+}
+
+export function pickStarter(species: SpeciesId) {
+  if (!isStarterSpecies(species)) return loadBag();
+  const bag = loadBag();
+  if (bag.starter) return bag;
+  const creature = makeCreature(species, 5, bag.hpBonus);
+  creature.id = `starter-${species}`;
+  creature.joy = 255;
+  const onlyDefault = bag.party.length === 1 && bag.party[0]?.id === "starter-sprout" && bag.box.length === 0;
+  if (onlyDefault || bag.party.length === 0) bag.party = [creature];
+  else {
+    bag.party.unshift(creature);
+    if (bag.party.length > 6) {
+      const extra = bag.party.pop();
+      if (extra) bag.box.unshift(extra);
+    }
+  }
+  bag.starter = species;
+  saveBag(bag);
+  return loadBag();
+}
+
+const NURSE_LINES: Record<string, string> = {
+  "joy-1": "You walked all this way just to see me? Come here. I'll put everyone back together.",
+  "joy-2": "There you are. I saved the quiet chair. Let me take care of you.",
+  "joy-3": "That look. Fine. Full heal, and a little something if this is your first visit today.",
+};
+
+export function nurseLine(nurseId: string) {
+  return NURSE_LINES[nurseId] ?? "Stay a minute. I'll take care of the whole party.";
+}
+
+export function nurseVisit(nurseId: string) {
+  const bag = loadBag();
+  healAll(bag);
+  const day = new Date().toDateString();
+  bag.nurseDay ??= {};
+  let gift = "They already slipped you something today.";
+  if (bag.nurseDay[nurseId] !== day) {
+    bag.nurseDay[nurseId] = day;
+    if (nurseId === "joy-2") {
+      bag.supers += 1;
+      gift = "Mina tucks a Super Potion into your bag.";
+    } else if (nurseId === "joy-3") {
+      bag.balls.great += 1;
+      gift = "Lila adds a Great Ball.";
+    } else {
+      bag.potions += 1;
+      gift = "Joy slips you a Potion.";
+    }
+  }
+  saveBag(bag);
+  return `Full HP. Full PP. ${gift}`;
 }
 
 export function makeLead(index: number) {

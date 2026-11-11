@@ -41,6 +41,10 @@ import {
   markEvolutionSeen,
   moveDef,
   spendPp,
+  nurseLine,
+  nurseVisit,
+  pickStarter,
+  STARTERS,
   masterStock,
   maxHp,
   monSrc,
@@ -532,7 +536,7 @@ export function MonsterQuest({
   const [line, setLine] = useState("Walk across a trainer's line. They will see you.");
   const [caseOpen, setCaseOpen] = useState(false);
   const [sheet, setSheet] = useState<"party" | "dex" | null>(null);
-  const [nurse, setNurse] = useState(false);
+  const [nurse, setNurse] = useState<string | null>(null);
   const [trialOpen, setTrialOpen] = useState(false);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [notice, setNotice] = useState("");
@@ -584,7 +588,7 @@ export function MonsterQuest({
     if (!musicOn()) return;
     setTownMusic(true, "canyon");
   }, [city?.id]);
-  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || nurse;
+  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || Boolean(nurse);
 
   const sail = (dir: 1 | -1) => {
     if (!city) return;
@@ -749,7 +753,7 @@ export function MonsterQuest({
 
   apiRef.current.talk = (npc) => {
     if (npc.id.startsWith("joy")) {
-      setNurse(true);
+      setNurse(npc.id);
       setLine(npc.line);
       return;
     }
@@ -1642,27 +1646,50 @@ export function MonsterQuest({
           </ul>
         </div>
       ) : null}
+      {bag && !bag.starter ? (
+        <div className="absolute inset-0 z-40 overflow-auto bg-[#f8f8d8] p-4 text-black">
+          <p className="text-xs font-bold uppercase">Choose one</p>
+          <p className="mt-1 font-serif text-2xl">These four only leave with a new trainer.</p>
+          <p className="mt-1 text-sm">Wild ones are the common lines. A starter hits harder, has more HP, and is the only way to get that family. It evolves at level 6, then again at 14.</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {STARTERS.map((starter) => (
+              <button
+                key={starter.id}
+                type="button"
+                onClick={() => setBag(pickStarter(starter.id))}
+                className="border-4 border-black bg-white p-2 text-left"
+              >
+                <img src={monSrc(starter.id, 0)} alt="" className="mx-auto h-24 w-24 object-contain" />
+                <p className="text-sm font-bold">{lines[starter.id].names[0]} · {starter.type}</p>
+                <p className="text-xs">{starter.line}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {trialOpen && city ? <TownTrial city={city} onClose={() => setTrialOpen(false)} /> : null}
       {nurse ? (
         <div className="absolute inset-x-0 top-16 z-20 border-4 border-black bg-[#f8f8d8] p-3 text-black">
-          <p className="text-sm font-bold">The party looks glad to be here. Heal them?</p>
-          <p className="mt-1 text-xs">HP and every move's PP come back at the Center. A new day does not refill PP.</p>
+          <div className="flex gap-3">
+            <img src={nurse === "joy-2" ? "/quest/joy-a.png" : "/quest/joy-b.png"} alt="" className="h-28 w-auto object-contain" />
+            <div>
+              <p className="text-sm font-bold">{nurseLine(nurse)}</p>
+              <p className="mt-1 text-xs">HP and every move's PP come back. The first visit each day also comes with a gift.</p>
+            </div>
+          </div>
           <div className="mt-2 flex gap-2">
             <button
               type="button"
               onClick={() => {
-                const rested = loadBag();
-                healAll(rested);
-                saveBag(rested);
+                setLine(nurseVisit(nurse));
                 setBag(loadBag());
-                setNurse(false);
-                setLine("Full HP. Full PP. They love it here.");
+                setNurse(null);
               }}
               className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]"
             >
-              Yes
+              Stay a minute
             </button>
-            <button type="button" onClick={() => setNurse(false)} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Not now</button>
+            <button type="button" onClick={() => setNurse(null)} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Not now</button>
           </div>
         </div>
       ) : null}
