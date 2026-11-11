@@ -13,6 +13,7 @@ function q(
   answer: 0 | 1 | 2 | 3 | 4,
   why: string,
   wrong: Four,
+  statementNo?: string,
 ): Question {
   const asks = /\?|next step|which |what |choose|choosing|best |most likely|diagnosis|management/i.test(stem);
   const text = asks ? stem : `${stem.replace(/[.?\s]*$/, "")}. The next step is:`;
@@ -27,6 +28,7 @@ function q(
     topicId,
     guide,
     statement,
+    statementNo,
     stem: [text],
     choices: [...choices],
     answer,
@@ -2077,6 +2079,7 @@ export const statementQuestions: Question[] = [
     1,
     "Penile strictures do not have a durable endoscopic option. Reconstruction uses oral mucosa, especially when lichen sclerosus is the cause, because genital skin fails. A sphincter treats incontinence, not a narrow urethra.",
     ["Repeated dilation is not the preferred plan.", "Endoscopic treatment of penile strictures has poor durability.", "A sphincter on a stricture obstructs him.", "Radiation causes strictures; it does not treat them."],
+    "15, 31",
   ),
   q(
     "gs-st-02",
@@ -2088,6 +2091,7 @@ export const statementQuestions: Question[] = [
     1,
     "A short bulbar stricture, generally under 2 cm, can be treated once endoscopically. Recurrence after that is a urethroplasty, not a series of cuts. A flap or a perineal urethrostomy is more operation than a 1 cm virgin bulbar stricture needs.",
     ["Urethroplasty is also appropriate, but it is not the only acceptable first step.", "A flap is for longer and penile disease.", "Perineal urethrostomy is an option for extensive disease, not the first step here.", "Waiting for retention is not a plan."],
+    "7",
   ),
   q(
     "gs-st-03",
@@ -2099,6 +2103,7 @@ export const statementQuestions: Question[] = [
     1,
     "The second endoscopic treatment has a poor chance of lasting. The guideline moves him to reconstruction. Self-dilation is a fallback for a patient who cannot or will not have surgery, not the preferred recommendation. A sling does not open a stricture.",
     ["Repeat cutting is how strictures become longer.", "A sling is an incontinence operation.", "Lifelong dilation is not preferred when urethroplasty is available.", "BCG does not treat stricture."],
+    "11",
   ),
   q(
     "gs-st-04",
@@ -2110,6 +2115,7 @@ export const statementQuestions: Question[] = [
     1,
     "The classic reconstruction of a pelvic-fracture distraction is a delayed excision and primary anastomosis through the perineum. There is often no lumen to 'augment' with a graft. A chronic suprapubic tube is not the goal if he can be reconstructed.",
     ["Six months is an appropriate time to fix it, not a reason to wait five years.", "You cannot augment a lumen that is gone.", "Penile skin is the wrong tissue in the wrong place.", "A sphincter needs continuity and a stricture-free urethra."],
+    "24",
   ),
   q(
     "gs-st-05",
@@ -2121,6 +2127,7 @@ export const statementQuestions: Question[] = [
     1,
     "Lichen sclerosus recurs in genital skin. Oral mucosa is the graft. Scrotal and penile skin flaps are how these strictures come back. Dilation does not fix pan-urethral disease.",
     ["Genital skin is the tissue the disease already destroyed.", "Scrotal skin fails in lichen sclerosus.", "Bladder mucosa is not the standard graft.", "Repeated dilation is not the reconstruction."],
+    "19a, 31",
   ),
   q(
     "gs-st-06",
@@ -2132,6 +2139,7 @@ export const statementQuestions: Question[] = [
     1,
     "The guideline is explicit that men being managed with repeated endoscopic treatment should be told about urethroplasty. Leaving that conversation out is the failure. A sphincter, radiation, and a 5-ARI do not open his urethra.",
     ["Another dilation without the offer is the pattern the guideline is trying to stop.", "A sphincter obstructs a stricture.", "Radiation causes strictures.", "Finasteride shrinks prostate, not scar."],
+    "11",
   ),
   q(
     "gs-cr-01",

@@ -276,6 +276,9 @@ function TestPage() {
                 >
                   <span className="mr-2 font-semibold">{letters[index]}.</span>
                   {choice}
+                  {revealed && isKey && question.statementNo ? (
+                    <span className="ml-2 text-xs font-semibold">Statement {question.statementNo}</span>
+                  ) : null}
                 </button>
               );
             })}
@@ -364,7 +367,7 @@ function Explanation({ test, questionId }: { test: TestBlock; questionId: string
       ) : null}
       {question.statement ? (
         <p className="mt-3 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
-          <span className="font-semibold">Guideline statement. </span>
+          <span className="font-semibold">Guideline statement{question.statementNo ? ` ${question.statementNo}` : ""}. </span>
           {question.guide ? `${question.guide}. ` : ""}
           {question.statement}
         </p>

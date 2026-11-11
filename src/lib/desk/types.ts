@@ -51,6 +51,8 @@ export type Question = {
   guide?: string;
   /** The recommendation being tested, in original wording. */
   statement?: string;
+  /** Published AUA guideline statement number, when it matches this item. */
+  statementNo?: string;
 };
 
 export type Pool = "all" | "unused" | "used" | "incorrect" | "correct" | "marked";
