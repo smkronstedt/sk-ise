@@ -46,8 +46,15 @@ function LoginPage() {
         setSent(true);
         return;
       }
-      const { data, error: err } = await authClient.signIn.email({ email, password, rememberMe: true });
-      if (err) throw new Error(err.message ?? "Sign in failed");
+      const { data, error: err } = await authClient.signIn.email({
+        email: email.trim(),
+        password,
+        rememberMe: true,
+      });
+      if (err) {
+        const detail = [err.message, "code" in err ? String(err.code ?? "") : ""].filter(Boolean).join(" ");
+        throw new Error(detail || "Sign in failed. Try again in a minute.");
+      }
       const token = data && "token" in data ? data.token : null;
       if (typeof token === "string") setBearerToken(token);
       const session = await authClient.getSession();
