@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Shell } from "@/components/desk/shell";
 import { AnatomyFigure } from "@/components/desk/anatomy-figure";
 import { isNlutdTopic, NlutdChart } from "@/components/desk/nlutd-chart";
 import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
-import { addCard } from "@/lib/cards";
+import { addCard, loadCards } from "@/lib/cards";
 import { selectionStatus } from "@/lib/desk/adapt";
 import { loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
@@ -27,18 +27,38 @@ export const Route = createFileRoute("/bank")({
 
 type Status = "unused" | "used" | "all" | "incorrect" | "correct" | "marked";
 
+const PLACE = "ise-bank-place";
+
+function savedPlace() {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(PLACE) || "null") as {
+      setName?: string;
+      topic?: string;
+      status?: Status;
+      query?: string;
+      hardOnly?: boolean;
+      index?: number;
+      hold?: string | null;
+    } | null;
+    return parsed ?? {};
+  } catch {
+    return {};
+  }
+}
+
 function BankPage() {
+  const place = savedPlace();
   const [items, setItems] = useState<BankItem[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [view, setView] = useState<"practice" | "points">("practice");
-  const [setName, setSetName] = useState("sasp");
-  const [topic, setTopic] = useState("all");
-  const [status, setStatus] = useState<Status>("unused");
-  const [query, setQuery] = useState("");
-  const [hardOnly, setHardOnly] = useState(false);
-  const [index, setIndex] = useState(0);
+  const [setName, setSetName] = useState(place.setName || "sasp");
+  const [topic, setTopic] = useState(place.topic || "all");
+  const [status, setStatus] = useState<Status>(place.status || "unused");
+  const [query, setQuery] = useState(place.query || "");
+  const [hardOnly, setHardOnly] = useState(place.hardOnly === true);
+  const [index, setIndex] = useState(place.index || 0);
   const [picked, setPicked] = useState<string | null>(null);
-  const [hold, setHold] = useState<string | null>(null);
+  const [hold, setHold] = useState<string | null>(place.hold ?? null);
   const [progress, setProgress] = useState<BankProgress>(emptyBankProgress);
   const [ready, setReady] = useState(false);
   const [banner, setBanner] = useState("");
@@ -115,11 +135,30 @@ function BankPage() {
     return next;
   }, [filtered, hold, items, index]);
 
+  const filters = useRef({ topic, status, query, view, hardOnly, setName });
   useEffect(() => {
+    const prev = filters.current;
+    const same =
+      prev.topic === topic &&
+      prev.status === status &&
+      prev.query === query &&
+      prev.view === view &&
+      prev.hardOnly === hardOnly &&
+      prev.setName === setName;
+    filters.current = { topic, status, query, view, hardOnly, setName };
+    if (same) return;
     setIndex(0);
     setPicked(null);
     setHold(null);
   }, [topic, status, query, view, hardOnly, setName]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(PLACE, JSON.stringify({ setName, topic, status, query, hardOnly, index, hold }));
+    } catch {
+      // The question stays on screen either way.
+    }
+  }, [setName, topic, status, query, hardOnly, index, hold]);
 
   const write = (next: BankProgress) => {
     setProgress(next);
@@ -298,6 +337,12 @@ function BankPage() {
               notes: { ...progress.notes, [item.id]: note },
             })
           }
+          onCard={() => {
+            const already = loadCards().some((card) => card.sourceQuestionId === item.id && card.source !== "full");
+            addCard(item, "manual");
+            setHold(item.id);
+            setBanner(already ? "Already in your cards. This question stays here." : "Added to cards. This question stays here.");
+          }}
         />
       )}
     </Shell>
@@ -317,6 +362,7 @@ function Practice({
   onJump,
   onMark,
   onNote,
+  onCard,
 }: {
   item: BankItem;
   index: number;
@@ -330,6 +376,7 @@ function Practice({
   onJump: (index: number) => void;
   onMark: () => void;
   onNote: (note: string) => void;
+  onCard: () => void;
 }) {
   const revealed = Boolean(saved);
   const choice = revealed ? saved?.choice : picked;
@@ -383,7 +430,7 @@ function Practice({
         </button>
         <button
           type="button"
-          onClick={() => addCard(item, "manual")}
+          onClick={onCard}
           className="min-h-11 rounded border border-line px-3 text-sm font-semibold"
         >
           Add to Cards

@@ -64,11 +64,9 @@ export function Shell({ children }: { children: ReactNode }) {
   }, [path]);
 
   useEffect(() => {
-    if (!authEnabled || !session.data?.user) {
-      setAccess("unknown");
-      setAdmin(false);
-      return;
-    }
+    if (!authEnabled) return;
+    const id = session.data?.user?.id;
+    if (!id) return;
     let stop = false;
     void myAccess()
       .then((result) => {
