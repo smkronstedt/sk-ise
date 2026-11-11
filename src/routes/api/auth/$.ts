@@ -2,22 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { auth } from "@/lib/auth/server";
 
 async function handle(request: Request) {
-  const path = new URL(request.url).pathname;
-  if (path.endsWith("/db-check")) {
-    const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
-    if (!url) return Response.json({ ok: false, message: "No database URL on the server." });
-    try {
-      const { Pool, neonConfig } = await import("@neondatabase/serverless");
-      neonConfig.poolQueryViaFetch = true;
-      const pool = new Pool({ connectionString: url, max: 1 });
-      const result = await pool.query("select 1 as ok");
-      await pool.end().catch(() => undefined);
-      return Response.json({ ok: true, rows: result.rows });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return Response.json({ ok: false, message });
-    }
-  }
   try {
     const response = await auth.handler(request);
     const body = await response.text();
