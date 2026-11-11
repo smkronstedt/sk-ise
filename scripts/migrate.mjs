@@ -50,8 +50,9 @@ async function main() {
   pool.on("error", (error) => {
     console.error("[migrate]", error instanceof Error ? error.message : error);
   });
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     await client.query(
       "CREATE TABLE IF NOT EXISTS _migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())",
     );
@@ -81,8 +82,15 @@ async function main() {
       count += 1;
     }
     console.log(count ? `[migrate] done — ${count} migration(s) applied.` : "[migrate] up to date.");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (/connect|ECONN|timeout|certificate|SSL|ENOTFOUND|EAI_AGAIN|password authentication|terminated/i.test(message)) {
+      console.error(`[migrate] database was unreachable (${message}). Deploy continues. Schema was not changed.`);
+      return;
+    }
+    throw err;
   } finally {
-    client.release();
+    client?.release();
     await pool.end();
   }
 }
