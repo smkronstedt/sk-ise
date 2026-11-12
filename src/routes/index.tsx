@@ -183,10 +183,15 @@ function Home() {
     };
   }, []);
   useEffect(() => {
+    let stop = false;
     const bump = () => setPulse((value) => value + 1);
+    void loadCatalog().finally(() => {
+      if (!stop) bump();
+    });
     window.addEventListener("ise-activity", bump);
     window.addEventListener("ise-progress", bump);
     return () => {
+      stop = true;
       window.removeEventListener("ise-activity", bump);
       window.removeEventListener("ise-progress", bump);
     };

@@ -52,9 +52,11 @@ export function Shell({ children }: { children: ReactNode }) {
     };
     read();
     window.addEventListener("ise-activity", read);
+    window.addEventListener("ise-progress", read);
     window.addEventListener("ise-mode", read);
     return () => {
       window.removeEventListener("ise-activity", read);
+      window.removeEventListener("ise-progress", read);
       window.removeEventListener("ise-mode", read);
     };
   }, []);

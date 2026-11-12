@@ -27,6 +27,7 @@ type Side = {
   trail?: { x?: number; y?: number } | null;
   notes?: { topicId?: string; xp?: number; level?: number; stage?: number }[] | null;
   evos?: { id: string; name: string; level: number; stage: number; at: number }[] | null;
+  lifetime?: number;
 };
 
 type CardsField = { list?: unknown; ops?: unknown; activity?: Record<string, DayLog>; daily?: Record<string, { id: string; choice?: string; correct?: boolean }>; training?: unknown; questSpend?: number; questBag?: unknown; side?: Side } | unknown[] | null;
@@ -76,6 +77,7 @@ function readSide(): Side {
     trail: read("ise-trail-pos") as Side["trail"],
     notes: read("callroom-fieldnotes-xp") as Side["notes"],
     evos: read("callroom-evo-log-v1") as Side["evos"],
+    lifetime: Number(localStorage.getItem("callroom-correct-lifetime") || 0) || 0,
   };
 }
 
@@ -113,6 +115,10 @@ function writeSide(side: Side | null | undefined) {
   if (side.trail) write("ise-trail-pos", side.trail);
   if (side.notes) write("callroom-fieldnotes-xp", side.notes);
   if (side.evos) write("callroom-evo-log-v1", side.evos);
+  if (typeof side.lifetime === "number") {
+    const have = Number(localStorage.getItem("callroom-correct-lifetime") || 0) || 0;
+    localStorage.setItem("callroom-correct-lifetime", String(Math.max(have, side.lifetime)));
+  }
 }
 
 function apply(bundle: Bundle) {
@@ -283,6 +289,7 @@ function mergeSide(local: Side = {}, remote: Side = {}): Side {
     trail: local.trail ?? remote.trail ?? null,
     notes: [...notes.values()],
     evos: [...new Map([...(remote.evos ?? []), ...(local.evos ?? [])].map((entry) => [`${entry.id}:${entry.stage}`, entry])).values()],
+    lifetime: Math.max(local.lifetime || 0, remote.lifetime || 0),
   };
 }
 function mergeTraining(local: unknown, remote: unknown) {

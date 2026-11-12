@@ -56,6 +56,16 @@ export function saveBankProgress(progress: BankProgress) {
   if (typeof window !== "undefined") window.dispatchEvent(new Event("ise-progress"));
 }
 
+/** Keep a correct answer on the account even when the question is not a UQB id. */
+export function rememberAnswer(id: string, choice: number, correct: boolean) {
+  if (!id) return;
+  const progress = loadBankProgress();
+  const prev = progress.answers[id];
+  if (prev?.correct && !correct) return;
+  progress.answers[id] = { choice: "ABCDEFGHIJ"[choice] ?? "A", correct: Boolean(prev?.correct || correct) };
+  saveBankProgress(progress);
+}
+
 export function optionText(item: BankItem, letter: string) {
   return item.options[letter] ?? "";
 }

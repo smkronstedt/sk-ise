@@ -8,7 +8,7 @@ import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { noteRow } from "@/lib/desk/honors";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
-import { loadBankProgress, saveBankProgress } from "@/lib/desk/original-bank";
+import { rememberAnswer } from "@/lib/desk/original-bank";
 import { guideLinks } from "@/lib/desk/statements";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
 import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
@@ -103,14 +103,7 @@ function TestPage() {
         [questionId]: { choice: answer.choice, submitted: true },
       },
     }));
-    if (questionId.startsWith("UQB-") && answer.choice != null) {
-      const progress = loadBankProgress();
-      progress.answers[questionId] = {
-        choice: letters[answer.choice],
-        correct: answer.choice === question.answer,
-      };
-      saveBankProgress(progress);
-    }
+    if (answer.choice != null) rememberAnswer(questionId, answer.choice, answer.choice === question.answer);
     logActivity("questions");
     if (answer.choice === question.answer) logCorrect();
     noteRow(answer.choice === question.answer);
