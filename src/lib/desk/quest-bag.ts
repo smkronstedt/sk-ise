@@ -86,7 +86,7 @@ const cute: Record<SpeciesId, string[]> = {
   pip: ["/field/cut/pip.png?v=1", "/field/cut/grove.png?v=1", "/field/cut/arbor.png?v=1", "/field/cut/monarch.png?v=1"],
   coal: ["/field/cut/coal.png?v=1", "/field/cut/blaze.png?v=1", "/field/cut/inferno.png?v=1", "/field/cut/drake.png?v=1"],
   dew: ["/field/cut/dew.png?v=1", "/field/cut/coral.png?v=1", "/field/cut/levi.png?v=1", "/field/cut/kraken.png?v=1"],
-  spark: ["/field/cut/spark.png?v=1", "/field/cut/volt.png?v=1", "/field/cut/storm.png?v=1", "/field/cut/tempest.png?v=1"],
+  spark: ["/field/cut/spark.png?v=1", "/field/cut/volt.png?v=2", "/field/cut/storm.png?v=1", "/field/cut/tempest.png?v=1"],
 };
 
 export function monSrc(species: SpeciesId, stage: 0 | 1 | 2 | 3) {
