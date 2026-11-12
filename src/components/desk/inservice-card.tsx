@@ -93,28 +93,43 @@ function SavedReport({
   onApply: () => void;
   onEdit?: () => void;
 }) {
+  const [open, setOpen] = useState(false);
   const prior = report.prior;
   const direction = prior ? (report.score >= prior.score ? "Up" : "Down") : "";
   return (
     <section className="rounded border border-line bg-paper p-4">
       <p className="text-sm font-semibold tracking-wide text-muted uppercase">{report.year} in-service</p>
-      <h2 className="font-serif text-2xl tracking-tight">
-        {report.score}% · {report.percentile}th percentile
-      </h2>
-      <p className="mt-1 text-sm text-muted">
-        {report.items ? `${report.items} items. ` : ""}
-        {prior ? `${direction} from ${prior.score}% (${prior.percentile}th) in ${prior.year}. ` : ""}
-        Sections under 60% are marked.
-      </p>
-      <ReportTable lines={report.lines} />
-      <button type="button" onClick={onApply} className="mt-3 min-h-11 w-full rounded border border-navy px-4 text-sm font-semibold">
-        Set focus from this report
-      </button>
-      {onEdit ? (
-        <button type="button" onClick={onEdit} className="mt-2 min-h-11 w-full rounded border border-line px-4 text-sm font-semibold">
-          Edit report
-        </button>
-      ) : null}
+      {open ? (
+        <>
+          <h2 className="font-serif text-2xl tracking-tight">
+            {report.score}% · {report.percentile}th percentile
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {report.items ? `${report.items} items. ` : ""}
+            {prior ? `${direction} from ${prior.score}% (${prior.percentile}th) in ${prior.year}. ` : ""}
+            Sections under 60% are marked.
+          </p>
+          <ReportTable lines={report.lines} />
+          <button type="button" onClick={onApply} className="mt-3 min-h-11 w-full rounded border border-navy px-4 text-sm font-semibold">
+            Set focus from this report
+          </button>
+          {onEdit ? (
+            <button type="button" onClick={onEdit} className="mt-2 min-h-11 w-full rounded border border-line px-4 text-sm font-semibold">
+              Edit report
+            </button>
+          ) : null}
+          <button type="button" onClick={() => setOpen(false)} className="mt-2 min-h-11 w-full rounded border border-line px-4 text-sm font-semibold">
+            Hide score
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="mt-1 text-sm text-muted">Hidden, so a shared screen does not show the score.</p>
+          <button type="button" onClick={() => setOpen(true)} className="mt-3 min-h-11 w-full rounded bg-navy px-4 text-sm font-semibold text-white">
+            View
+          </button>
+        </>
+      )}
     </section>
   );
 }
@@ -134,6 +149,7 @@ export function InserviceCard({
 }) {
   const [report, setReport] = useState<IseReport | null>(null);
   const [editing, setEditing] = useState(false);
+  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -166,22 +182,38 @@ export function InserviceCard({
       <div className="flex flex-col gap-4">
         <section className="rounded border border-line bg-paper p-4">
           <p className="text-sm font-semibold tracking-wide text-muted uppercase">2025 in-service</p>
-          <h2 className="font-serif text-2xl tracking-tight">
-            {ise2025.score}% · {ise2025.percentile}th percentile
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            {ise2025.items} items. Up from {ise2025.prior[0].score}% ({ise2025.prior[0].percentile}th) in {ise2025.prior[0].year}, and {ise2025.prior[1].score}% ({ise2025.prior[1].percentile}th) in {ise2025.prior[1].year}. Time still goes to the large misses: voiding was 43% on 30 items, stones 52% on 17, and core 37% on 8. Neoplasm was 63% on 30 items, so it stays on the outline.
-          </p>
-          <ReportTable lines={ise2025.lines} />
-          <button type="button" onClick={() => onApply(ise2025.focus)} className="mt-3 min-h-11 w-full rounded border border-navy px-4 text-sm font-semibold">
-            Set focus from this report
-          </button>
+          {open ? (
+            <>
+              <h2 className="font-serif text-2xl tracking-tight">
+                {ise2025.score}% · {ise2025.percentile}th percentile
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                {ise2025.items} items. Up from {ise2025.prior[0].score}% ({ise2025.prior[0].percentile}th) in {ise2025.prior[0].year}, and {ise2025.prior[1].score}% ({ise2025.prior[1].percentile}th) in {ise2025.prior[1].year}. Time still goes to the large misses: voiding was 43% on 30 items, stones 52% on 17, and core 37% on 8. Neoplasm was 63% on 30 items, so it stays on the outline.
+              </p>
+              <ReportTable lines={ise2025.lines} />
+              <button type="button" onClick={() => onApply(ise2025.focus)} className="mt-3 min-h-11 w-full rounded border border-navy px-4 text-sm font-semibold">
+                Set focus from this report
+              </button>
+              <button type="button" onClick={() => setOpen(false)} className="mt-2 min-h-11 w-full rounded border border-line px-4 text-sm font-semibold">
+                Hide score
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-sm text-muted">Hidden, so a shared screen does not show the score.</p>
+              <button type="button" onClick={() => setOpen(true)} className="mt-3 min-h-11 w-full rounded bg-navy px-4 text-sm font-semibold text-white">
+                View
+              </button>
+            </>
+          )}
         </section>
-        <details className="rounded border border-line bg-paper p-4">
-          <summary className="cursor-pointer text-sm font-semibold">2024 report · {ise2024.score}% · {ise2024.percentile}th</summary>
-          <p className="mt-2 text-sm text-muted">{ise2024.items} items. PGY2.</p>
-          <ReportTable lines={ise2024.lines} />
-        </details>
+        {open ? (
+          <details className="rounded border border-line bg-paper p-4">
+            <summary className="cursor-pointer text-sm font-semibold">2024 report</summary>
+            <p className="mt-2 text-sm text-muted">{ise2024.items} items. {ise2024.score}% · {ise2024.percentile}th. PGY2.</p>
+            <ReportTable lines={ise2024.lines} />
+          </details>
+        ) : null}
       </div>
     );
   }

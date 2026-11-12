@@ -1,5 +1,5 @@
 import { questionById, questions } from "./questions";
-import type { Question } from "./types";
+import type { BlueprintId, Question } from "./types";
 import type { BankItem } from "./original-bank";
 import { guideLinks, linksForBankTopic } from "./statements";
 import { bankFigures } from "./bank-figures";
@@ -83,4 +83,43 @@ export function bankList() {
 
 export function bankTopicList() {
   return bankTopics;
+}
+
+/** Bank topic labels mapped onto the in-service sections. */
+const bankBlueprint: Record<string, BlueprintId> = {
+  "Oncology-Bladder/Urothelial": "oncology",
+  "Oncology-Prostate": "oncology",
+  "Oncology-Kidney": "oncology",
+  "Oncology-Adrenal": "oncology",
+  "Oncology-Testis": "oncology",
+  "Oncology-Penis/Urethra": "oncology",
+  "Urinary Diversion": "oncology",
+  Stones: "stones",
+  "BPH/LUTS": "obstruction",
+  Pediatrics: "peds",
+  "Infertility/Andrology": "andrology",
+  "Sexual Dysfunction": "andrology",
+  "Female Urology/Pelvic Floor": "urogyn",
+  "Voiding Dysfunction/Incontinence": "urogyn",
+  "Neurogenic Bladder": "urogyn",
+  "Transplant/Renal Physiology": "core",
+  "Trauma/Reconstruction": "core",
+  "Infection/Inflammation": "core",
+  "Laparoscopy/Robotics/Perioperative": "core",
+  "Imaging/Radiation Safety": "core",
+  "Ethics/Professionalism/Statistics": "core",
+  "Anatomy/Embryology": "basic",
+  Pharmacology: "basic",
+  Other: "core",
+};
+
+/** How many bank questions sit in each in-service section. Empty until the catalog has loaded. */
+export function blueprintBankCounts(): Partial<Record<BlueprintId, number>> {
+  const counts: Partial<Record<BlueprintId, number>> = {};
+  for (const topic of bankTopics) {
+    const bucket = bankBlueprint[topic.title];
+    if (!bucket) continue;
+    counts[bucket] = (counts[bucket] ?? 0) + topic.count;
+  }
+  return counts;
 }

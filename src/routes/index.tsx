@@ -12,8 +12,7 @@ import { isAdminEmail } from "@/lib/admin-email";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { bucketStats, drawQuestionIds, scoreTest, uniqueCorrectCount } from "@/lib/desk/adapt";
 import { ensureLifetime } from "@/lib/desk/activity";
-import { loadCatalog } from "@/lib/desk/catalog";
-import { ise2025 } from "@/lib/desk/ise";
+import { blueprintBankCounts, loadCatalog } from "@/lib/desk/catalog";
 import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 import { BANK_TOTAL, countBankCorrect } from "@/lib/desk/original-bank";
 import { questions } from "@/lib/desk/questions";
@@ -214,11 +213,6 @@ function Home() {
             </div>
             <div className="mt-1 max-w-xl text-sm text-muted">
               <p>{deskStanding(experience, leaders)}</p>
-              {mine ? (
-                <p>
-                  Country: {ise2025.percentile}th percentile on the {ise2025.year} in-service, from {ise2025.prior[0].percentile}th in {ise2025.prior[0].year}. That is the national exam. This bank has no country-wide group.
-                </p>
-              ) : null}
             </div>
           </div>
           <p className="text-sm text-muted">
@@ -349,7 +343,9 @@ function ClassicView({
           </p>
         </div>
         <div className="divide-y divide-line">
-          {stats.map((row) => (
+          {stats.map((row) => {
+            const inBank = blueprintBankCounts()[row.id as BlueprintId];
+            return (
             <div key={row.id} className="px-4 py-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="text-base font-semibold">{row.title}</h2>
@@ -368,8 +364,8 @@ function ClassicView({
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <p className="text-sm">
                   {row.attempted === 0
-                    ? `None answered (${row.bank} total available)`
-                    : `${row.correct}/${row.attempted} last answers correct (${row.bank} total available)`}
+                    ? `None answered${inBank ? ` (${inBank} questions in the bank)` : ""}`
+                    : `${row.correct}/${row.attempted} last answers correct${inBank ? ` (${inBank} questions in the bank)` : ""}`}
                 </p>
                 <div className="ml-auto flex gap-1">
                   {focusChoices.map((choice) => (
@@ -389,7 +385,8 @@ function ClassicView({
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
