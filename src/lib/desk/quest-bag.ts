@@ -6,15 +6,15 @@ export const BAG_KEY = "callroom-quest-bag-v1";
 export type SpeciesId = "sprout" | "pebble" | "wick" | "drop" | "pip" | "coal" | "dew" | "spark";
 export type Ball = "ball" | "great" | "ultra" | "master";
 
-export const lines: Record<SpeciesId, { names: [string, string, string] }> = {
+export const lines: Record<SpeciesId, { names: string[] }> = {
   sprout: { names: ["Sprout", "Thicket", "Canopy"] },
   pebble: { names: ["Pebble", "Ridge", "Crag"] },
   wick: { names: ["Wick", "Kindle", "Pyre"] },
   drop: { names: ["Drop", "Brook", "Tide"] },
-  pip: { names: ["Pip", "Grove", "Arbor"] },
-  coal: { names: ["Coal", "Blaze", "Inferno"] },
-  dew: { names: ["Dew", "Coral", "Levi"] },
-  spark: { names: ["Spark", "Volt", "Storm"] },
+  pip: { names: ["Pip", "Grove", "Arbor", "Monarch"] },
+  coal: { names: ["Coal", "Blaze", "Inferno", "Drake"] },
+  dew: { names: ["Dew", "Coral", "Levi", "Kraken"] },
+  spark: { names: ["Spark", "Volt", "Storm", "Tempest"] },
 };
 
 export type KnownMove = { id: string; pp: number };
@@ -28,7 +28,7 @@ export type Creature = {
   moves?: KnownMove[];
   pending?: string;
   /** Highest evolution stage the player has already been shown. */
-  seenStage?: 0 | 1 | 2;
+  seenStage?: 0 | 1 | 2 | 3;
   /** 0–255. They start happy and love the Center. */
   joy?: number;
 };
@@ -78,19 +78,20 @@ export const shopItems = [
 
 export type ShopId = (typeof shopItems)[number]["id"];
 
-const cute: Record<SpeciesId, [string, string, string]> = {
+const cute: Record<SpeciesId, string[]> = {
   sprout: ["/field/cut/sprout.png?v=4", "/field/cut/thicket.png?v=4", "/field/cut/canopy.png?v=4"],
   pebble: ["/field/cut/stone.png?v=4", "/field/cut/ridge.png?v=4", "/field/cut/crag.png?v=4"],
   wick: ["/field/cut/ember.png?v=4", "/field/cut/kindle.png?v=4", "/field/cut/pyre.png?v=4"],
   drop: ["/field/cut/drop.png?v=4", "/field/cut/brook.png?v=4", "/field/cut/tide.png?v=4"],
-  pip: ["/field/cut/pip.png?v=1", "/field/cut/grove.png?v=1", "/field/cut/arbor.png?v=1"],
-  coal: ["/field/cut/coal.png?v=1", "/field/cut/blaze.png?v=1", "/field/cut/inferno.png?v=1"],
-  dew: ["/field/cut/dew.png?v=1", "/field/cut/coral.png?v=1", "/field/cut/levi.png?v=1"],
-  spark: ["/field/cut/spark.png?v=1", "/field/cut/volt.png?v=1", "/field/cut/storm.png?v=1"],
+  pip: ["/field/cut/pip.png?v=1", "/field/cut/grove.png?v=1", "/field/cut/arbor.png?v=1", "/field/cut/monarch.png?v=1"],
+  coal: ["/field/cut/coal.png?v=1", "/field/cut/blaze.png?v=1", "/field/cut/inferno.png?v=1", "/field/cut/drake.png?v=1"],
+  dew: ["/field/cut/dew.png?v=1", "/field/cut/coral.png?v=1", "/field/cut/levi.png?v=1", "/field/cut/kraken.png?v=1"],
+  spark: ["/field/cut/spark.png?v=1", "/field/cut/volt.png?v=1", "/field/cut/storm.png?v=1", "/field/cut/tempest.png?v=1"],
 };
 
-export function monSrc(species: SpeciesId, stage: 0 | 1 | 2) {
-  return cute[species][stage];
+export function monSrc(species: SpeciesId, stage: 0 | 1 | 2 | 3) {
+  const art = cute[species];
+  return art[Math.min(stage, art.length - 1)];
 }
 
 export const speciesType: Record<SpeciesId, string> = {
@@ -131,7 +132,8 @@ export function levelOf(exp: number) {
   return 40;
 }
 
-export function stageOf(level: number): 0 | 1 | 2 {
+export function stageOf(level: number, species?: SpeciesId): 0 | 1 | 2 | 3 {
+  if (species && isStarterSpecies(species) && level >= 28) return 3;
   if (level >= 14) return 2;
   if (level >= 6) return 1;
   return 0;
@@ -139,26 +141,27 @@ export function stageOf(level: number): 0 | 1 | 2 {
 
 export function creatureSrc(creature: Creature) {
   if (creature.dex) return spriteFor(creature.dex, loadField().rare.includes(creature.dex));
-  return monSrc(creature.species, stageOf(levelOf(creature.exp)));
+  return monSrc(creature.species, stageOf(levelOf(creature.exp), creature.species));
 }
 
 export function nameOf(creature: Creature) {
   if (creature.dex) return DEX[creature.dex - 1]?.name ?? "Caught";
-  return lines[creature.species].names[stageOf(levelOf(creature.exp))];
+  const names = lines[creature.species].names;
+  return names[stageOf(levelOf(creature.exp), creature.species)] ?? names[names.length - 1];
 }
 
 export type EvolutionMoment = {
   id: string;
   species: SpeciesId;
-  from: 0 | 1 | 2;
-  to: 0 | 1 | 2;
+  from: 0 | 1 | 2 | 3;
+  to: 0 | 1 | 2 | 3;
   name: string;
   level: number;
 };
 
 const EVO_LOG = "callroom-evo-log-v1";
 
-export type EvoEntry = { id: string; name: string; level: number; stage: 1 | 2; at: number };
+export type EvoEntry = { id: string; name: string; level: number; stage: 1 | 2 | 3; at: number };
 
 export function loadEvoLog(): EvoEntry[] {
   try {
@@ -174,11 +177,11 @@ function loggedStage(id: string) {
   return loadEvoLog().reduce((stage, entry) => (entry.id === id ? Math.max(stage, entry.stage) : stage), 0);
 }
 
-/** First change is level 6. Final form is level 14. The creature stays itself. */
+/** First change is level 6. The next is 14. Starters have a big form at 28. */
 export function evolutionMoment(creature: Creature): EvolutionMoment | null {
   const level = levelOf(creature.exp);
-  const to = stageOf(level);
-  const from = loggedStage(creature.id) as 0 | 1 | 2;
+  const to = stageOf(level, creature.species);
+  const from = loggedStage(creature.id) as 0 | 1 | 2 | 3;
   if (to <= from) return null;
   return { id: creature.id, species: creature.species, from, to, name: nameOf(creature), level };
 }
@@ -187,10 +190,10 @@ export function markEvolutionSeen(creatureId: string) {
   const bag = loadBag();
   const creature = [...bag.party, ...bag.box].find((row) => row.id === creatureId);
   if (!creature) return bag;
-  const stage = stageOf(levelOf(creature.exp));
+  const stage = stageOf(levelOf(creature.exp), creature.species);
   creature.seenStage = stage;
   if (stage > 0) {
-    const form = stage as 1 | 2;
+    const form = stage as 1 | 2 | 3;
     const log = loadEvoLog().filter((entry) => !(entry.id === creature.id && entry.stage === form));
     log.push({ id: creature.id, name: nameOf(creature), level: levelOf(creature.exp), stage: form, at: Date.now() });
     localStorage.setItem(EVO_LOG, JSON.stringify(log));
@@ -204,22 +207,37 @@ export function isStarterSpecies(species: SpeciesId) {
 }
 
 export const STARTERS: { id: SpeciesId; type: string; line: string }[] = [
-  { id: "pip", type: "Grass", line: "Pip, then Grove at level 6, Arbor at 14." },
-  { id: "coal", type: "Fire", line: "Coal, then Blaze at level 6, Inferno at 14." },
-  { id: "dew", type: "Water", line: "Dew, then Coral at level 6, Levi at 14." },
-  { id: "spark", type: "Electric", line: "Spark, then Volt at level 6, Storm at 14." },
+  { id: "pip", type: "Grass", line: "Pip, Grove at 6, Arbor at 14, Monarch at 28." },
+  { id: "coal", type: "Fire", line: "Coal, Blaze at 6, Inferno at 14, Drake at 28." },
+  { id: "dew", type: "Water", line: "Dew, Coral at 6, Levi at 14, Kraken at 28." },
+  { id: "spark", type: "Electric", line: "Spark, Volt at 6, Storm at 14, Tempest at 28." },
 ];
+
+export function formNote(creature: Creature) {
+  const stage = stageOf(levelOf(creature.exp), creature.species);
+  if (isStarterSpecies(creature.species)) {
+    if (stage >= 3) return "Fully evolved.";
+    if (stage === 2) return "Evolves at level 28.";
+    if (stage === 1) return "Evolves at level 14.";
+    return "Evolves at level 6.";
+  }
+  if (stage >= 2) return "Final form.";
+  if (stage === 1) return "Evolves at level 14.";
+  return "Evolves at level 6.";
+}
 
 export function maxHp(creature: Creature, bag: Pick<QuestBag, "hpBonus">) {
   const level = levelOf(creature.exp);
-  const bonus = isStarterSpecies(creature.species) ? 10 : 0;
-  return 20 + bag.hpBonus + bonus + stageOf(level) * 6 + level * 2;
+  const stage = stageOf(level, creature.species);
+  const bonus = (isStarterSpecies(creature.species) ? 10 : 0) + (stage === 3 ? 16 : 0);
+  return 20 + bag.hpBonus + bonus + stage * 6 + level * 2;
 }
 
 export function strike(creature: Creature, bag: Pick<QuestBag, "power">) {
   const level = levelOf(creature.exp);
-  const bonus = isStarterSpecies(creature.species) ? 2 : 0;
-  return 3 + bag.power + bonus + stageOf(level) + Math.floor(level / 5);
+  const stage = stageOf(level, creature.species);
+  const bonus = (isStarterSpecies(creature.species) ? 2 : 0) + (stage === 3 ? 4 : 0);
+  return 3 + bag.power + bonus + stage + Math.floor(level / 5);
 }
 
 export type MoveDef = { id: string; name: string; kind: string; power: number; pp: number; level: number; species?: SpeciesId };
@@ -244,6 +262,10 @@ export const moveBook: MoveDef[] = [
   { id: "tidal", name: "Tidal", kind: "Water", power: 16, pp: 5, level: 22, species: "dew" },
   { id: "jolt", name: "Jolt", kind: "Electric", power: 9, pp: 15, level: 8, species: "spark" },
   { id: "thunder", name: "Thunder", kind: "Electric", power: 16, pp: 5, level: 22, species: "spark" },
+  { id: "worldroot", name: "Worldroot", kind: "Grass", power: 22, pp: 5, level: 28, species: "pip" },
+  { id: "skyfire", name: "Skyfire", kind: "Fire", power: 22, pp: 5, level: 28, species: "coal" },
+  { id: "depth", name: "Depth Charge", kind: "Water", power: 22, pp: 5, level: 28, species: "dew" },
+  { id: "stormcall", name: "Stormcall", kind: "Electric", power: 22, pp: 5, level: 28, species: "spark" },
 ];
 
 export function moveDef(id: string) {
@@ -392,11 +414,11 @@ export function foeHealth(kind: "trainer" | "leader" | "rival" | "wild", count: 
 }
 
 export function grantExp(creature: Creature, amount: number) {
-  const beforeStage = stageOf(levelOf(creature.exp));
+  const beforeStage = stageOf(levelOf(creature.exp), creature.species);
   const beforeLevel = levelOf(creature.exp);
   creature.exp += amount;
   const afterLevel = levelOf(creature.exp);
-  const afterStage = stageOf(afterLevel);
+  const afterStage = stageOf(afterLevel, creature.species);
   const learned = learnThrough(creature, beforeLevel, afterLevel);
   if (afterStage > beforeStage) {
     const line = creature.dex

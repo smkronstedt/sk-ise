@@ -32,6 +32,7 @@ import {
   lines,
   loadBag,
   enrollGuide,
+  formNote,
   creatureSrc,
   evolutionMoment,
   expPace,
@@ -55,6 +56,7 @@ import {
   shopItems,
   speciesType,
   spendBattleItem,
+  isStarterSpecies,
   stageOf,
   strike,
   swapBox,
@@ -1371,7 +1373,7 @@ export function MonsterQuest({
             return creature ? <img src={creatureSrc(creature)} alt="" className="h-48 w-auto" /> : null;
           })()}
           <p className="mt-3 font-serif text-2xl">{evo.name} evolved.</p>
-          <p className="mt-1 text-sm">Level {evo.level}. {evo.to >= 2 ? "Final form." : "The next form is at level 14."} Written in the record.</p>
+          <p className="mt-1 text-sm">Level {evo.level}. {evo.to >= 3 ? "Fully evolved." : evo.to >= 2 ? (isStarterSpecies(evo.species) ? "One more form at level 28." : "Final form.") : "The next form is at level 14."} Written in the record.</p>
           <button
             type="button"
             onClick={() => {
@@ -1657,8 +1659,8 @@ export function MonsterQuest({
               <img src="/quest/leader.png" alt="" className="h-28 w-auto shrink-0 object-contain" />
               <p className="text-sm font-bold leading-relaxed">
                 {offer
-                  ? `${lines[offer].names[0]}? That one evolves at level 6, then again at 14. You will not find another. Take it?`
-                  : "You're just starting out. I'm Professor Hale. These four will not show up in the grass. Pick the one that travels with you."}
+                  ? `${lines[offer].names[0]}? It evolves at 6, again at 14, then into ${lines[offer].names[3]} at 28. That last form is the big one. Take it?`
+                  : "You're just starting out. I'm Professor Hale. These four will not show up in the grass. Each one becomes something big at level 28. Pick the one that travels with you."}
               </p>
             </div>
             {offer ? (
@@ -1677,7 +1679,7 @@ export function MonsterQuest({
                   >
                     <span className="flex items-end justify-center gap-1">
                       <img src={monSrc(starter.id, 0)} alt="" className="h-16 w-16 object-contain" />
-                      <img src={monSrc(starter.id, 2)} alt="" className="h-16 w-16 object-contain" />
+                      <img src={monSrc(starter.id, 3)} alt="" className="h-20 w-20 object-contain" />
                     </span>
                     <p className="text-sm font-bold">{lines[starter.id].names[0]} · {starter.type}</p>
                     <p className="text-xs">{starter.line}</p>
@@ -1784,7 +1786,7 @@ function FieldSheet({
           {[...bag.party, ...bag.box].map((creature, index) => (
             <div key={creature.id} className="border-4 border-black bg-white p-2">
               <p className="text-sm font-bold">{index < bag.party.length ? `${index + 1}. ` : "Box · "}{nameOf(creature)} · Lv {levelOf(creature.exp)} · HP {creature.hp}/{maxHp(creature, bag)}</p>
-              <p className="text-xs">{levelOf(creature.exp) >= 14 ? "Final form." : levelOf(creature.exp) >= 6 ? "Evolves at level 14." : "Evolves at level 6."} Mood: {joyWord(joyOf(creature))}.</p>
+              <p className="text-xs">{formNote(creature)} Mood: {joyWord(joyOf(creature))}.</p>
               <p className="text-xs">{knownMoves(creature).map((move) => `${move.def.name} ${move.pp}/${move.def.pp}`).join(" · ")}</p>
               <div className="mt-1 flex flex-wrap gap-1">
                 {bag.candies > 0 ? (
