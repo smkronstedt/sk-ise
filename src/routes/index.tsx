@@ -368,8 +368,8 @@ function ClassicView({
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <p className="text-sm">
                   {row.attempted === 0
-                    ? `${row.bank} trainer items, none answered`
-                    : `${row.correct}/${row.attempted} last answers correct`}
+                    ? `None answered (${row.bank} available)`
+                    : `${row.correct}/${row.attempted} last answers correct (${row.bank} available)`}
                 </p>
                 <div className="ml-auto flex gap-1">
                   {focusChoices.map((choice) => (
