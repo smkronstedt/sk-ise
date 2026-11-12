@@ -542,6 +542,7 @@ export function MonsterQuest({
   const [notice, setNotice] = useState("");
   const [evo, setEvo] = useState<ReturnType<typeof evolutionMoment>>(null);
   const [bag, setBag] = useState<QuestBag | null>(null);
+  const [offer, setOffer] = useState<SpeciesId | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const bagRef = useRef<QuestBag | null>(null);
   const followRef = useRef<string | null>(null);
@@ -556,6 +557,9 @@ export function MonsterQuest({
     if (!localStorage.getItem(BAG_KEY)) saveBag(next);
     setBag(enrollGuide());
     repelRef.current = loadBag().repelLeft;
+    const pull = () => setBag(loadBag());
+    window.addEventListener("ise-progress", pull);
+    return () => window.removeEventListener("ise-progress", pull);
   }, []);
 
   useEffect(() => {
@@ -588,7 +592,7 @@ export function MonsterQuest({
     if (!musicOn()) return;
     setTownMusic(true, "canyon");
   }, [city?.id]);
-  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || Boolean(nurse);
+  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || Boolean(bag && !bag.starter);
 
   const sail = (dir: 1 | -1) => {
     if (!city) return;
@@ -1647,23 +1651,40 @@ export function MonsterQuest({
         </div>
       ) : null}
       {bag && !bag.starter ? (
-        <div className="absolute inset-0 z-40 overflow-auto bg-[#f8f8d8] p-4 text-black">
-          <p className="text-xs font-bold uppercase">Choose one</p>
-          <p className="mt-1 font-serif text-2xl">These four only leave with a new trainer.</p>
-          <p className="mt-1 text-sm">Wild ones are the common lines. A starter hits harder, has more HP, and is the only way to get that family. It evolves at level 6, then again at 14.</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {STARTERS.map((starter) => (
-              <button
-                key={starter.id}
-                type="button"
-                onClick={() => setBag(pickStarter(starter.id))}
-                className="border-4 border-black bg-white p-2 text-left"
-              >
-                <img src={monSrc(starter.id, 0)} alt="" className="mx-auto h-24 w-24 object-contain" />
-                <p className="text-sm font-bold">{lines[starter.id].names[0]} · {starter.type}</p>
-                <p className="text-xs">{starter.line}</p>
-              </button>
-            ))}
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3 sm:items-center">
+          <div className="w-full max-w-lg border-4 border-black bg-[#f8f8d8] p-3 text-black">
+            <div className="flex gap-3">
+              <img src="/quest/leader.png" alt="" className="h-28 w-auto shrink-0 object-contain" />
+              <p className="text-sm font-bold leading-relaxed">
+                {offer
+                  ? `${lines[offer].names[0]}? That one evolves at level 6, then again at 14. You will not find another. Take it?`
+                  : "You're just starting out. I'm Professor Hale. These four will not show up in the grass. Pick the one that travels with you."}
+              </p>
+            </div>
+            {offer ? (
+              <div className="mt-3 flex gap-2">
+                <button type="button" onClick={() => { setBag(pickStarter(offer)); setOffer(null); }} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">I'll take {lines[offer].names[0]}</button>
+                <button type="button" onClick={() => setOffer(null)} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Let me look again</button>
+              </div>
+            ) : (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {STARTERS.map((starter) => (
+                  <button
+                    key={starter.id}
+                    type="button"
+                    onClick={() => setOffer(starter.id)}
+                    className="border-4 border-black bg-white p-2 text-left"
+                  >
+                    <span className="flex items-end justify-center gap-1">
+                      <img src={monSrc(starter.id, 0)} alt="" className="h-16 w-16 object-contain" />
+                      <img src={monSrc(starter.id, 2)} alt="" className="h-16 w-16 object-contain" />
+                    </span>
+                    <p className="text-sm font-bold">{lines[starter.id].names[0]} · {starter.type}</p>
+                    <p className="text-xs">{starter.line}</p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       ) : null}

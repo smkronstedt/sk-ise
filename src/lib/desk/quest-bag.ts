@@ -740,6 +740,8 @@ export function mergeBags(local: unknown, remote: unknown): QuestBag | null {
   const extras = [...seen.values()].filter((creature) => !party.some((row) => row.id === creature.id) && !box.some((row) => row.id === creature.id));
   return clamp({
     ...newer,
+    starter: newer.starter ?? older.starter,
+    nurseDay: { ...(older.nurseDay ?? {}), ...(newer.nurseDay ?? {}) },
     party: party.slice(0, 6),
     box: [...box, ...party.slice(6), ...extras],
     hpBonus: Math.max(left.hpBonus, right.hpBonus),
