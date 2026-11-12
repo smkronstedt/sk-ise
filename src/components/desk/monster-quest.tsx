@@ -15,6 +15,7 @@ import type { BlueprintId, DeskState, TestBlock } from "@/lib/desk/types";
 import { drawActor, drawCreature, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
 import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
+import { isPopqText, PopqFigure } from "@/components/desk/popq-figure";
 import { musicOn, setTownMusic } from "@/lib/desk/town-music";
 import { questCash } from "@/lib/desk/purse";
 import {
@@ -1534,6 +1535,7 @@ export function MonsterQuest({
             {battle.reveal && question ? <p className="mt-1 max-h-24 overflow-auto text-xs leading-relaxed">{question.explanation}</p> : null}
             {battle.reveal && question?.topicId === "nlutd" ? <NlutdChart /> : null}
             {battle.reveal && question && isDsdText([question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <DsdFigure /> : null}
+            {battle.reveal && question && isPopqText([question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <PopqFigure /> : null}
             {battle.reveal && question?.objective ? (
               <p className="mt-2 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
                 <span className="font-semibold">Teaching point. </span>

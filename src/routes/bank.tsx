@@ -4,6 +4,7 @@ import { Shell } from "@/components/desk/shell";
 import { AnatomyFigure } from "@/components/desk/anatomy-figure";
 import { isNlutdTopic, NlutdChart } from "@/components/desk/nlutd-chart";
 import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
+import { isPopqText, PopqFigure } from "@/components/desk/popq-figure";
 import { addCard, loadCards } from "@/lib/cards";
 import { selectionStatus } from "@/lib/desk/adapt";
 import { loadCatalog } from "@/lib/desk/catalog";
@@ -488,6 +489,11 @@ function Practice({
             [item.question, item.rationale, item.learning_point, ...item.key_facts, ...Object.values(item.options)].join(" "),
           ) ? (
             <DsdFigure />
+          ) : null}
+          {isPopqText(
+            [item.question, item.rationale, item.learning_point, ...item.key_facts, ...Object.values(item.options)].join(" "),
+          ) ? (
+            <PopqFigure />
           ) : null}
           <p className="mt-3 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
             <span className="font-semibold">Learning point. </span>
