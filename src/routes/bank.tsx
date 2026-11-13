@@ -7,6 +7,7 @@ import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
 import { isPopqText, PopqFigure } from "@/components/desk/popq-figure";
 import { addCard, loadCards } from "@/lib/cards";
 import { selectionStatus } from "@/lib/desk/adapt";
+import { bankFigures } from "@/lib/desk/bank-figures";
 import { loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
 import { logActivity, logCorrect } from "@/lib/desk/activity";
@@ -417,6 +418,9 @@ function Practice({
       </p>
       <p className="mt-2 leading-relaxed">{item.question}</p>
       <AnatomyFigure topic={item.topic} text={item.question} />
+      {bankFigures[item.id] ? (
+        <img src={bankFigures[item.id]} alt="Figure for this question" className="mt-3 max-h-[28rem] w-full rounded border border-line bg-white object-contain" />
+      ) : null}
       <div className="mt-3 flex flex-col gap-2">
         {letters.map((letter) => {
           const text = optionText(item, letter);

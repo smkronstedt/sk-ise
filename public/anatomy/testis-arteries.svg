@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 520">
+  <rect width="880" height="520" fill="#fffdf8"/>
+  <text x="28" y="36" font-family="Georgia, serif" font-size="22" fill="#1c1915">Arteries that keep the testis alive</text>
+  <text x="28" y="58" font-family="Georgia, serif" font-size="14" fill="#5c564c">After the cord bundle is clipped, two collaterals still reach the testis.</text>
+
+  <rect x="28" y="84" width="520" height="292" rx="8" fill="#fff" stroke="#e4dccf"/>
+
+  <rect x="196" y="100" width="120" height="32" rx="6" fill="#3d2914"/>
+  <text x="256" y="121" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#fff">Aorta</text>
+  <line x1="256" y1="132" x2="256" y2="168" stroke="#b4332a" stroke-width="3"/>
+  <rect x="168" y="168" width="176" height="36" rx="6" fill="#f8e4e1" stroke="#b4332a"/>
+  <text x="256" y="191" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#6e1d16">Testicular artery</text>
+  <line x1="256" y1="204" x2="256" y2="248" stroke="#b4332a" stroke-width="3" stroke-dasharray="5 4"/>
+  <circle cx="256" cy="262" r="14" fill="#fff" stroke="#b4332a" stroke-width="3"/>
+  <path d="M246 252 L266 272 M266 252 L246 272" stroke="#b4332a" stroke-width="3"/>
+  <text x="278" y="267" font-family="Georgia, serif" font-size="13" fill="#6e1d16">Clipped in the cord</text>
+
+  <rect x="40" y="168" width="140" height="32" rx="6" fill="#1d4e89"/>
+  <text x="110" y="189" text-anchor="middle" font-family="Georgia, serif" font-size="13" fill="#fff">External iliac</text>
+  <line x1="110" y1="200" x2="110" y2="228" stroke="#b4332a" stroke-width="3"/>
+  <rect x="36" y="228" width="148" height="32" rx="6" fill="#f8e4e1" stroke="#b4332a"/>
+  <text x="110" y="249" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#6e1d16">Inferior epigastric</text>
+  <line x1="110" y1="260" x2="110" y2="292" stroke="#b4332a" stroke-width="3"/>
+  <rect x="36" y="292" width="148" height="36" rx="6" fill="#f8e4e1" stroke="#b4332a"/>
+  <text x="110" y="314" text-anchor="middle" font-family="Georgia, serif" font-size="13" fill="#6e1d16">Cremasteric a.</text>
+
+  <rect x="392" y="148" width="140" height="44" rx="6" fill="#1d4e89"/>
+  <text x="462" y="166" text-anchor="middle" font-family="Georgia, serif" font-size="13" fill="#fff">Internal iliac</text>
+  <text x="462" y="182" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#d6e6f5">anterior division</text>
+  <line x1="462" y1="192" x2="462" y2="220" stroke="#1b7a3a" stroke-width="4"/>
+  <rect x="372" y="220" width="180" height="40" rx="6" fill="#e5f4ea" stroke="#1b7a3a" stroke-width="2"/>
+  <text x="462" y="245" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#145c2e">Superior vesical a.</text>
+  <line x1="462" y1="260" x2="462" y2="292" stroke="#1b7a3a" stroke-width="4"/>
+  <rect x="372" y="292" width="180" height="40" rx="6" fill="#e5f4ea" stroke="#1b7a3a" stroke-width="2"/>
+  <text x="462" y="317" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#145c2e">Deferential artery</text>
+
+  <path d="M110 328 C110 360 200 360 230 390" fill="none" stroke="#b4332a" stroke-width="3"/>
+  <path d="M462 332 C462 370 320 370 280 390" fill="none" stroke="#1b7a3a" stroke-width="4"/>
+  <ellipse cx="256" cy="408" rx="46" ry="28" fill="#f3d2be" stroke="#6e3424" stroke-width="2"/>
+  <text x="256" y="412" text-anchor="middle" font-family="Georgia, serif" font-size="13" fill="#3d2914">Testis</text>
+
+  <g>
+    <rect x="568" y="84" width="284" height="292" rx="8" fill="#fff" stroke="#e4dccf"/>
+    <text x="590" y="114" font-family="Georgia, serif" font-size="16" fill="#1c1915">What is clipped</text>
+    <text x="590" y="136" font-family="Georgia, serif" font-size="13" fill="#5c564c">Spermatic cord bundle</text>
+    <rect x="590" y="152" width="240" height="28" rx="4" fill="#f8e4e1" stroke="#b4332a"/>
+    <text x="600" y="171" font-family="Georgia, serif" font-size="13" fill="#6e1d16">Testicular artery, from the aorta</text>
+    <text x="590" y="208" font-family="Georgia, serif" font-size="16" fill="#1c1915">What is left</text>
+    <rect x="590" y="222" width="240" height="44" rx="4" fill="#fff" stroke="#e4dccf"/>
+    <text x="600" y="240" font-family="Georgia, serif" font-size="13" fill="#1c1915">Cremasteric artery</text>
+    <text x="600" y="256" font-family="Georgia, serif" font-size="12" fill="#5c564c">from the inferior epigastric</text>
+    <rect x="590" y="274" width="240" height="44" rx="4" fill="#e5f4ea" stroke="#1b7a3a"/>
+    <text x="600" y="292" font-family="Georgia, serif" font-size="13" fill="#145c2e">Deferential artery</text>
+    <text x="600" y="308" font-family="Georgia, serif" font-size="12" fill="#145c2e">from the superior vesical artery</text>
+    <text x="590" y="346" font-family="Georgia, serif" font-size="13" fill="#5c564c">They join on the testis, so the</text>
+    <text x="590" y="364" font-family="Georgia, serif" font-size="13" fill="#5c564c">gland usually stays viable.</text>
+  </g>
+
+  <text x="28" y="470" font-family="Georgia, serif" font-size="14" fill="#1c1915">Not to the testis: internal pudendal (perineum and penis), obturator, inferior gluteal.</text>
+  <text x="28" y="494" font-family="Georgia, serif" font-size="13" fill="#5c564c">The deferential artery is the artery of the vas. Its parent is the superior vesical artery.</text>
+</svg>

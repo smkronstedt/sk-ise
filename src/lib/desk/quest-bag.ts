@@ -240,6 +240,11 @@ export function strike(creature: Creature, bag: Pick<QuestBag, "power">) {
   return 3 + bag.power + bonus + stage + Math.floor(level / 5);
 }
 
+/** Sum of strike across the current party. Used as the duel tiebreaker. */
+export function partyStrength(bag: QuestBag = loadBag()) {
+  return bag.party.reduce((sum, creature) => sum + strike(creature, bag), 0);
+}
+
 export type MoveDef = { id: string; name: string; kind: string; power: number; pp: number; level: number; species?: SpeciesId };
 
 export const moveBook: MoveDef[] = [
@@ -701,7 +706,7 @@ export function enrollGuide() {
     const creature = makeCreature(GUIDE_SPECIES[number % GUIDE_SPECIES.length], 5, bag.hpBonus);
     creature.id = `dex-${number}`;
     creature.dex = number;
-    if (bag.party.length < 6) bag.party.push(creature);
+    if (bag.party.length === 0) bag.party.push(creature);
     else bag.box.push(creature);
     owned.add(number);
     changed = true;
@@ -710,24 +715,38 @@ export function enrollGuide() {
   return loadBag();
 }
 
-export function bringToFront(dex: number) {
-  enrollGuide();
+export function bringAlong(id: string) {
   const bag = loadBag();
-  const partyIndex = bag.party.findIndex((creature) => creature.dex === dex);
-  if (partyIndex === 0) return;
-  if (partyIndex > 0) {
-    const [creature] = bag.party.splice(partyIndex, 1);
-    bag.party.unshift(creature);
-    saveBag(bag);
-    return;
-  }
-  const boxIndex = bag.box.findIndex((creature) => creature.dex === dex);
-  if (boxIndex < 0) return;
-  const [creature] = bag.box.splice(boxIndex, 1);
-  const displaced = bag.party.length >= 6 ? bag.party.pop() : undefined;
-  bag.party.unshift(creature);
-  if (displaced) bag.box.unshift(displaced);
+  if (bag.party.some((creature) => creature.id === id)) return "Already with you.";
+  if (bag.party.length >= 6) return "Six are already with you. Bench one first.";
+  const index = bag.box.findIndex((creature) => creature.id === id);
+  if (index < 0) return "That one is not in the box.";
+  const [creature] = bag.box.splice(index, 1);
+  bag.party.push(creature);
   saveBag(bag);
+  return `${nameOf(creature)} is coming.`;
+}
+
+export function benchCreature(id: string) {
+  const bag = loadBag();
+  if (bag.party.length <= 1) return "Someone has to walk with you.";
+  const index = bag.party.findIndex((creature) => creature.id === id);
+  if (index < 0) return "That one is not with you.";
+  const [creature] = bag.party.splice(index, 1);
+  bag.box.unshift(creature);
+  saveBag(bag);
+  return `${nameOf(creature)} waits with the ones you have caught.`;
+}
+
+export function walkWith(id: string) {
+  const bag = loadBag();
+  const index = bag.party.findIndex((creature) => creature.id === id);
+  if (index < 0) return "Only one of the six with you can walk.";
+  if (index === 0) return `${nameOf(bag.party[0])} is already walking.`;
+  const [creature] = bag.party.splice(index, 1);
+  bag.party.unshift(creature);
+  saveBag(bag);
+  return `${nameOf(creature)} is walking and ready to fight.`;
 }
 
 export function swapBox(index: number) {

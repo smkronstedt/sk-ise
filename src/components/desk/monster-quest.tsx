@@ -32,7 +32,10 @@ import {
   levelOf,
   lines,
   loadBag,
+  benchCreature,
+  bringAlong,
   enrollGuide,
+  walkWith,
   formNote,
   creatureSrc,
   evolutionMoment,
@@ -154,6 +157,7 @@ function buildHome(): World {
   for (let y = 6; y <= 15; y++) tiles[y][10] = 1;
   for (let x = 4; x <= 16; x++) tiles[8][x] = 1;
   tiles[15][10] = 5;
+  tiles[16][10] = 5;
   tiles[7][3] = 2;
   tiles[7][7] = 2;
   tiles[10][4] = 3;
@@ -179,7 +183,7 @@ function buildHome(): World {
         adaptive: false,
         testName: "",
         blueprint: "basic",
-        line: "Professor Moka: The lab is open. Those four still will not appear in the grass. The south road goes to Quarry End.",
+        line: "Professor Moka: The south road is the trail. Quarry End and the rock gym are at the far end. Onco Harbor is only after that badge.",
         foe: "/quest/leader.png",
         sprite: "/quest/leader.png",
       },
@@ -187,6 +191,14 @@ function buildHome(): World {
   };
 }
 
+function parkAtHome() {
+  if (typeof localStorage === "undefined") return;
+  const key = "callroom-quest-parked-home-v2";
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, "1");
+  localStorage.setItem("callroom-quest-scene", "home");
+  localStorage.removeItem("callroom-quest-city");
+}
 function topicIdsFor(blueprint: BlueprintId | "all") {
   if (blueprint === "all") return topics.map((topic) => topic.id);
   return topics.filter((topic) => topic.blueprintId === blueprint).map((topic) => topic.id);
@@ -260,7 +272,17 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       adaptive: true,
       testName: `Gym: ${city.element}`,
       blueprint: city.id,
-      line: trainersBeaten ? `${city.subject}. ${city.gymCount} questions. Need 60%.` : "Beat the trainers in town first.",
+      line: !trainersBeaten
+        ? "Beat the trainers in town first."
+        : city.id === "stones"
+          ? "Dr. Nicolette. Medical and surgical stones. 8 questions. Need 60%."
+          : city.id === "oncology"
+            ? "Sera Voss mixes the harbor. Prostate weighs extra. 16 questions. Need 60%."
+            : city.id === "urogyn"
+              ? "Warden Calder. Urodynamics, incontinence, prolapse, and diversion. 12 questions. Need 60%."
+              : city.id === "core"
+                ? "Nima Sol. Office, trauma, imaging, plus a short transplant and statistics set. 10 questions. Need 60%."
+                : `${city.subject}. ${city.gymCount} questions. Need 60%.`,
       topics: city.gymTopics,
       prostate: city.id === "oncology",
       foe: "/field/towns/trainer.jpg?v=2",
@@ -269,34 +291,172 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
   }
 
   if (scene === "route") {
+    const wide = sized(21, 15);
+    const paint = (spots: readonly (readonly [number, number])[], tile: Tile) => {
+      for (const [x, y] of spots) wide[y][x] = tile;
+    };
+    const pushSide = (npc: { id: string; name: string; x: number; y: number; topics: string[]; line: string; blueprint: BlueprintId }) => {
+      npcs.push({
+        id: npc.id,
+        kind: "trainer",
+        name: npc.name,
+        x: npc.x,
+        y: npc.y,
+        face: "down",
+        sight: 0,
+        done: false,
+        ready: true,
+        count: 3,
+        need: 0.6,
+        adaptive: false,
+        testName: `Side: ${npc.name}`,
+        blueprint: npc.blueprint,
+        topics: npc.topics,
+        rematch: true,
+        line: npc.line,
+        foe: "/field/towns/walker.jpg?v=2",
+      });
+    };
+    if (city.id === "stones") {
+      openGround(wide);
+      paint(
+        [
+          [10, 13], [10, 12], [10, 11], [9, 11], [8, 11], [8, 10], [8, 9], [9, 9], [10, 9], [11, 9],
+          [11, 8], [11, 7], [10, 7], [9, 7], [8, 7], [7, 7], [7, 6], [7, 5], [8, 5], [9, 5], [10, 5],
+          [10, 4], [10, 3], [10, 2], [10, 1],
+          [7, 9], [6, 9], [5, 9], [4, 9],
+          [12, 7], [13, 7], [14, 7], [15, 7], [16, 7],
+          [11, 4], [12, 4], [13, 4], [14, 4], [15, 4],
+        ],
+        1,
+      );
+      wide[13][10] = 5;
+      wide[14][10] = 5;
+      wide[1][10] = 5;
+      wide[0][10] = 5;
+      paint(
+        [
+          [2, 3], [3, 3], [4, 3], [2, 4], [3, 4],
+          [16, 11], [17, 11], [18, 11], [17, 12], [18, 12],
+        ],
+        3,
+      );
+      paint(
+        [
+          [4, 12], [5, 12], [6, 12], [4, 11],
+          [13, 10], [14, 10], [13, 11], [14, 11],
+          [5, 4], [6, 4], [5, 5], [6, 5],
+          [15, 2], [16, 2], [15, 3],
+        ],
+        6,
+      );
+      paint([[2, 7], [3, 8], [2, 10], [18, 5], [17, 6], [18, 8], [3, 13], [16, 13], [6, 2], [13, 2], [12, 12]], 2);
+      pushSide({ id: "side-lantern", name: "Lantern", x: 4, y: 8, topics: ["stones-med"], blueprint: "stones", line: "A lantern in the wood. Three medical-stone questions. You can walk away." });
+      pushSide({ id: "side-moth", name: "Moth", x: 16, y: 6, topics: ["stones-surg"], blueprint: "stones", line: "Something bright in the grass. Three surgical-stone questions, then it lets you pass." });
+      npcs.push({
+        id: "side-glow",
+        kind: "townsman",
+        name: "Glow",
+        x: 15,
+        y: 3,
+        face: "down",
+        sight: 0,
+        done: false,
+        ready: false,
+        count: 0,
+        need: 1,
+        adaptive: false,
+        testName: "",
+        blueprint: "stones",
+        line: "Four lanterns. Light them in order.",
+        foe: "/field/towns/walker.jpg?v=2",
+      });
+      return { tiles: wide, npcs, start: { x: 10, y: 12 } };
+    }
+    if (city.id === "oncology") {
+      openGround(wide);
+      for (let y = 1; y <= 13; y++) {
+        wide[y][1] = 3;
+        wide[y][2] = 3;
+        wide[y][3] = 3;
+        wide[y][17] = 3;
+        wide[y][18] = 3;
+        wide[y][19] = 3;
+        wide[y][10] = 1;
+      }
+      wide[13][10] = 5;
+      wide[14][10] = 5;
+      wide[1][10] = 5;
+      wide[0][10] = 5;
+      paint([[9, 6], [8, 6], [7, 6], [11, 5], [12, 5], [13, 5], [14, 5]], 1);
+      paint([[6, 3], [7, 3], [13, 8], [14, 8], [6, 10], [7, 10]], 6);
+      paint([[8, 3], [12, 9], [7, 11], [13, 11], [6, 8]], 2);
+      pushSide({ id: "side-wreck", name: "Wreck", x: 14, y: 4, topics: ["renal", "utuc"], blueprint: "oncology", line: "A hull on the sand. Three upper-tract questions. The north sign is the channel." });
+      npcs.push({
+        id: "side-tide",
+        kind: "townsman",
+        name: "Tide",
+        x: 7,
+        y: 5,
+        face: "right",
+        sight: 0,
+        done: false,
+        ready: false,
+        count: 0,
+        need: 1,
+        adaptive: false,
+        testName: "",
+        blueprint: "oncology",
+        line: "Time the channel. The marker has to sit in the green.",
+        foe: "/field/towns/walker.jpg?v=2",
+      });
+      return { tiles: wide, npcs, start: { x: 10, y: 12 } };
+    }
+    if (city.id === "urogyn") {
+      openGround(wide);
+      for (let y = 1; y <= 13; y++) wide[y][10] = 1;
+      wide[13][10] = 5;
+      wide[14][10] = 5;
+      wide[1][10] = 5;
+      wide[0][10] = 5;
+      paint([[4, 5], [5, 5], [4, 6], [15, 9], [16, 9], [16, 10]], 3);
+      paint([[6, 3], [7, 3], [13, 3], [14, 3], [5, 12], [6, 12], [14, 12], [15, 12]], 6);
+      paint([[8, 4], [12, 4], [7, 8], [13, 8], [8, 11], [12, 11], [6, 6], [14, 6]], 2);
+      npcs.push({
+        id: "side-cairn",
+        kind: "townsman",
+        name: "Cairn",
+        x: 12,
+        y: 7,
+        face: "left",
+        sight: 0,
+        done: false,
+        ready: false,
+        count: 0,
+        need: 1,
+        adaptive: false,
+        testName: "",
+        blueprint: "urogyn",
+        line: "A quiet span. Nothing here is required. North is The Commons.",
+        foe: "/field/towns/walker.jpg?v=2",
+      });
+      return { tiles: wide, npcs, start: { x: 10, y: 12 } };
+    }
     openGround(tiles);
     for (let y = 1; y <= 9; y++) tiles[y][6] = 1;
-    tiles[1][6] = 5;
+    tiles[0][6] = 5;
+    tiles[10][6] = 5;
     const band = cities.findIndex((item) => item.id === city.id);
-    if (band % 3 !== 2) {
-      for (let y = 4; y <= 7; y++) {
-        tiles[y][3] = 6;
-        tiles[y][4] = 6;
-      }
-      tiles[3][4] = 2;
-      tiles[8][3] = 2;
-    } else {
-      tiles[6][8] = 6;
-      tiles[6][9] = 6;
-      tiles[7][8] = 6;
-      tiles[4][3] = 2;
-      tiles[8][9] = 2;
-    }
     if (band % 2 === 0) {
-      tiles[3][8] = 6;
-      tiles[4][8] = 6;
-      tiles[4][9] = 6;
+      tiles[4][3] = 6;
+      tiles[4][4] = 6;
+      tiles[7][8] = 2;
     } else {
-      tiles[3][9] = 2;
-      tiles[7][9] = 2;
-      tiles[8][8] = 2;
+      tiles[5][8] = 6;
+      tiles[5][9] = 6;
+      tiles[3][3] = 2;
     }
-    return { tiles, npcs, start: { x: 6, y: 9 } };
+    return { tiles, npcs, start: { x: 6, y: 8 } };
   }
 
   if (scene === "center") {
@@ -343,43 +503,98 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
 
   tiles = sized(21, 17);
   openGround(tiles);
-  for (let y = 1; y <= 15; y++) tiles[y][10] = 1;
-  for (let x = 1; x <= 19; x++) {
-    tiles[4][x] = 1;
-    tiles[8][x] = 1;
-    tiles[12][x] = 1;
-  }
-  tiles[1][9] = 8;
-  tiles[1][10] = 4;
-  tiles[1][11] = 8;
-  tiles[8][1] = 7;
-  tiles[7][1] = 8;
-  tiles[9][1] = 8;
-  tiles[8][19] = 9;
-  tiles[7][19] = 8;
-  tiles[9][19] = 8;
-  tiles[3][3] = 2;
-  tiles[3][17] = 2;
-  tiles[6][4] = 2;
-  tiles[6][16] = 2;
-  tiles[10][5] = 2;
-  tiles[10][15] = 2;
-  tiles[14][6] = 3;
-  tiles[14][14] = 3;
   const townIndex = cities.findIndex((item) => item.id === city.id);
-  tiles[15][10] = 5;
-  if (gymDone && townIndex < cities.length - 1) tiles[15][18] = 5;
-  if (townIndex === 0) tiles[15][2] = 5;
-  if (townIndex > 0) tiles[15][2] = 5;
-  const spots: { x: number; y: number; face: Face }[] = [
-    { x: 4, y: 3, face: "up" },
-    { x: 16, y: 3, face: "up" },
-    { x: 4, y: 6, face: "down" },
-    { x: 16, y: 6, face: "down" },
-    { x: 4, y: 10, face: "up" },
-    { x: 16, y: 10, face: "up" },
-    { x: 7, y: 14, face: "left" },
-  ];
+  if (city.id === "urogyn") {
+    for (let y = 1; y <= 15; y++) {
+      tiles[y][1] = 3;
+      tiles[y][2] = 3;
+      tiles[y][18] = 3;
+      tiles[y][19] = 3;
+    }
+    for (let x = 1; x <= 19; x++) {
+      tiles[1][x] = 3;
+      tiles[2][x] = 3;
+      tiles[15][x] = 3;
+    }
+    for (let y = 4; y <= 12; y++) tiles[y][10] = 1;
+    for (let x = 6; x <= 14; x++) tiles[8][x] = 1;
+    tiles[3][9] = 8;
+    tiles[3][10] = 4;
+    tiles[3][11] = 8;
+    tiles[4][6] = 8;
+    tiles[4][14] = 8;
+    tiles[12][6] = 8;
+    tiles[12][14] = 8;
+    tiles[6][8] = 8;
+    tiles[6][12] = 8;
+    tiles[11][8] = 8;
+    tiles[11][12] = 8;
+    tiles[8][4] = 7;
+    tiles[7][4] = 8;
+    tiles[9][4] = 8;
+    tiles[8][16] = 9;
+    tiles[7][16] = 8;
+    tiles[9][16] = 8;
+    tiles[14][10] = 1;
+    for (let x = 3; x <= 17; x++) tiles[14][x] = 1;
+    tiles[14][2] = 5;
+    tiles[14][18] = 5;
+    tiles[13][2] = 1;
+    tiles[13][18] = 1;
+  } else {
+    for (let y = 1; y <= 15; y++) tiles[y][10] = 1;
+    for (let x = 1; x <= 19; x++) {
+      tiles[4][x] = 1;
+      tiles[8][x] = 1;
+      tiles[12][x] = 1;
+    }
+    tiles[1][9] = 8;
+    tiles[1][10] = 4;
+    tiles[1][11] = 8;
+    tiles[8][1] = 7;
+    tiles[7][1] = 8;
+    tiles[9][1] = 8;
+    tiles[8][19] = 9;
+    tiles[7][19] = 8;
+    tiles[9][19] = 8;
+    tiles[3][3] = 2;
+    tiles[3][17] = 2;
+    tiles[6][4] = 2;
+    tiles[6][16] = 2;
+    tiles[10][5] = 2;
+    tiles[10][15] = 2;
+    tiles[14][6] = 3;
+    tiles[14][14] = 3;
+    tiles[15][10] = 5;
+    tiles[16][10] = 5;
+    if (townIndex < cities.length - 1) {
+      tiles[15][18] = 5;
+      tiles[16][18] = 5;
+    }
+    tiles[15][2] = 5;
+    tiles[16][2] = 5;
+    for (let x = 3; x <= 9; x++) tiles[15][x] = 1;
+    if (townIndex < cities.length - 1) {
+      for (let x = 11; x <= 17; x++) tiles[15][x] = 1;
+    }
+  }
+  const spots: { x: number; y: number; face: Face }[] = city.id === "urogyn"
+    ? [
+        { x: 7, y: 6, face: "down" },
+        { x: 13, y: 6, face: "down" },
+        { x: 7, y: 10, face: "up" },
+      ]
+    : [
+        { x: 4, y: 3, face: "up" },
+        { x: 16, y: 3, face: "up" },
+        { x: 4, y: 6, face: "down" },
+        { x: 16, y: 6, face: "down" },
+        { x: 4, y: 10, face: "up" },
+        { x: 16, y: 10, face: "up" },
+        { x: 7, y: 14, face: "left" },
+        { x: 13, y: 6, face: "right" },
+        { x: 13, y: 10, face: "left" },
+      ];
   city.trainers.forEach((trainer, index) => {
     const spot = spots[index];
     if (!spot) return;
@@ -410,8 +625,8 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
     id: `town-${city.id}`,
     kind: "townsman",
     name: "Local",
-    x: 4,
-    y: 5,
+    x: city.id === "urogyn" ? 9 : 4,
+    y: city.id === "urogyn" ? 6 : 5,
     face: "down",
     sight: 0,
     done: false,
@@ -421,7 +636,15 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
     adaptive: false,
     testName: "",
     blueprint: city.id,
-    line: `${city.city}. The gym is north, the mart is west, and the Center is east. Trainers stay in their yards. ${townIndex === 0 ? "The bottom-left road goes home." : "The bottom-left road goes back."} The middle of the bottom road is the route.`,
+    line: city.id === "urogyn"
+      ? "Blackwater Hold. Water on every side. The gym is the stone door north. West is the shop, east is the Center. The dock signs leave the island."
+      : city.id === "stones"
+        ? "Quarry End. Stone questions, and Dr. Nicolette keeps the rock gym. The south road is the trail home. After the badge, the east boat goes to Onco Harbor."
+        : city.id === "oncology"
+          ? "Onco Harbor. This town comes after Quarry End. The bottom-left road goes back to the rock gym, the trail, and home. The east dock is the peninsula."
+          : city.id === "core"
+            ? "The Commons. Office, trauma, imaging, and a short transplant and statistics set. The gym leader mixes them."
+            : `${city.city}. The gym is north, the mart is west, and the Center is east. Trainers stay in their yards. ${townIndex === 0 ? "The bottom-left road goes home." : "The bottom-left road goes back."} The middle of the bottom road is the route.`,
     foe: "/field/towns/walker.jpg?v=2",
   });
   if (!rivalDone) {
@@ -429,8 +652,8 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       id: `rival-${city.id}`,
       kind: "rival",
       name: RIVAL,
-      x: 18,
-      y: 14,
+      x: city.id === "urogyn" ? 16 : 18,
+      y: city.id === "urogyn" ? 12 : 14,
       face: "left",
       sight: 1,
       done: false,
@@ -546,6 +769,154 @@ function drawCenter(ctx: CanvasRenderingContext2D, frame: number) {
   ctx.fillText("OUT", 6 * TILE + TILE / 2, 9 * TILE + 18);
 }
 
+function paintPlace(ctx: CanvasRenderingContext2D, scene: Scene, cityId: string, frame: number) {
+  const glow = (x: number, y: number, color: string, r: number) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  if (scene === "route" && cityId === "stones") {
+    ctx.fillStyle = "rgba(255, 236, 170, 0.9)";
+    ctx.beginPath();
+    ctx.arc(TILE * 2.2, TILE * 1.7, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(70, 48, 120, 0.45)";
+    ctx.beginPath();
+    ctx.arc(TILE * 2.5, TILE * 1.5, 11, 0, Math.PI * 2);
+    ctx.fill();
+    const flies = [
+      [3.2, 6.2],
+      [5.5, 3.4],
+      [14.2, 3.2],
+      [17.2, 7.4],
+      [6.4, 11.2],
+      [12.6, 9.4],
+      [9.2, 6.6],
+    ];
+    flies.forEach(([fx, fy], index) => {
+      glow(fx * TILE + Math.sin(frame / 2 + index) * 6, fy * TILE + Math.cos(frame / 3 + index) * 4, index % 2 ? "#ffe27a" : "#d7b4ff", 2.4);
+    });
+    const caps = [
+      [2.2, 8.4, "#c45c4a"],
+      [17.4, 4.2, "#7d5cff"],
+      [15.2, 12.4, "#c45c4a"],
+      [4.6, 6.6, "#7d5cff"],
+    ] as const;
+    for (const [sx, sy, color] of caps) {
+      ctx.fillStyle = "#f4efe4";
+      ctx.fillRect(sx * TILE, sy * TILE + 6, 4, 8);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.ellipse(sx * TILE + 2, sy * TILE + 6, 8, 5, 0, Math.PI, 0);
+      ctx.fill();
+    }
+  }
+  if (scene === "route" && cityId === "oncology") {
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    for (let y = 2; y <= 12; y += 2) {
+      const bob = frame % 2 ? 4 : 8;
+      ctx.fillRect(2 * TILE + 10, y * TILE + bob, 12, 3);
+      ctx.fillRect(18 * TILE + 4, y * TILE + (12 - bob), 12, 3);
+    }
+  }
+  if (scene === "route" && cityId === "urogyn") {
+    ctx.fillStyle = "rgba(255,255,255,0.28)";
+    ctx.fillRect(0, (frame % 5) * 18, 21 * TILE, 26);
+    ctx.fillRect(0, 80 + (frame % 4) * 22, 21 * TILE, 18);
+  }
+  if (scene === "town" && cityId === "urogyn") {
+    const flicker = frame % 2 ? 6 : 4;
+    for (const tx of [8, 12]) {
+      ctx.fillStyle = "#5c4632";
+      ctx.fillRect(tx * TILE + 13, 2 * TILE + 8, 5, 18);
+      ctx.fillStyle = frame % 2 ? "#ffb347" : "#ff7a3c";
+      glow(tx * TILE + 15, 2 * TILE + 6, frame % 2 ? "#ffb347" : "#ff7a3c", flicker);
+    }
+    ctx.fillStyle = "#1d3557";
+    ctx.fillRect(7 * TILE + 10, 4 * TILE - 26, 7, 22);
+    ctx.fillStyle = "#8d1d2c";
+    ctx.fillRect(13 * TILE + 14, 4 * TILE - 26, 7, 22);
+  }
+}
+
+function TrailPlay({ kind, onClose }: { kind: "glow" | "tide"; onClose: (won: boolean) => void }) {
+  const [order, setOrder] = useState<number[]>([]);
+  const [next, setNext] = useState(1);
+  const [note, setNote] = useState(kind === "glow" ? "Light the lanterns from 1 to 4." : "Stop the marker while it sits in the green.");
+  const [bar, setBar] = useState(0);
+  const [won, setWon] = useState(false);
+  useEffect(() => {
+    setOrder([1, 2, 3, 4].sort(() => Math.random() - 0.5));
+  }, [kind]);
+  useEffect(() => {
+    if (kind !== "tide" || won) return;
+    const timer = window.setInterval(() => setBar((value) => (value + 3) % 100), 30);
+    return () => window.clearInterval(timer);
+  }, [kind, won]);
+  return (
+    <div className={`absolute inset-x-0 top-16 z-20 border-4 border-black p-3 text-black ${kind === "glow" ? "bg-[#efe6ff]" : "bg-[#e5f4f8]"}`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-bold">{kind === "glow" ? "Glow shrine" : "Tide mark"}</p>
+        <button type="button" onClick={() => onClose(false)} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
+          Leave
+        </button>
+      </div>
+      <p className="mt-1 text-sm">{note}</p>
+      {won ? (
+        <button type="button" onClick={() => onClose(true)} className="mt-3 min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
+          Take it
+        </button>
+      ) : kind === "glow" ? (
+        <div className="mt-3 flex gap-2">
+          {order.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => {
+                if (value !== next) {
+                  setNext(1);
+                  setNote("Start again at 1.");
+                  return;
+                }
+                if (value === 4) {
+                  setWon(true);
+                  setNote("The lanterns stay lit. The first time, the wood leaves a Potion and a Ball.");
+                } else {
+                  setNext(value + 1);
+                  setNote(`Next is ${value + 1}.`);
+                }
+              }}
+              className="min-h-14 min-w-14 border-4 border-black bg-[#fff4a8] text-lg font-bold"
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-3">
+          <div className="relative h-8 border-4 border-black bg-white">
+            <div className="absolute inset-y-0 left-[38%] w-[24%] bg-[#8fd0c6]" />
+            <div className="absolute top-0 h-full w-2 bg-black" style={{ left: `${bar}%` }} />
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (bar > 38 && bar < 62) {
+                setWon(true);
+                setNote("The channel holds. The first time, it leaves a Repel.");
+              } else setNote("Too early or too late. Wait for the green.");
+            }}
+            className="mt-2 min-h-11 border-4 border-black bg-white px-3 text-sm font-bold"
+          >
+            Stop
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function MonsterQuest({
   stops,
   picked: _picked,
@@ -579,17 +950,23 @@ export function MonsterQuest({
   const apiRef = useRef({ talk: (_npc: Npc) => {}, wild: () => {}, enter: (_tile: Tile, _x: number, _y: number) => {} });
   const [scene, setScene] = useState<Scene>(() => {
     if (typeof localStorage === "undefined") return "home";
+    parkAtHome();
     const saved = localStorage.getItem("callroom-quest-scene");
     if (saved === "home" || saved === "town" || saved === "gym" || saved === "route" || saved === "center") return saved;
     return localStorage.getItem("callroom-quest-city") ? "town" : "home";
   });
   const [tune, setTune] = useState(false);
-  const [hold, setHold] = useState<string | null>(() => (typeof localStorage === "undefined" ? null : localStorage.getItem("callroom-quest-city")));
+  const [hold, setHold] = useState<string | null>(() => {
+    if (typeof localStorage === "undefined") return null;
+    parkAtHome();
+    return localStorage.getItem("callroom-quest-city");
+  });
   const [line, setLine] = useState("Walk across a trainer's line. They will see you.");
   const [caseOpen, setCaseOpen] = useState(false);
   const [sheet, setSheet] = useState<"party" | "dex" | null>(null);
   const [nurse, setNurse] = useState<string | null>(null);
   const [trialOpen, setTrialOpen] = useState(false);
+  const [play, setPlay] = useState<"glow" | "tide" | null>(null);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [notice, setNotice] = useState("");
   const [evo, setEvo] = useState<ReturnType<typeof evolutionMoment>>(null);
@@ -634,17 +1011,25 @@ export function MonsterQuest({
     else sessionStorage.removeItem("ise-battle");
   }, [battle]);
 
+  useEffect(() => {
+    if (typeof localStorage === "undefined") return;
+    if (localStorage.getItem("callroom-quest-parked-home-v2") !== "1") return;
+    localStorage.setItem("callroom-quest-parked-home-v2", "done");
+    posRef.current = { x: 10, y: 13, scene: "home", cityId: "home" };
+    setHold(null);
+    setScene("home");
+    setLine("Home. The south road is the trail. Quarry End is at the far end.");
+  }, []);
+
   const gymBeaten = (id: string) => stops.some((stop) => stop.kind === "gym" && stop.city.id === id && stop.done);
-  let furthest = 0;
-  for (; furthest < cities.length - 1; furthest += 1) if (!gymBeaten(cities[furthest].id)) break;
-  const wanted = hold ? cities.findIndex((item) => item.id === hold) : furthest;
-  const city = cities[Math.max(0, Math.min(wanted < 0 ? furthest : wanted, furthest))];
+  const savedIndex = hold ? cities.findIndex((item) => item.id === hold) : 0;
+  const city = cities[savedIndex >= 0 ? savedIndex : 0];
   cityRef.current = city;
   useEffect(() => {
     if (!musicOn()) return;
     setTownMusic(true, "canyon");
   }, [city?.id]);
-  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || Boolean(bag && !bag.starter);
+  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || Boolean(bag && !bag.starter) || Boolean(play) || trialOpen;
 
   const sail = (dir: 1 | -1) => {
     if (!city) return;
@@ -655,7 +1040,7 @@ export function MonsterQuest({
       return;
     }
     if (dir > 0 && !gymBeaten(city.id)) {
-      setLine("The boat stays tied until you beat the gym leader.");
+      setLine("The way on stays shut until you beat the gym leader. The road back is open.");
       return;
     }
     localStorage.setItem("callroom-quest-city", next.id);
@@ -815,6 +1200,14 @@ export function MonsterQuest({
       setLine(npc.line);
       return;
     }
+    if (npc.id === "side-glow") {
+      setPlay("glow");
+      return;
+    }
+    if (npc.id === "side-tide") {
+      setPlay("tide");
+      return;
+    }
     if (npc.kind === "townsman") {
       setLine(npc.line);
       return;
@@ -834,14 +1227,14 @@ export function MonsterQuest({
     if (tile === 5 && scene === "home") {
       localStorage.setItem("callroom-quest-city", "stones");
       setHold("stones");
-      posRef.current = { x: 10, y: 14, scene: "town", cityId: "stones" };
-      setScene("town");
-      localStorage.setItem("callroom-quest-scene", "town");
-      setLine("The road comes out in Quarry End.");
+      posRef.current = { x: 10, y: 12, scene: "route", cityId: "stones" };
+      setScene("route");
+      localStorage.setItem("callroom-quest-scene", "route");
+      setLine("The trail. North is Quarry End and the rock gym. South comes back home.");
       return;
     }
     if (tile === 4 && scene === "center") {
-      go("town", 18, 8);
+      go("town", city?.id === "urogyn" ? 15 : 18, 8);
       setLine("They look back at the door. Come again.");
       return;
     }
@@ -851,15 +1244,55 @@ export function MonsterQuest({
       return;
     }
     if (tile === 4 && scene === "town") go("gym", 6, 8);
-    else if (tile === 4 && scene === "gym") go("town", 10, 2);
+    else if (tile === 4 && scene === "gym") go("town", 10, city?.id === "urogyn" ? 12 : 2);
     else if (tile === 5 && scene === "town" && (y ?? 0) >= 14 && (x ?? 0) <= 3) {
-      if (city?.id === "stones") go("home", 10, 13);
-      else sail(-1);
-    } else if (tile === 5 && scene === "town" && (x ?? 0) >= 16) sail(1);
-    else if (tile === 5 && scene === "town") go("route", 6, 9);
-    else if (tile === 5 && scene === "route") {
+      if (city?.id === "stones") {
+        go("route", 10, 2);
+        setLine("The trail home. South leaves the wood. North comes back to Quarry End.");
+      } else sail(-1);
+    } else if (tile === 5 && scene === "town") {
+      const east = (x ?? 0) >= 16;
+      if (city?.id === "stones") {
+        if (east) {
+          if (!gymBeaten(city.id)) {
+            setLine("The road to Onco Harbor stays shut until Dr. Nicolette falls. The trail home is open.");
+            return;
+          }
+          sail(1);
+          return;
+        }
+        go("route", 10, 2);
+        setLine("The trail. South goes home. North is Quarry End.");
+        return;
+      }
+      const trail = city && (city.id === "oncology" || city.id === "urogyn");
+      if (trail) {
+        go("route", -1, -1);
+        setLine(
+          city.id === "oncology"
+            ? "Peninsula. South goes back to Onco Harbor. North walks on to the next town."
+            : "The span. South goes back. North walks on to the next town.",
+        );
+      } else if (east) sail(1);
+      else go("route", -1, -1);
+    } else if (tile === 5 && scene === "route") {
+      if (city?.id === "stones") {
+        if ((y ?? 0) >= 8) {
+          go("home", 10, 13);
+          setLine("Home. The trail north goes back to Quarry End.");
+          return;
+        }
+        go("town", 10, 14);
+        setLine("Quarry End. The rock gym is north. Stone trainers are in the yards.");
+        return;
+      }
+      if ((y ?? 0) >= 8) {
+        go("town", 10, city?.id === "urogyn" ? 13 : 14);
+        setLine("Back in town. No badge needed to come back.");
+        return;
+      }
       if (!city || !gymBeaten(city.id)) {
-        setLine("The far shore stays shut until you beat the gym leader. The boat is in town after that.");
+        setLine("That sign goes to the next town. It stays shut until the gym badge. South goes back.");
         return;
       }
       sail(1);
@@ -1141,13 +1574,17 @@ export function MonsterQuest({
     if (!ctx) return;
     const here = cityRef.current;
     const id = scene === "home" ? "home" : here?.id ?? "league";
-    if (posRef.current.cityId !== id || posRef.current.scene !== scene) {
-      const start = scene === "home" ? { x: 10, y: 13 } : scene === "gym" || scene === "center" ? { x: 6, y: 8 } : scene === "route" ? { x: 6, y: 9 } : { x: 10, y: 14 };
-      posRef.current = { x: start.x, y: start.y, scene, cityId: id };
-    }
     const map = buildWorld(scene, here, stopsRef.current, testsRef.current);
     const cols = map.tiles[0]?.length ?? COLS;
     const rows = map.tiles.length || ROWS;
+    const stood = map.tiles[posRef.current.y]?.[posRef.current.x];
+    const samePlace = posRef.current.cityId === id && posRef.current.scene === scene;
+    const blocked = stood == null || stood === 2 || stood === 3 || stood === 8;
+    if (!samePlace || blocked) posRef.current = { x: map.start.x, y: map.start.y, scene, cityId: id };
+    if (map.tiles[posRef.current.y]?.[posRef.current.x] === 5) {
+      const ny = posRef.current.y <= 2 ? posRef.current.y + 1 : posRef.current.y - 1;
+      if (canWalk(map, posRef.current.x, ny)) posRef.current = { x: posRef.current.x, y: ny, scene, cityId: id };
+    }
     let alive = true;
     let moving = 0;
     let last = performance.now();
@@ -1358,25 +1795,60 @@ export function MonsterQuest({
             const tile = map.tiles[y][x];
             const building = scene === "gym" || ((scene === "town" || scene === "home") && tile === 8);
             drawProp(ctx, tile, x, y, building);
-            if (scene === "town" || scene === "home") {
-              const label = tile === 7 ? "MART" : tile === 9 ? "CENTER" : tile === 4 && scene === "home" ? "HOUSE" : tile === 4 ? "GYM" : tile === 5 && scene === "home" ? "ROAD" : tile === 5 && x <= 3 ? (cityRef.current?.id === "stones" ? "HOME" : "BACK") : tile === 5 && x >= 16 ? "BOAT" : tile === 5 ? "ROUTE" : "";
-              if (label) {
-                ctx.fillStyle = "#1a1208";
-                ctx.font = "bold 8px sans-serif";
-                ctx.textAlign = "center";
-                ctx.fillText(label, x * TILE + TILE / 2, y * TILE + 14);
-              }
+            const label =
+              scene === "town" || scene === "home"
+                ? tile === 7
+                  ? "MART"
+                  : tile === 9
+                    ? "CENTER"
+                    : tile === 4 && scene === "home"
+                      ? "HOUSE"
+                      : tile === 4
+                        ? "GYM"
+                        : tile === 5 && scene === "home"
+                          ? "ROAD"
+                          : tile === 5 && x <= 3
+                            ? cityRef.current?.id === "stones"
+                              ? "HOME"
+                              : "BACK"
+                            : tile === 5 && x >= 16
+                              ? cityRef.current?.id === "stones"
+                                ? "BOAT"
+                                : cityRef.current && ["oncology", "urogyn"].includes(cityRef.current.id)
+                                  ? "TRAIL"
+                                  : "BOAT"
+                              : tile === 5
+                                ? cityRef.current && ["stones", "oncology", "urogyn"].includes(cityRef.current.id)
+                                  ? "TRAIL"
+                                  : "ROUTE"
+                                : ""
+                : scene === "route" && tile === 5
+                  ? cityRef.current?.id === "stones"
+                    ? y <= 2
+                      ? "QUARRY"
+                      : "HOME"
+                    : y <= 2
+                      ? "ONWARD"
+                      : "BACK"
+                  : "";
+            if (label) {
+              ctx.fillStyle = "#1a1208";
+              ctx.font = "bold 8px sans-serif";
+              ctx.textAlign = "center";
+              ctx.fillText(label, x * TILE + TILE / 2, y * TILE + 14);
             }
           }
         }
+        paintPlace(ctx, scene, id, frame);
       }
       const stepPhase = moving > 0 ? walked + t : 0;
       const follow = followRef.current;
       if (follow) {
         const behindX = player.face === "left" ? 0.8 : player.face === "right" ? -0.8 : 0;
         const behindY = player.face === "up" ? 0.85 : player.face === "down" ? -0.85 : 0;
-        drawCreature(ctx, drawX + behindX, drawY + behindY, follow, player.face, stepPhase);
         const leadJoy = bagRef.current?.party[0];
+        const grown = leadJoy ? stageOf(levelOf(leadJoy.exp), leadJoy.species) >= 2 : false;
+        drawCreature(ctx, drawX + behindX, drawY + behindY, follow, player.face, stepPhase, grown);
         if (scene === "center" && leadJoy && joyOf(leadJoy) >= 200) {
           ctx.fillStyle = "#ff6b93";
           const hx = (drawX + behindX) * TILE + TILE / 2 - 3;
@@ -1399,9 +1871,24 @@ export function MonsterQuest({
         }
       }
       drawActor(ctx, drawX, drawY, "player", stepPhase, player.face);
-      const wash = ["#d7b98a", "#7eb6d6", "#f0e27a", "#7dcea0", "#c39bd3", "#e6d5f2", "#e59866", "#c4a484"][Math.max(0, cities.findIndex((item) => item.id === id)) % 8];
+      const washIndex = Math.max(0, cities.findIndex((item) => item.id === id));
+      let wash = ["#d7b98a", "#7eb6d6", "#f0e27a", "#7dcea0", "#c39bd3", "#e6d5f2", "#e59866", "#c4a484"][washIndex % 8];
+      let washAlpha = scene === "center" ? 0 : scene === "town" || scene === "home" ? 0.16 : 0.05;
+      if (scene === "route" && id === "stones") {
+        wash = "#241433";
+        washAlpha = 0.34;
+      } else if (scene === "route" && id === "oncology") {
+        wash = "#14384a";
+        washAlpha = 0.16;
+      } else if (scene === "route" && id === "urogyn") {
+        wash = "#e7eef3";
+        washAlpha = 0.28;
+      } else if (scene === "town" && id === "urogyn") {
+        wash = "#5e6d7a";
+        washAlpha = 0.2;
+      }
       ctx.fillStyle = wash;
-      ctx.globalAlpha = scene === "center" ? 0 : scene === "town" || scene === "home" ? 0.16 : 0.05;
+      ctx.globalAlpha = washAlpha;
       ctx.fillRect(0, 0, cols * TILE, rows * TILE);
       ctx.globalAlpha = 1;
       raf = requestAnimationFrame(draw);
@@ -1454,16 +1941,51 @@ export function MonsterQuest({
       ) : null}
       <div className="flex items-center justify-between gap-3 border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
         <div>
-          <h2 className="font-serif text-xl">{scene === "home" ? "Home" : scene === "center" && city ? `${city.city} Center` : city ? `${city.city} · ${city.element}` : "Championship"}</h2>
-          {scene === "home" ? <p className="text-xs">Your house is on the left. Professor Moka is in the lab. The south road goes to Quarry End.</p> : null}
-          {city && gymBeaten(city.id) && cities.findIndex((item) => item.id === city.id) < cities.length - 1 ? (
-            <p className="text-xs">Boat at the bottom right goes to the next world. This one stays.</p>
+          <h2 className="font-serif text-xl">
+            {scene === "home"
+              ? "Home"
+              : scene === "center" && city
+                ? `${city.city} Center`
+                : scene === "route" && city?.id === "stones"
+                  ? "The trail"
+                  : scene === "route" && city?.id === "oncology"
+                    ? "Peninsula"
+                    : scene === "route" && city?.id === "urogyn"
+                      ? "The Span"
+                      : city
+                        ? `${city.city} · ${city.element}`
+                        : "Championship"}
+          </h2>
+          {scene === "home" ? <p className="text-xs">Your house is on the left. Professor Moka is in the lab. The south road is the trail to Quarry End.</p> : null}
+          {scene === "route" && city?.id === "stones" ? <p className="text-xs">South sign goes home. North sign goes to Quarry End. Neither needs a badge.</p> : null}
+          {scene === "route" && city?.id === "oncology" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
+          {scene === "route" && city?.id === "urogyn" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
+          {scene === "route" && city && city.id !== "stones" && city.id !== "oncology" && city.id !== "urogyn" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
+          {scene === "town" && city?.id === "urogyn" ? <p className="text-xs">West dock goes back. East dock needs the badge before the next town.</p> : null}
+          {scene === "town" && city?.id === "stones" ? <p className="text-xs">South road is the trail home. The east road needs the rock badge before Onco Harbor.</p> : null}
+          {scene === "town" && city?.id === "oncology" ? <p className="text-xs">Bottom-left goes back to Quarry End. The far sign needs the badge before the next town.</p> : null}
+          {city && scene === "town" && city.id !== "urogyn" && city.id !== "stones" && city.id !== "oncology" ? (
+            <p className="text-xs">Bottom-left goes back. The east road needs the gym badge before the next town.</p>
           ) : null}
         </div>
         <div className="flex gap-2">
           {city && scene === "town" && !battle ? (
             <button type="button" onClick={() => setTrialOpen(true)} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Trial</button>
           ) : null}
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.setItem("callroom-quest-scene", "home");
+              localStorage.removeItem("callroom-quest-city");
+              posRef.current = { x: 10, y: 13, scene: "home", cityId: "home" };
+              setHold(null);
+              setScene("home");
+              setLine("Home. The south road is the trail. Quarry End is at the far end.");
+            }}
+            className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold"
+          >
+            Home
+          </button>
           <button type="button" onClick={() => setSheet((open) => (open ? null : "party"))} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">
             Start
           </button>
@@ -1527,6 +2049,9 @@ export function MonsterQuest({
           <div className="mt-3 border-4 border-double border-black bg-[#f8f8d8] p-3">
             <p className="text-xs font-bold uppercase">{battle.title}</p>
             {battle.menu === "ask" && question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
+            {question?.image && (battle.menu === "ask" || battle.reveal) ? (
+              <img src={question.image} alt="Arteries to the testis" className="mt-2 max-h-56 w-full bg-white object-contain" />
+            ) : null}
             {!battle.menu && !battle.reveal && !battle.committed ? <p className="mt-2 text-sm font-bold">Fight the whole set, or run. This is the only time it asks.</p> : null}
             {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
             {battle.reveal && question ? (
@@ -1759,6 +2284,28 @@ export function MonsterQuest({
         </div>
       ) : null}
       {trialOpen && city ? <TownTrial city={city} onClose={() => setTrialOpen(false)} /> : null}
+      {play ? (
+        <TrailPlay
+          kind={play}
+          onClose={(won) => {
+            if (won) {
+              const key = play === "glow" ? "callroom-trail-glow" : "callroom-trail-tide";
+              if (!localStorage.getItem(key)) {
+                const next = loadBag();
+                if (play === "glow") {
+                  next.potions += 1;
+                  next.balls.ball += 1;
+                } else next.repels += 1;
+                saveBag(next);
+                localStorage.setItem(key, "1");
+                setBag(loadBag());
+                setLine(play === "glow" ? "The wood leaves a Potion and a Ball." : "The channel leaves a Repel.");
+              } else setLine(play === "glow" ? "The lanterns are already quiet." : "The tide has nothing left to give.");
+            }
+            setPlay(null);
+          }}
+        />
+      ) : null}
       {nurse ? (
         <div className="absolute inset-x-0 top-16 z-20 border-4 border-black bg-[#f8f8d8] p-3 text-black">
           <div className="flex gap-3">
@@ -1893,17 +2440,45 @@ function FieldSheet({
         </div>
       ) : null}
       {sheet === "dex" ? (
-        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-          {DEX.map((creature) => {
-            const owned = field.caught.includes(creature.number);
-            return (
-              <div key={creature.number} className={`border-4 p-1 text-center ${owned ? "border-black bg-white" : "border-[#c8b56a] bg-[#efe6c0]"}`}>
-                <p className="text-[10px]">#{String(creature.number).padStart(3, "0")}</p>
-                {owned ? <img src={portraitFor(creature.number, field.rare.includes(creature.number))} alt="" className="mx-auto h-12 w-12 rounded-full object-cover" /> : <div className="mx-auto h-12 w-12 rounded-full bg-black/10" />}
-                <p className="truncate text-[11px] font-bold">{owned ? creature.name : "—"}</p>
-              </div>
-            );
-          })}
+        <div className="mt-3 grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_16rem]">
+          <div className="max-h-[28rem] overflow-auto border-4 border-black bg-white">
+            {DEX.map((creature) => {
+              const owned = field.caught.includes(creature.number);
+              const next = creature.into ? DEX[creature.into - 1] : undefined;
+              return (
+                <div key={creature.number} className={`flex items-center gap-2 border-b border-black/10 px-2 py-1 ${creature.stage > 0 ? "pl-6" : ""}`}>
+                  <span className="w-8 font-mono text-[10px]">#{String(creature.number).padStart(3, "0")}</span>
+                  {owned ? <img src={portraitFor(creature.number, field.rare.includes(creature.number))} alt="" className="h-8 w-8 rounded-full object-cover" /> : <div className="h-8 w-8 rounded-full bg-black/10" />}
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-bold">{creature.name}</p>
+                    <p className="truncate text-[10px]">{next ? `Next #${String(next.number).padStart(3, "0")} ${next.name}` : "Final form"}{owned ? " · Caught" : ""}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {bag ? (
+            <div className="border-4 border-black bg-white p-2">
+              <p className="text-sm font-bold">With you {bag.party.length}/6</p>
+              <p className="text-[10px]">The first one walks and fights.</p>
+              {bag.party.map((creature, index) => (
+                <div key={creature.id} className="mt-2 flex flex-wrap items-center gap-1">
+                  <img src={creatureSrc(creature)} alt="" className="h-8 w-8 object-contain" />
+                  <p className="min-w-0 flex-1 truncate text-xs font-bold">{index === 0 ? "Walking · " : ""}{nameOf(creature)}</p>
+                  {index > 0 ? <button type="button" onClick={() => { onNote(walkWith(creature.id)); onChange(); }} className="min-h-11 border-4 border-black bg-white px-2 text-[10px] font-bold">Walk</button> : null}
+                  <button type="button" onClick={() => { onNote(benchCreature(creature.id)); onChange(); }} className="min-h-11 border-4 border-black bg-white px-2 text-[10px] font-bold">Bench</button>
+                </div>
+              ))}
+              <p className="mt-3 text-sm font-bold">Caught</p>
+              {bag.box.map((creature) => (
+                <div key={creature.id} className="mt-2 flex items-center gap-1">
+                  <img src={creatureSrc(creature)} alt="" className="h-8 w-8 object-contain" />
+                  <p className="min-w-0 flex-1 truncate text-xs">{nameOf(creature)}</p>
+                  <button type="button" disabled={bag.party.length >= 6} onClick={() => { onNote(bringAlong(creature.id)); onChange(); }} className="min-h-11 border-4 border-black bg-[#fff4a8] px-2 text-[10px] font-bold disabled:opacity-40">Bring</button>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

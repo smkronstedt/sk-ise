@@ -13,15 +13,47 @@ const FIRST = [
 ];
 const SECOND = ["cap", "fin", "hop", "ling", "mite", "cub", "kit", "pup", "nix", "eel", "jay"];
 
-export type Creature = { number: number; name: string; gym: Gym };
+export type Creature = { number: number; name: string; gym: Gym; stage: 0 | 1 | 2; into?: number };
 
-export const DEX: Creature[] = FIRST.flatMap((a) => SECOND.map((b) => `${a}${b}`))
-  .slice(0, 151)
-  .map((name, index) => ({
-    number: index + 1,
-    name,
-    gym: GYMS[index % GYMS.length],
-  }));
+const named = FIRST.flatMap((a) => SECOND.map((b) => `${a}${b}`)).slice(0, 151);
+
+function lineSizes(count: number) {
+  const sizes: number[] = [];
+  let left = count;
+  while (left > 0) {
+    if (left === 4 || left === 2) {
+      sizes.push(2);
+      left -= 2;
+      continue;
+    }
+    if (left === 1) {
+      sizes.push(1);
+      left -= 1;
+      continue;
+    }
+    sizes.push(3);
+    left -= 3;
+  }
+  return sizes;
+}
+
+export const DEX: Creature[] = [];
+{
+  let cursor = 0;
+  for (const size of lineSizes(named.length)) {
+    for (let stage = 0; stage < size; stage += 1) {
+      const number = cursor + 1;
+      DEX.push({
+        number,
+        name: named[cursor],
+        gym: GYMS[cursor % GYMS.length],
+        stage: stage as 0 | 1 | 2,
+        into: stage < size - 1 ? number + 1 : undefined,
+      });
+      cursor += 1;
+    }
+  }
+}
 
 /** Unique correct questions required for one creature. Full bank ÷ 151, and never fewer than 8. */
 export const CATCH_EVERY = Math.max(8, Math.floor((UQB_TOTAL + questions.length) / DEX.length));

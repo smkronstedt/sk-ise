@@ -109,6 +109,23 @@ export const ise2024 = {
   lines: lines2024,
 };
 
+/** Next sitting is PGY-4. AUA does not publish a raw-score curve by section, so these are study targets, not cut scores. */
+export function sectionAim(id: string) {
+  const now = lines2025.find((line) => line.id === id);
+  const then = lines2024.find((line) => line.id === id);
+  if (!now) return null;
+  const aim = now.score < 60 ? 70 : now.score < 75 ? 80 : now.score;
+  const heavy = now.items >= 15 && now.score < 70;
+  return {
+    now,
+    then: then ?? null,
+    aim,
+    delta: then ? now.score - then.score : null,
+    weight: Math.round((now.items / ise2025.items) * 100),
+    heavy,
+  };
+}
+
 export function sectionById(id: string) {
   return iseSections.find((row) => row.id === id);
 }

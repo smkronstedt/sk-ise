@@ -22,7 +22,7 @@ import { RankMark } from "@/components/desk/rank-mark";
 import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
 import { CATCH_EVERY, DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
-import { bringToFront } from "@/lib/desk/quest-bag";
+import { benchCreature, bringAlong, creatureSrc, enrollGuide, loadBag, nameOf, walkWith, type QuestBag } from "@/lib/desk/quest-bag";
 import { MODE_EVENT, loadMode, type DeskMode } from "@/lib/desk/modes";
 import { Badge } from "@/components/desk/badge";
 import { RpgMode } from "@/components/desk/game-modes";
@@ -565,6 +565,44 @@ function Encounter({
 }
 
 
+function OwnedRail({ bag, note, onAct }: { bag: QuestBag | null; note: string; onAct: (note: string) => void }) {
+  if (!bag) return null;
+  const full = bag.party.length >= 6;
+  return (
+    <aside className="rounded border border-field-ink/15 bg-white p-3 lg:sticky lg:top-4">
+      <h2 className="font-serif text-xl">With you</h2>
+      <p className="text-xs text-field-ink/70">{bag.party.length}/6 on the quest. The first one walks and fights.</p>
+      <ul className="mt-2 flex flex-col gap-2">
+        {bag.party.map((creature, index) => (
+          <li key={creature.id} className="flex items-center gap-2 border-b border-field-ink/10 pb-2">
+            <img src={creatureSrc(creature)} alt="" className="h-10 w-10 object-contain" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{index === 0 ? "Walking · " : `${index + 1}. `}{creature.dex ? `#${String(creature.dex).padStart(3, "0")} ` : ""}{nameOf(creature)}</p>
+            </div>
+            {index > 0 ? (
+              <button type="button" onClick={() => onAct(walkWith(creature.id))} className="min-h-11 rounded border border-field-ink px-2 text-xs font-semibold">Walk</button>
+            ) : null}
+            <button type="button" onClick={() => onAct(benchCreature(creature.id))} className="min-h-11 rounded border border-field-ink px-2 text-xs font-semibold">Bench</button>
+          </li>
+        ))}
+      </ul>
+      <h2 className="mt-4 font-serif text-xl">Caught</h2>
+      <p className="text-xs text-field-ink/70">Everyone you own who is not on the quest.</p>
+      <ul className="mt-2 flex max-h-[32rem] flex-col gap-2 overflow-auto">
+        {bag.box.length === 0 ? <li className="text-sm text-field-ink/70">None waiting.</li> : null}
+        {bag.box.map((creature) => (
+          <li key={creature.id} className="flex items-center gap-2">
+            <img src={creatureSrc(creature)} alt="" className="h-8 w-8 object-contain" />
+            <p className="min-w-0 flex-1 truncate text-sm">{creature.dex ? `#${String(creature.dex).padStart(3, "0")} ` : ""}{nameOf(creature)}</p>
+            <button type="button" disabled={full} onClick={() => onAct(bringAlong(creature.id))} className="min-h-11 rounded bg-field-stamp px-2 text-xs font-semibold text-white disabled:opacity-40">Bring</button>
+          </li>
+        ))}
+      </ul>
+      {note ? <p className="mt-3 text-sm">{note}</p> : null}
+    </aside>
+  );
+}
+
 function FieldNotes({
   battleDone,
   startTopicBattle,
@@ -587,7 +625,8 @@ function FieldNotes({
   const [fresh, setFresh] = useState<Creature[]>([]);
   const [toward, setToward] = useState(0);
   const [picked, setPicked] = useState("stones");
-  const [walking, setWalking] = useState<number | null>(null);
+  const [bag, setBag] = useState<QuestBag | null>(null);
+  const [note, setNote] = useState("");
   const have = new Set(caught);
   const rareSet = new Set(rare);
 
@@ -597,6 +636,7 @@ function FieldNotes({
     setRare(result.rare);
     setFresh(result.fresh);
     setToward(result.toward);
+    setBag(enrollGuide());
   }, [desk.state.tests]);
 
   return (
@@ -605,7 +645,7 @@ function FieldNotes({
         <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
         <h1 className="font-serif text-3xl tracking-tight">Monster Quest</h1>
         <p className="mt-1 text-sm">
-          One creature for every {CATCH_EVERY} different questions you get right. Put in front sends that one out. It follows you and it fights. {have.size}/151 caught.
+          One creature for every {CATCH_EVERY} different questions you get right. The guide is numbered like a dex: the next number is the evolution. Six can come with you. One of those six walks and fights. {have.size}/151 caught.
         </p>
         <div className="mt-4 flex gap-2">
           <button
@@ -648,44 +688,41 @@ function FieldNotes({
       )}
 
       {view === "collection" && (
-        <div className="p-4">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid items-start gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <ol className="overflow-hidden rounded border border-field-ink/15 bg-white">
             {DEX.map((creature) => {
               const isCaught = have.has(creature.number);
-              const isRare = rareSet.has(creature.number);
+              const next = creature.into ? DEX[creature.into - 1] : undefined;
               return (
-                <div
+                <li
                   key={creature.number}
-                  className={`rounded border p-3 text-center ${
-                    isRare ? "border-mark bg-mark-bg" : isCaught ? "border-field-fern bg-white" : "border-field-ink/15 bg-field-ink/5"
-                  }`}
+                  className={`flex items-center gap-3 border-b border-field-ink/10 px-3 py-2 ${creature.stage > 0 ? "pl-8" : ""} ${isCaught ? "" : "opacity-60"}`}
                 >
-                  <div className="font-mono text-[10px] opacity-70">#{String(creature.number).padStart(3, "0")}</div>
+                  <span className="w-10 shrink-0 font-mono text-xs">#{String(creature.number).padStart(3, "0")}</span>
                   {isCaught ? (
-                    <img src={portraitFor(creature.number, isRare)} alt={creature.name} className="mx-auto mt-2 h-28 w-28 rounded-full object-cover" />
+                    <img src={portraitFor(creature.number, rareSet.has(creature.number))} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
                   ) : (
-                    <div className="mx-auto mt-2 h-28 w-28 rounded-full bg-field-ink/10" />
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-field-ink/10" />
                   )}
-                  <div className="mt-2 font-semibold">{isCaught ? creature.name : "???"}</div>
-                  {isRare ? <div className="text-xs font-semibold text-mark">Rare</div> : null}
-                  {isCaught ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        bringToFront(creature.number);
-                        setWalking(creature.number);
-                      }}
-                      className={`mt-2 min-h-11 w-full rounded px-2 text-sm font-semibold ${
-                        walking === creature.number ? "bg-field-stamp text-white" : "border border-field-ink"
-                      }`}
-                    >
-                      {walking === creature.number ? "Out" : "Put in front"}
-                    </button>
-                  ) : null}
-                </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{creature.name}</p>
+                    <p className="text-xs text-field-ink/70">
+                      {next ? `Evolves into #${String(next.number).padStart(3, "0")} ${next.name}` : "Final form"}
+                      {isCaught ? " · Caught" : ""}
+                    </p>
+                  </div>
+                </li>
               );
             })}
-          </div>
+          </ol>
+          <OwnedRail
+            bag={bag}
+            note={note}
+            onAct={(note) => {
+              setNote(note);
+              setBag(loadBag());
+            }}
+          />
         </div>
       )}
     </section>
