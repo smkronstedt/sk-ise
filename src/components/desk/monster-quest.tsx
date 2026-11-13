@@ -11,9 +11,10 @@ import { useDesk } from "@/lib/desk/provider";
 import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
 import { DEX, loadField, portraitFor } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
-import type { BlueprintId, DeskState, TestBlock } from "@/lib/desk/types";
+import type { BlueprintId, DeskState, Question, TestBlock } from "@/lib/desk/types";
 import { drawActor, drawCreature, drawGround, drawProp, DressedActor, lookFor, PixelActor, TILE } from "@/components/desk/quest-art";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
+import { Figure } from "@/components/desk/figure";
 import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
 import { isPopqText, PopqFigure } from "@/components/desk/popq-figure";
 import { musicOn, setTownMusic } from "@/lib/desk/town-music";
@@ -216,6 +217,13 @@ function gymHall(src: string) {
   return img.complete && img.naturalWidth > 0 ? img : null;
 }
 
+function pictureMissing(question: Question) {
+  if (question.image || question.figure) return false;
+  const text = [question.stem.join(" "), question.objective].join(" ");
+  if (question.topicId === "nlutd" || isDsdText(text) || isPopqText(text)) return false;
+  return /\b(figure|figures|photograph|photographs|diagram|radiograph|depicted|shown below|shown above|image below|image above|the image|this image|following image|see the image|the photo|this photo|the pictures?)\b/i.test(text);
+}
+
 function parkAtHome() {
   if (typeof localStorage === "undefined") return;
   const key = "callroom-quest-parked-home-v2";
@@ -235,7 +243,7 @@ function drawForQuest(state: DeskState, topicIds: string[], count: number, remat
     for (const test of state.tests) {
       if (!/^(Route|Gym|Rival|Wild): /.test(test.name)) continue;
       for (const [id, answer] of Object.entries(test.answers)) {
-        if (answer?.submitted) seen.add(id);
+        if (answer?.submitted && !state.fresh?.[id]) seen.add(id);
       }
     }
   }
@@ -1587,6 +1595,34 @@ export function MonsterQuest({
     setBattle({ ...battle, index: battle.index + 1, reveal: null, menu: "fight", moveId: undefined, committed: false });
   };
 
+  const sendBack = () => {
+    if (!battle || battle.reveal || battle.over) return;
+    const id = battle.ids[battle.index];
+    const question = id ? getQuestion(id) : undefined;
+    if (!id || !question || !pictureMissing(question)) return;
+    if (!desk.state.marks[id]) desk.toggleMark(id);
+    desk.setNote(id, "Missing picture. Sent back from Monster Quest.");
+    desk.recycle([id]);
+    const ids = battle.ids.filter((item) => item !== id);
+    desk.patchTest(battle.testId, (current) => ({
+      ...current,
+      questionIds: current.questionIds.filter((item) => item !== id),
+    }));
+    setNotice("Marked and sent back. It will not count as used.");
+    if (battle.index >= ids.length) {
+      seal(false);
+      setBattle({
+        ...battle,
+        ids,
+        reveal: { correct: true, note: "Sent back and marked. It does not count." },
+        menu: null,
+        over: "Sent back. This fight is over.",
+      });
+      return;
+    }
+    setBattle({ ...battle, ids, reveal: null, menu: "fight", moveId: undefined, committed: false });
+  };
+
   const run = () => {
     if (!battle) return;
     fleeRef.current = battle.fromId ?? null;
@@ -2206,9 +2242,15 @@ export function MonsterQuest({
         </div>
           <div className="mt-3 border-4 border-double border-black bg-[#f8f8d8] p-3">
             <p className="text-xs font-bold uppercase">{battle.title}</p>
-            {(battle.menu === "ask" || battle.menu === "fight") && question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
-            {question?.image && (battle.menu === "ask" || battle.menu === "fight" || battle.reveal) ? (
-              <img src={question.image} alt="Arteries to the testis" className="mt-2 max-h-56 w-full bg-white object-contain" />
+            {question && !battle.over ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
+            {question?.image && !battle.over ? (
+              <img src={question.image} alt="Question figure" className="mt-2 max-h-56 w-full bg-white object-contain" />
+            ) : null}
+            {question?.figure && !battle.over ? <Figure id={question.figure} /> : null}
+            {question && pictureMissing(question) && !battle.reveal && !battle.over ? (
+              <button type="button" onClick={sendBack} className="mt-2 min-h-11 border-4 border-black bg-[#fff4a8] px-3 text-left text-sm font-bold">
+                No picture in this one. Send it back and mark it.
+              </button>
             ) : null}
             {!battle.menu && !battle.reveal && !battle.over ? <p className="mt-2 text-sm font-bold">Pick an attack for this question, or run.</p> : null}
             {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
