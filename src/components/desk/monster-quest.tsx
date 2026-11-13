@@ -12,7 +12,7 @@ import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } 
 import { DEX, loadField, portraitFor } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, DeskState, TestBlock } from "@/lib/desk/types";
-import { drawActor, drawCreature, drawGround, drawProp, PixelActor, TILE } from "@/components/desk/quest-art";
+import { drawActor, drawCreature, drawGround, drawProp, lookFor, PixelActor, TILE } from "@/components/desk/quest-art";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
 import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
 import { isPopqText, PopqFigure } from "@/components/desk/popq-figure";
@@ -781,6 +781,38 @@ function drawCenter(ctx: CanvasRenderingContext2D, frame: number) {
   ctx.fillText("OUT", 6 * TILE + TILE / 2, 9 * TILE + 18);
 }
 
+const LEADER_COAT: Record<string, string> = {
+  stones: "#8a6230",
+  oncology: "#9a2430",
+  urogyn: "#16324a",
+  core: "#5c3d86",
+  andrology: "#1c1c1c",
+  peds: "#246b34",
+  basic: "#4e2a62",
+  obstruction: "#6d4524",
+};
+
+const TRAINER_COATS: Record<string, string[]> = {
+  stones: ["#5c5348", "#8a4b32", "#3e4a38", "#c4a574"],
+  oncology: ["#8d1d2c", "#1d3557", "#c45c4a", "#243044"],
+  urogyn: ["#1d4e6a", "#2c3e50", "#5c7a8a", "#5c4632"],
+  core: ["#1d3557", "#c45c4a", "#5a7a4a", "#243044"],
+  andrology: ["#1a1a1a", "#3d6fd8", "#e23b3b", "#f2d15a"],
+  peds: ["#3a7a28", "#e59866", "#1d3557", "#7dcea0"],
+  basic: ["#6b4c7a", "#2a4a32", "#1a1a1a", "#c4a484"],
+  obstruction: ["#8a5a32", "#5a4632", "#3a4a28", "#c4a574"],
+};
+
+function coatFor(kind: string, cityId: string, name: string) {
+  if (kind === "rival") return "#2a3142";
+  if (kind === "leader") return LEADER_COAT[cityId] ?? "#5c3d2e";
+  if (kind === "townsman") return "#f4efe4";
+  const row = TRAINER_COATS[cityId] ?? TRAINER_COATS.core;
+  let n = 0;
+  for (let i = 0; i < name.length; i += 1) n += name.charCodeAt(i) * (i + 3);
+  return row[n % row.length];
+}
+
 function paintPlace(ctx: CanvasRenderingContext2D, scene: Scene, cityId: string, frame: number) {
   const glow = (x: number, y: number, color: string, r: number) => {
     ctx.fillStyle = color;
@@ -788,6 +820,59 @@ function paintPlace(ctx: CanvasRenderingContext2D, scene: Scene, cityId: string,
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   };
+  if (scene === "town" || scene === "home") {
+    const rock = (sx: number, sy: number, color: string) => {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(sx * TILE, sy * TILE + 18);
+      ctx.lineTo(sx * TILE + 8, sy * TILE + 2);
+      ctx.lineTo(sx * TILE + 20, sy * TILE + 18);
+      ctx.fill();
+    };
+    const lamp = (sx: number, sy: number, color: string) => {
+      ctx.fillStyle = "#5c4632";
+      ctx.fillRect(sx * TILE + 14, sy * TILE, 4, 16);
+      glow(sx * TILE + 16, sy * TILE - 2, color, frame % 2 ? 5 : 4);
+    };
+    if (cityId === "home") {
+      lamp(3, 6, "#ffd27a");
+      lamp(16, 6, "#ffd27a");
+    } else if (cityId === "stones") {
+      rock(2, 11, "#9a9186");
+      rock(17, 11, "#6e675e");
+      rock(3, 6, "#b7aea0");
+      rock(16, 6, "#8a8176");
+    } else if (cityId === "oncology") {
+      ctx.fillStyle = "#8d2e2a";
+      for (const sx of [3, 6, 13, 16]) ctx.fillRect(sx * TILE, 2 * TILE, 10, 4);
+      lamp(5, 5, "#ffb347");
+      lamp(15, 5, "#ffb347");
+    } else if (cityId === "urogyn") {
+      ctx.fillStyle = frame % 2 ? "#1d3557" : "#16324a";
+      ctx.fillRect(8 * TILE, 2 * TILE, 8, 22);
+      ctx.fillStyle = "#8d1d2c";
+      ctx.fillRect(12 * TILE, 2 * TILE, 8, 22);
+    } else if (cityId === "core") {
+      for (const [sx, sy] of [[3, 6], [6, 11], [14, 6], [17, 11]] as const) glow(sx * TILE, sy * TILE, "#fff", 3);
+    } else if (cityId === "andrology") {
+      lamp(4, 5, "#ffe14a");
+      lamp(15, 5, "#ffe14a");
+      lamp(8, 11, "#fff4a8");
+    } else if (cityId === "peds") {
+      for (const [sx, sy, color] of [[3, 7, "#ff8fab"], [6, 12, "#ffe14a"], [15, 7, "#9ae66e"], [17, 12, "#8ec8ff"]] as const) glow(sx * TILE, sy * TILE, color, 4);
+    } else if (cityId === "basic") {
+      ctx.fillStyle = "#6b4c7a";
+      ctx.fillRect(3 * TILE + 8, 6 * TILE, 6, 14);
+      ctx.fillRect(16 * TILE + 8, 11 * TILE, 6, 14);
+      ctx.fillStyle = "#c9b6e0";
+      ctx.fillRect(3 * TILE + 9, 6 * TILE + 3, 4, 6);
+      ctx.fillRect(16 * TILE + 9, 11 * TILE + 3, 4, 6);
+    } else if (cityId === "obstruction") {
+      rock(2, 12, "#a06a3a");
+      rock(16, 12, "#8a5430");
+      rock(4, 7, "#c48a4a");
+    }
+  }
   if (scene === "route" && cityId === "stones") {
     ctx.fillStyle = "rgba(255, 236, 170, 0.9)";
     ctx.beginPath();
@@ -1793,6 +1878,7 @@ export function MonsterQuest({
       ctx.setTransform(2, 0, 0, 2, 0, 0);
       ctx.imageSmoothingEnabled = true;
       ctx.clearRect(0, 0, cols * TILE, rows * TILE);
+      const place = lookFor(scene === "home" ? "home" : id);
       if (scene === "center") drawCenter(ctx, frame);
       else if (scene === "gym" && here?.hall && gymHall(here.hall)) {
         ctx.drawImage(gymHall(here.hall) as HTMLImageElement, 0, 0, cols * TILE, rows * TILE);
@@ -1806,14 +1892,14 @@ export function MonsterQuest({
           for (let x = 0; x < cols; x++) {
             const tile = map.tiles[y][x];
             const building = scene === "gym" || ((scene === "town" || scene === "home") && tile === 8);
-            drawGround(ctx, tile, x, y, building, frame);
+            drawGround(ctx, tile, x, y, building, frame, scene === "gym" ? undefined : place);
           }
         }
         for (let y = 0; y < rows; y++) {
           for (let x = 0; x < cols; x++) {
             const tile = map.tiles[y][x];
             const building = scene === "gym" || ((scene === "town" || scene === "home") && tile === 8);
-            drawProp(ctx, tile, x, y, building);
+            drawProp(ctx, tile, x, y, building, scene === "gym" ? undefined : place);
             const label =
               scene === "town" || scene === "home"
                 ? tile === 7
@@ -1880,7 +1966,10 @@ export function MonsterQuest({
       }
       for (const npc of map.npcs) {
         if (npc.sprite) drawCreature(ctx, npc.x, npc.y, npc.sprite, npc.face, 0);
-        else drawActor(ctx, npc.x, npc.y, npc.kind === "leader" ? "leader" : npc.kind === "rival" ? "rival" : "trainer", 0, npc.face);
+        else {
+          const actor = npc.kind === "leader" ? "leader" : npc.kind === "rival" ? "rival" : "trainer";
+          drawActor(ctx, npc.x, npc.y, actor, 0, npc.face, coatFor(npc.kind, id, npc.name));
+        }
         if (bang && bang.id === npc.id && now < bangUntil) {
           ctx.fillStyle = "#fff8dc";
           ctx.fillRect(npc.x * TILE + 8, npc.y * TILE - 18, 16, 18);
@@ -1892,7 +1981,7 @@ export function MonsterQuest({
       drawActor(ctx, drawX, drawY, "player", stepPhase, player.face);
       const washIndex = Math.max(0, cities.findIndex((item) => item.id === id));
       let wash = ["#d7b98a", "#7eb6d6", "#f0e27a", "#7dcea0", "#c39bd3", "#e6d5f2", "#e59866", "#c4a484"][washIndex % 8];
-      let washAlpha = scene === "center" || scene === "gym" ? 0 : scene === "town" || scene === "home" ? 0.16 : 0.05;
+      let washAlpha = scene === "center" || scene === "gym" || scene === "town" || scene === "home" ? 0 : scene === "route" ? 0.08 : 0.05;
       if (scene === "route" && id === "stones") {
         wash = "#241433";
         washAlpha = 0.34;
