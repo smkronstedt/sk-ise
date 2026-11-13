@@ -90,7 +90,7 @@ const RIVAL = "Reed Calder";
 
 type Tile = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 type Face = "up" | "down" | "left" | "right";
-type Scene = "town" | "gym" | "route" | "center" | "home";
+type Scene = "town" | "gym" | "route" | "center" | "home" | "house" | "yard";
 
 type Npc = {
   id: string;
@@ -159,6 +159,96 @@ function sized(cols: number, rows: number): Tile[][] {
 
 function openGround(tiles: Tile[][]) {
   for (let y = 1; y < tiles.length - 1; y++) for (let x = 1; x < tiles[0].length - 1; x++) tiles[y][x] = 0;
+}
+
+let houseStory: 1 | 2 = 1;
+
+function residenceNpc(id: string, name: string, x: number, y: number, line: string): Npc {
+  return {
+    id,
+    kind: "townsman",
+    name,
+    x,
+    y,
+    face: "down",
+    sight: 0,
+    done: false,
+    ready: false,
+    count: 0,
+    need: 1,
+    adaptive: false,
+    testName: "",
+    blueprint: "basic",
+    line,
+    foe: "/quest/leader.png",
+  };
+}
+
+function buildHouse(): World {
+  const tiles = sized(21, 15);
+  openGround(tiles);
+  for (let y = 0; y < tiles.length; y++) {
+    tiles[y][0] = 8;
+    tiles[y][20] = 8;
+  }
+  for (let x = 0; x < tiles[0].length; x++) {
+    tiles[0][x] = 8;
+    tiles[14][x] = 8;
+  }
+  for (let y = 1; y <= 13; y++) for (let x = 1; x <= 19; x++) tiles[y][x] = 1;
+  const npcs: Npc[] = [
+    residenceNpc(
+      "stairs",
+      "Stairs",
+      10,
+      6,
+      houseStory === 1 ? "Stairs. The bedroom and the balcony are up." : "Stairs. The medals, the diploma, and the television are down.",
+    ),
+  ];
+  if (houseStory === 1) {
+    tiles[9][4] = 8;
+    tiles[9][5] = 8;
+    tiles[9][6] = 8;
+    tiles[8][16] = 8;
+    tiles[13][10] = 4;
+    tiles[1][10] = 4;
+    npcs.push(residenceNpc("awards", "Awards", 4, 3, "Marathon medals, the Navy SEAL trident, and the rest of the awards. The Rutgers diploma is on the far wall."));
+    npcs.push(residenceNpc("television", "Television", 16, 9, "Empire Urology is on. Close it and you are still in the house."));
+  } else {
+    tiles[4][3] = 8;
+    tiles[4][4] = 8;
+    tiles[5][3] = 8;
+    tiles[5][4] = 8;
+    for (let x = 7; x <= 13; x++) tiles[1][x] = 1;
+  }
+  return { tiles, npcs, start: { x: 10, y: 8 } };
+}
+
+function buildYard(): World {
+  const tiles = sized(21, 15);
+  openGround(tiles);
+  for (let y = 6; y <= 10; y++) for (let x = 6; x <= 14; x++) tiles[y][x] = 3;
+  for (let x = 4; x <= 16; x++) {
+    tiles[5][x] = 1;
+    tiles[11][x] = 1;
+  }
+  for (let y = 5; y <= 11; y++) {
+    tiles[y][5] = 1;
+    tiles[y][15] = 1;
+  }
+  tiles[4][10] = 1;
+  tiles[3][10] = 4;
+  tiles[2][2] = 2;
+  tiles[2][18] = 2;
+  tiles[12][2] = 2;
+  tiles[12][18] = 2;
+  tiles[13][3] = 2;
+  tiles[13][17] = 2;
+  return {
+    tiles,
+    start: { x: 10, y: 4 },
+    npcs: [residenceNpc("pool", "Pool", 10, 12, "The backyard pool. Two floors above it, and a balcony over the water.")],
+  };
 }
 
 function buildHome(): World {
@@ -254,6 +344,8 @@ function drawForQuest(state: DeskState, topicIds: string[], count: number, remat
 
 function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestBlock[]): World {
   if (scene === "home") return buildHome();
+  if (scene === "house") return buildHouse();
+  if (scene === "yard") return buildYard();
   let tiles = blank();
   const trainerDone = (name: string) => stops.some((stop) => stop.kind === "trainer" && stop.name === name && stop.done);
   const gymDone = city ? stops.some((stop) => stop.kind === "gym" && stop.city.id === city.id && stop.done) : false;
@@ -339,7 +431,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
         sight: 0,
         done: false,
         ready: true,
-        count: 3,
+        count: 6,
         need: 0.6,
         adaptive: false,
         testName: `Side: ${npc.name}`,
@@ -384,8 +476,8 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
         6,
       );
       paint([[2, 7], [3, 8], [2, 10], [18, 5], [17, 6], [18, 8], [3, 13], [16, 13], [6, 2], [13, 2], [12, 12]], 2);
-      pushSide({ id: "side-lantern", name: "Lantern", x: 4, y: 8, topics: ["stones-med"], blueprint: "stones", line: "A lantern in the wood. Three medical-stone questions. You can walk away." });
-      pushSide({ id: "side-moth", name: "Moth", x: 16, y: 6, topics: ["stones-surg"], blueprint: "stones", line: "Something bright in the grass. Three surgical-stone questions, then it lets you pass." });
+      pushSide({ id: "side-lantern", name: "Lantern", x: 4, y: 8, topics: ["stones-med"], blueprint: "stones", line: "A lantern in the wood. Six medical-stone questions. You can walk away." });
+      pushSide({ id: "side-moth", name: "Moth", x: 16, y: 6, topics: ["stones-surg"], blueprint: "stones", line: "Something bright in the grass. Six surgical-stone questions, then it lets you pass." });
       npcs.push({
         id: "side-glow",
         kind: "townsman",
@@ -424,7 +516,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       paint([[9, 6], [8, 6], [7, 6], [11, 5], [12, 5], [13, 5], [14, 5]], 1);
       paint([[6, 3], [7, 3], [13, 8], [14, 8], [6, 10], [7, 10]], 6);
       paint([[8, 3], [12, 9], [7, 11], [13, 11], [6, 8]], 2);
-      pushSide({ id: "side-wreck", name: "Wreck", x: 14, y: 4, topics: ["renal", "utuc"], blueprint: "oncology", line: "A hull on the sand. Three upper-tract questions. The north sign is the channel." });
+      pushSide({ id: "side-wreck", name: "Wreck", x: 14, y: 4, topics: ["renal", "utuc"], blueprint: "oncology", line: "A hull on the sand. Six upper-tract questions. The north sign is the channel." });
       npcs.push({
         id: "side-tide",
         kind: "townsman",
@@ -841,6 +933,52 @@ function paintPlace(ctx: CanvasRenderingContext2D, scene: Scene, cityId: string,
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   };
+  if (scene === "house") {
+    const px = (sx: number, sy: number, w: number, h: number, color: string) => {
+      ctx.fillStyle = color;
+      ctx.fillRect(sx * TILE, sy * TILE, w, h);
+    };
+    if (houseStory === 1) {
+      px(2, 2, 40, 30, "#1c1a17");
+      ctx.fillStyle = "#d4af37";
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.arc(2 * TILE + 8 + i * 6, 2 * TILE + 16, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(8 * TILE + 16, 2 * TILE + 4);
+      ctx.lineTo(8 * TILE + 16, 2 * TILE + 28);
+      ctx.moveTo(8 * TILE + 8, 2 * TILE + 10);
+      ctx.lineTo(8 * TILE + 16, 2 * TILE + 16);
+      ctx.lineTo(8 * TILE + 24, 2 * TILE + 10);
+      ctx.stroke();
+      px(14.5, 2, 36, 24, "#f4efe4");
+      ctx.strokeStyle = "#8a1f2b";
+      ctx.strokeRect(14.5 * TILE + 3, 2 * TILE + 3, 30, 18);
+      ctx.fillStyle = "#8a1f2b";
+      ctx.font = "bold 7px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("RWJ", 14.5 * TILE + 18, 2 * TILE + 15);
+      px(4, 8.55, 56, 14, "#6b2d3c");
+      px(15.15, 7.35, 30, 20, "#111");
+      ctx.fillStyle = "#3aa0ff";
+      ctx.fillRect(15.15 * TILE + 3, 7.35 * TILE + 3, 24, 12);
+    } else {
+      px(3, 3.4, 44, 30, "#f7f4ee");
+      px(3, 3.4, 44, 8, "#1e3a5f");
+      ctx.fillStyle = "#c4a574";
+      ctx.fillRect(7 * TILE, 1.05 * TILE, 7 * TILE, 5);
+    }
+    return;
+  }
+  if (scene === "yard") {
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.fillRect(8 * TILE, 7.4 * TILE, 18, 5);
+    return;
+  }
   if (scene === "town" || scene === "home") {
     const rock = (sx: number, sy: number, color: string) => {
       ctx.fillStyle = color;
@@ -1070,7 +1208,7 @@ export function MonsterQuest({
     if (typeof localStorage === "undefined") return "home";
     parkAtHome();
     const saved = localStorage.getItem("callroom-quest-scene");
-    if (saved === "home" || saved === "town" || saved === "gym" || saved === "route" || saved === "center") return saved;
+    if (saved === "home" || saved === "town" || saved === "gym" || saved === "route" || saved === "center" || saved === "house" || saved === "yard") return saved;
     return localStorage.getItem("callroom-quest-city") ? "town" : "home";
   });
   const [tune, setTune] = useState(false);
@@ -1092,6 +1230,8 @@ export function MonsterQuest({
   const [offer, setOffer] = useState<SpeciesId | null>(null);
   const [gift, setGift] = useState<string | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
+  const [tvOpen, setTvOpen] = useState(false);
+  const [houseFloor, setHouseFloor] = useState<1 | 2>(1);
   const bagRef = useRef<QuestBag | null>(null);
   const followRef = useRef<string | null>(null);
   const repelRef = useRef(0);
@@ -1148,7 +1288,7 @@ export function MonsterQuest({
     if (!musicOn()) return;
     setTownMusic(true, "canyon");
   }, [city?.id]);
-  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || Boolean(bag && !bag.starter) || Boolean(play) || trialOpen || Boolean(gift);
+  pausedRef.current = caseOpen || shopOpen || tvOpen || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || Boolean(bag && !bag.starter) || Boolean(play) || trialOpen || Boolean(gift);
 
   const sail = (dir: 1 | -1) => {
     if (!city) return;
@@ -1170,11 +1310,27 @@ export function MonsterQuest({
   };
 
   const go = (next: Scene, x: number, y: number) => {
-    const cityId = next === "home" ? "home" : city?.id ?? "stones";
+    const cityId = next === "home" || next === "house" || next === "yard" ? "home" : city?.id ?? "stones";
     posRef.current = { x, y, scene: next, cityId };
     setScene(next);
     localStorage.setItem("callroom-quest-scene", next);
-    setLine(next === "home" ? "Home. Your house is on the left. Professor Moka is in the lab." : next === "route" ? "Grass shows up in patches. A correct answer weakens a wild one. Then throw a ball." : next === "gym" ? "The aisle is the leader's line of sight." : next === "center" ? "The Center is warm and quiet. Talk to a nurse. HP and PP come back here. Not at midnight." : "The west door is the shop. Trainers stay off the main road.");
+    setLine(
+      next === "home"
+        ? "Home. Your house is on the left. Professor Moka is in the lab."
+        : next === "house"
+          ? houseStory === 1
+            ? "Inside. Medals and the trident on the left, the Rutgers diploma on the right, couch and television below. North door is the yard."
+            : "Upstairs. The bed is on the left. The balcony looks over the pool."
+          : next === "yard"
+            ? "The backyard. The pool is the shape of the one behind the house."
+            : next === "route"
+              ? "Grass shows up in patches. A correct answer weakens a wild one. Then throw a ball."
+              : next === "gym"
+                ? "The aisle is the leader's line of sight."
+                : next === "center"
+                  ? "The Center is warm and quiet. Talk to a nurse. HP and PP come back here. Not at midnight."
+                  : "The west door is the shop. Trainers stay off the main road.",
+    );
   };
 
   const readyLead = () => {
@@ -1339,6 +1495,19 @@ export function MonsterQuest({
       setPlay("tide");
       return;
     }
+    if (npc.id === "television") {
+      setTvOpen(true);
+      setLine("Empire Urology is on. Close it and you are still in the house.");
+      return;
+    }
+    if (npc.id === "stairs") {
+      const next = houseStory === 1 ? 2 : 1;
+      houseStory = next;
+      setHouseFloor(next);
+      posRef.current = { x: 10, y: 8, scene: "house", cityId: "home" };
+      setLine(next === 2 ? "Upstairs. Bed on the left. The balcony is over the pool." : "Downstairs. Medals, the trident, the diploma, the couch, and the television.");
+      return;
+    }
     if (npc.kind === "townsman") {
       setLine(npc.line);
       return;
@@ -1352,7 +1521,20 @@ export function MonsterQuest({
       return;
     }
     if (tile === 4 && scene === "home") {
-      setLine("Your house. The lights are on, and it is quiet.");
+      houseStory = 1;
+      setHouseFloor(1);
+      go("house", 10, 11);
+      return;
+    }
+    if (tile === 4 && scene === "house") {
+      if ((y ?? 0) <= 2) go("yard", 10, 4);
+      else go("home", 4, 6);
+      return;
+    }
+    if (tile === 4 && scene === "yard") {
+      houseStory = 1;
+      setHouseFloor(1);
+      go("house", 10, 3);
       return;
     }
     if (tile === 5 && scene === "home") {
@@ -1740,7 +1922,7 @@ export function MonsterQuest({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const here = cityRef.current;
-    const id = scene === "home" ? "home" : here?.id ?? "league";
+    const id = scene === "home" || scene === "house" || scene === "yard" ? "home" : here?.id ?? "league";
     const map = buildWorld(scene, here, stopsRef.current, testsRef.current);
     const cols = map.tiles[0]?.length ?? COLS;
     const rows = map.tiles.length || ROWS;
@@ -1971,7 +2153,13 @@ export function MonsterQuest({
             const building = scene === "gym" || ((scene === "town" || scene === "home") && tile === 8);
             drawProp(ctx, tile, x, y, building, scene === "gym" ? undefined : place);
             const label =
-              scene === "town" || scene === "home"
+              scene === "house" && tile === 4
+                ? y <= 2
+                  ? "YARD"
+                  : "OUT"
+                : scene === "yard" && tile === 4
+                  ? "HOUSE"
+                  : scene === "town" || scene === "home"
                 ? tile === 7
                   ? "MART"
                   : tile === 9
@@ -2051,7 +2239,7 @@ export function MonsterQuest({
       drawActor(ctx, drawX, drawY, "player", stepPhase, player.face);
       const washIndex = Math.max(0, cities.findIndex((item) => item.id === id));
       let wash = ["#d7b98a", "#7eb6d6", "#f0e27a", "#7dcea0", "#c39bd3", "#e6d5f2", "#e59866", "#c4a484"][washIndex % 8];
-      let washAlpha = scene === "center" || scene === "gym" || scene === "town" || scene === "home" ? 0 : scene === "route" ? 0.08 : 0.05;
+      let washAlpha = scene === "center" || scene === "gym" || scene === "town" || scene === "home" || scene === "house" || scene === "yard" ? 0 : scene === "route" ? 0.08 : 0.05;
       if (scene === "route" && id === "stones") {
         wash = "#241433";
         washAlpha = 0.34;
@@ -2090,7 +2278,7 @@ export function MonsterQuest({
         saveBag(stored);
       }
     };
-  }, [battle, scene, city?.id]);
+  }, [battle, scene, city?.id, houseFloor]);
 
   const question = battle ? getQuestion(battle.ids[battle.index] ?? "") : undefined;
   const lead = bag?.party[0];
@@ -2117,6 +2305,24 @@ export function MonsterQuest({
           </button>
         </div>
       ) : null}
+      {tvOpen ? (
+        <div className="absolute inset-0 z-40 flex flex-col bg-black">
+          <iframe
+            className="min-h-0 w-full flex-1 border-0"
+            src="https://www.youtube.com/embed/videoseries?list=PLe7F6RMpK5ctHhycv-bDk1VDnz1w3y6XK"
+            title="EMPIRE Urology Lectures"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+          <button
+            type="button"
+            onClick={() => setTvOpen(false)}
+            className="min-h-11 border-4 border-black bg-[#fff4a8] text-sm font-bold text-black"
+          >
+            Back to the house
+          </button>
+        </div>
+      ) : null}
       <div className="border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
         <div className="flex gap-1 overflow-x-auto pb-2">
           {cities.map((item) => {
@@ -2137,6 +2343,12 @@ export function MonsterQuest({
           <h2 className="font-serif text-xl">
             {scene === "home"
               ? "Home"
+              : scene === "house"
+                ? houseFloor === 1
+                  ? "House"
+                  : "Upstairs"
+                : scene === "yard"
+                  ? "Backyard"
               : scene === "center" && city
                 ? `${city.city} Center`
                 : scene === "route" && city?.id === "stones"
@@ -2150,6 +2362,8 @@ export function MonsterQuest({
                         : "Championship"}
           </h2>
           {scene === "home" ? <p className="text-xs">Your house is on the left. Professor Moka is in the lab. The south road is the trail to Quarry End.</p> : null}
+          {scene === "house" ? <p className="text-xs">{houseFloor === 1 ? "Click the stairs, the awards, or the television. North door is the pool. South door leaves." : "Click the stairs to go down. The balcony is along the north wall."}</p> : null}
+          {scene === "yard" ? <p className="text-xs">The pool is behind the house. The door on the north side goes back in.</p> : null}
           {scene === "route" && city?.id === "stones" ? <p className="text-xs">South sign goes home. North sign goes to Quarry End. Neither needs a badge.</p> : null}
           {scene === "route" && city?.id === "oncology" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
           {scene === "route" && city?.id === "urogyn" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
