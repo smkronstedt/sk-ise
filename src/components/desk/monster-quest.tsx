@@ -793,31 +793,31 @@ function drawCenter(ctx: CanvasRenderingContext2D, frame: number) {
 }
 
 const LEADER_COAT: Record<string, string> = {
-  stones: "#8a6230",
-  oncology: "#9a2430",
-  urogyn: "#16324a",
-  core: "#5c3d86",
-  andrology: "#1c1c1c",
-  peds: "#246b34",
-  basic: "#4e2a62",
-  obstruction: "#6d4524",
+  stones: "l:32",
+  oncology: "l:4",
+  urogyn: "l:210",
+  core: "l:280",
+  andrology: "l:50",
+  peds: "l:128",
+  basic: "l:292",
+  obstruction: "l:22",
 };
 
 const TRAINER_COATS: Record<string, string[]> = {
-  stones: ["#5c5348", "#8a4b32", "#3e4a38", "#c4a574"],
-  oncology: ["#8d1d2c", "#1d3557", "#c45c4a", "#243044"],
-  urogyn: ["#1d4e6a", "#2c3e50", "#5c7a8a", "#5c4632"],
-  core: ["#1d3557", "#c45c4a", "#5a7a4a", "#243044"],
-  andrology: ["#1a1a1a", "#3d6fd8", "#e23b3b", "#f2d15a"],
-  peds: ["#3a7a28", "#e59866", "#1d3557", "#7dcea0"],
-  basic: ["#6b4c7a", "#2a4a32", "#1a1a1a", "#c4a484"],
-  obstruction: ["#8a5a32", "#5a4632", "#3a4a28", "#c4a574"],
+  stones: ["t:32:40:25", "t:200:30:20", "t:-1:35:28", "t:18:80:32"],
+  oncology: ["t:0:-1:0", "t:4:210:8", "t:-1:0:-1", "t:25:4:18"],
+  urogyn: ["t:210:195:215", "t:200:0:210", "t:-1:210:220", "t:185:45:200"],
+  core: ["t:280:210:270", "t:0:280:250", "t:210:40:200", "t:-1:280:-1"],
+  andrology: ["t:-1:50:-1", "t:50:210:45", "t:200:48:30", "t:0:52:20"],
+  peds: ["t:128:50:110", "t:140:200:30", "t:90:130:25", "t:210:120:140"],
+  basic: ["t:292:270:300", "t:-1:292:-1", "t:280:120:260", "t:320:40:290"],
+  obstruction: ["t:22:35:18", "t:30:-1:25", "t:15:45:10", "t:200:25:22"],
 };
 
 function coatFor(kind: string, cityId: string, name: string) {
-  if (kind === "rival") return "#2a3142";
-  if (kind === "leader") return LEADER_COAT[cityId] ?? "#5c3d2e";
-  if (kind === "townsman") return "#f4efe4";
+  if (kind === "rival") return "";
+  if (kind === "leader") return LEADER_COAT[cityId] ?? "l:4";
+  if (kind === "townsman") return "t:205:45:30";
   const row = TRAINER_COATS[cityId] ?? TRAINER_COATS.core;
   let n = 0;
   for (let i = 0; i < name.length; i += 1) n += name.charCodeAt(i) * (i + 3);

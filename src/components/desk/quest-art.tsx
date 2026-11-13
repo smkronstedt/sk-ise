@@ -73,8 +73,50 @@ function dye(ctx: CanvasRenderingContext2D, color: string, x: number, y: number,
 
 const sheets: Record<string, HTMLCanvasElement> = {};
 
-function clothesSheet(name: string, color: string) {
-  const key = `${name}|${color}`;
+function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = 0;
+  if (max === rn) h = (gn - bn) / d + (gn < bn ? 6 : 0);
+  else if (max === gn) h = (bn - rn) / d + 2;
+  else h = (rn - gn) / d + 4;
+  return [h / 6, s, l];
+}
+
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  if (s === 0) {
+    const v = Math.round(l * 255);
+    return [v, v, v];
+  }
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const hue = (t: number) => {
+    let next = t;
+    if (next < 0) next += 1;
+    if (next > 1) next -= 1;
+    if (next < 1 / 6) return p + (q - p) * 6 * next;
+    if (next < 1 / 2) return q;
+    if (next < 2 / 3) return p + (q - p) * (2 / 3 - next) * 6;
+    return p;
+  };
+  return [Math.round(hue(h + 1 / 3) * 255), Math.round(hue(h) * 255), Math.round(hue(h - 1 / 3) * 255)];
+}
+
+function dyePixel(r: number, g: number, b: number, hue: number): [number, number, number] {
+  const light = rgbToHsl(r, g, b)[2];
+  if (hue < 0) return hslToRgb(0, 0.05, Math.max(0.05, light * 0.28));
+  return hslToRgb((((hue % 360) + 360) % 360) / 360, 0.62, light);
+}
+
+function clothesSheet(name: string, code: string) {
+  const key = `${name}|${code}`;
   if (sheets[key]) return sheets[key];
   const base = sprite(name);
   if (!base || typeof document === "undefined") return null;
@@ -84,15 +126,38 @@ function clothesSheet(name: string, color: string) {
   const pen = canvas.getContext("2d");
   if (!pen) return null;
   pen.drawImage(base, 0, 0);
-  pen.globalCompositeOperation = "source-atop";
-  pen.fillStyle = color;
-  pen.globalAlpha = name === "leader" ? 0.78 : 0.58;
-  const top = name === "leader" ? 0.22 : 0.4;
-  pen.fillRect(0, canvas.height * top, canvas.width, canvas.height * (1 - top));
-  if (name === "leader") {
-    pen.globalAlpha = 0.9;
-    pen.fillRect(canvas.width * 0.28, canvas.height * 0.16, canvas.width * 0.44, canvas.height * 0.06);
+  const data = pen.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = data.data;
+  const parts = code.split(":");
+  const mode = parts[0];
+  const hues = parts.slice(1).map(Number);
+  for (let i = 0; i < pixels.length; i += 4) {
+    const r = pixels[i];
+    const g = pixels[i + 1];
+    const b = pixels[i + 2];
+    const a = pixels[i + 3];
+    if (a < 20) continue;
+    if (r < 30 && g < 30 && b < 30) continue;
+    if (r > 225 && g > 220 && b > 210) continue;
+    if (r > 200 && g > 140 && b < 165 && r - b > 70 && r > g - 10) continue;
+    const y = Math.floor(i / 4 / canvas.width);
+    let hue: number | null = null;
+    if (mode === "l") hue = hues[0];
+    else {
+      const hat = y < canvas.height * 0.18 && r > 120 && r > g * 1.4 && r > b * 1.4;
+      const vest = g > r + 10 && g > b && g > 50;
+      const pants = !hat && !vest && y > canvas.height * 0.45 && r > 70 && g > 40 && b < 150 && r > b && !(r > 210 && g > 150);
+      if (hat) hue = hues[0];
+      else if (vest) hue = hues[1];
+      else if (pants) hue = hues[2];
+    }
+    if (hue == null || Number.isNaN(hue)) continue;
+    const [nr, ng, nb] = dyePixel(r, g, b, hue);
+    pixels[i] = nr;
+    pixels[i + 1] = ng;
+    pixels[i + 2] = nb;
   }
+  pen.putImageData(data, 0, 0);
   sheets[key] = canvas;
   return canvas;
 }
