@@ -22,6 +22,23 @@ export const Route = createFileRoute("/test/$id")({
 });
 
 const letters = "ABCDEFGHIJ";
+const FLAG_KEY = "callroom-flagged-figures";
+
+function loadFlags(): string[] {
+  try {
+    const raw = localStorage.getItem(FLAG_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function flagFigure(id: string) {
+  const current = new Set(loadFlags());
+  current.add(id);
+  localStorage.setItem(FLAG_KEY, JSON.stringify([...current]));
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("ise-progress"));
+}
 
 function TestPage() {
   const { id } = Route.useParams();
@@ -30,6 +47,7 @@ function TestPage() {
   const [bankReady, setBankReady] = useState(false);
   const [cardAdded, setCardAdded] = useState(false);
   const [savedNote, setSavedNote] = useState("");
+  const [flaggedNote, setFlaggedNote] = useState("");
 
   useEffect(() => {
     void loadCatalog().finally(() => setBankReady(true));
@@ -113,6 +131,7 @@ function TestPage() {
   const jump = (index: number) => {
     desk.patchTest(test.id, (current) => ({ ...current, index }));
     setCardAdded(false);
+    setFlaggedNote("");
   };
 
   const endBlock = () => {
@@ -136,6 +155,23 @@ function TestPage() {
       "manual",
     );
     setCardAdded(true);
+  };
+
+  const flagMissingFigure = () => {
+    flagFigure(question.id);
+    // Skip without scoring: do not call rememberAnswer or logCorrect
+    desk.patchTest(test.id, (current) => ({
+      ...current,
+      answers: {
+        ...current.answers,
+        [questionId]: { choice: null, submitted: false },
+      },
+    }));
+    setFlaggedNote("Flagged. This item will not count as right or wrong. We will fix the figure or describe it.");
+    // Advance if not last
+    if (test.index < test.questionIds.length - 1) {
+      setTimeout(() => jump(test.index + 1), 600);
+    }
   };
 
   return (
@@ -171,6 +207,7 @@ function TestPage() {
         </button>
       </div>
       {savedNote ? <p className="mb-3 text-sm font-semibold text-correct">{savedNote}</p> : null}
+      {flaggedNote ? <p className="mb-3 text-sm font-semibold text-amber-700">{flaggedNote}</p> : null}
 
       {test.status === "done" ? (
         <div className="mb-3 rounded border border-line bg-obj px-3 py-2 text-sm">
@@ -291,6 +328,13 @@ function TestPage() {
               className="min-h-11 rounded border border-amber-500 bg-amber-50 px-3 text-sm font-semibold text-amber-800 disabled:opacity-50"
             >
               {cardAdded ? "Added to Cards" : "Add to Cards"}
+            </button>
+            <button
+              type="button"
+              onClick={flagMissingFigure}
+              className="min-h-11 rounded border border-rose-400 bg-rose-50 px-3 text-sm font-semibold text-rose-800"
+            >
+              Flag missing figure
             </button>
             {test.mode === "tutor" && test.status === "open" ? (
               <button
