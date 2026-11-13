@@ -24,6 +24,10 @@ import {
   catchChance,
   drink,
   foeHealth,
+  foeStrike,
+  partnerFor,
+  claimGift,
+  GYM_GIFT,
   grantExp,
   healAll,
   joyOf,
@@ -72,6 +76,7 @@ import {
   type Ball,
   type QuestBag,
   type SpeciesId,
+  type Partner,
 } from "@/lib/desk/quest-bag";
 
 const COLS = 13;
@@ -121,6 +126,9 @@ type Battle = {
   foeKind: "trainer" | "leader" | "rival" | "wild";
   foeType: string;
   foeSpecies?: SpeciesId;
+  foeStage?: 0 | 1 | 2 | 3;
+  foeMove?: string;
+  foePower?: number;
   title: string;
   need: number;
   reveal: { correct: boolean; note: string } | null;
@@ -1069,6 +1077,7 @@ export function MonsterQuest({
   const [evo, setEvo] = useState<ReturnType<typeof evolutionMoment>>(null);
   const [bag, setBag] = useState<QuestBag | null>(null);
   const [offer, setOffer] = useState<SpeciesId | null>(null);
+  const [gift, setGift] = useState<string | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const bagRef = useRef<QuestBag | null>(null);
   const followRef = useRef<string | null>(null);
@@ -1126,7 +1135,7 @@ export function MonsterQuest({
     if (!musicOn()) return;
     setTownMusic(true, "canyon");
   }, [city?.id]);
-  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || Boolean(bag && !bag.starter) || Boolean(play) || trialOpen;
+  pausedRef.current = caseOpen || shopOpen || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || Boolean(bag && !bag.starter) || Boolean(play) || trialOpen || Boolean(gift);
 
   const sail = (dir: 1 | -1) => {
     if (!city) return;
@@ -1210,8 +1219,10 @@ export function MonsterQuest({
       busyRef.current = false;
       return;
     }
-    const foeMax = foeHealth(npc.kind, ids.length, Math.max(0, cities.findIndex((item) => item.id === city?.id)));
-    setLine(npc.line);
+    const cityIndex = Math.max(0, cities.findIndex((item) => item.id === city?.id));
+    const partner = partnerFor(city?.id ?? "stones", npc.kind === "leader" ? npc.name : npc.id, npc.kind);
+    const foeMax = foeHealth(npc.kind, ids.length, cityIndex);
+    setLine(npc.kind === "leader" ? `${npc.name} sends out ${partner.name}. Knock it out. A wrong answer and ${partner.move} hits you.` : npc.line);
     setBattle({
       testId,
       ids,
@@ -1221,9 +1232,13 @@ export function MonsterQuest({
       foeHp: foeMax,
       foeMax,
       right: 0,
-      foeName: npc.name,
+      foeName: partner.name,
       foeKind: npc.kind,
-      foeType: city?.element ?? "Normal",
+      foeType: speciesType[partner.species],
+      foeSpecies: partner.species,
+      foeStage: partner.stage,
+      foeMove: partner.move,
+      foePower: foeStrike(npc.kind, cityIndex),
       title: npc.testName,
       need: npc.need,
       reveal: null,
@@ -1279,6 +1294,9 @@ export function MonsterQuest({
       foeKind: "wild",
       foeType: speciesType[species],
       foeSpecies: species,
+      foeStage: stageOf(level),
+      foeMove: "Bash",
+      foePower: foeStrike("wild", cityIndex),
       title: "Tall grass",
       need: 1,
       reveal: null,
@@ -1443,10 +1461,12 @@ export function MonsterQuest({
     const lead = current.party[0];
     if (!lead) return;
     const move = battle.moveId ? moveDef(battle.moveId) : undefined;
-    const spent = move ? spendPp(lead, move.id) : true;
+    const spent = move ? spendPp(lead, move.id) : false;
     const mult = move ? effectiveness(move.kind, battle.foeType) : 1;
     const dealtBase = correct && spent ? Math.round((strike(lead, current) + (move?.power ?? 0)) * (battle.boost ? 2 : 1) * mult) : 0;
     const foeHp = Math.max(0, battle.foeHp - dealtBase);
+    const incoming = battle.foePower ?? 4;
+    const taken = battle.guard ? Math.max(1, Math.floor(incoming / 2)) : incoming;
     let grew = "";
     let hp = battle.you;
     let youMax = battle.youMax;
@@ -1460,14 +1480,15 @@ export function MonsterQuest({
       }
       youMax = maxHp(lead, current);
       hp = Math.min(youMax, hp + Math.max(0, youMax - battle.youMax));
-    } else hp = Math.max(0, hp - (battle.guard ? 1 : 4));
+    } else hp = Math.max(0, hp - taken);
     lead.hp = hp;
     const right = battle.right + (correct ? 1 : 0);
     const last = battle.index + 1 >= battle.ids.length;
-    const accurate = right / battle.ids.length >= battle.need;
     let prize = "";
-    const wonFight = last && hp > 0 && battle.foeKind !== "wild" && accurate;
-    const wildDown = last && hp > 0 && battle.foeKind === "wild" && foeHp <= 0;
+    let fainted = false;
+    const knocked = foeHp <= 0 && hp > 0;
+    const wonFight = knocked && battle.foeKind !== "wild";
+    const wildDown = knocked && battle.foeKind === "wild";
     if (wonFight || wildDown) {
       const amount = wonFight ? 16 + right * 2 : 10;
       prize = payExp(current, amount);
@@ -1475,24 +1496,27 @@ export function MonsterQuest({
       hp = Math.min(youMax, lead.hp);
       lead.hp = hp;
     }
-    if (hp <= 0 && !last) {
+    if (hp <= 0 && !knocked) {
       const bench = current.party.slice(1).find((creature) => creature.hp > 0);
       if (bench) {
         current.party = [bench, ...current.party.filter((creature) => creature.id !== bench.id)];
         hp = bench.hp;
         youMax = maxHp(bench, current);
         grew = [grew, `${nameOf(lead)} fainted. ${nameOf(bench)} stepped in.`].filter(Boolean).join(" ");
-      }
+      } else fainted = true;
     }
     saveBag(current);
     setBag(loadBag());
     let over: string | null = null;
     if (wonFight) {
       seal(true);
-      over = prize ? `You won. ${prize}` : "You won.";
+      over = prize ? `You won. ${battle.foeName} fainted. ${prize}` : `You won. ${battle.foeName} fainted.`;
     } else if (wildDown) {
       seal(false);
       over = prize ? `It fainted. ${prize} Throw a ball while it still has HP.` : "It fainted. Throw a ball while it still has HP.";
+    } else if (fainted) {
+      seal(false);
+      over = "You fainted. Their attack landed.";
     } else if (last && battle.foeKind !== "wild") {
       if (!prize) {
         prize = payExp(current, 8);
@@ -1500,27 +1524,27 @@ export function MonsterQuest({
         setBag(loadBag());
       }
       seal(false);
-      over = prize ? `Not enough. ${prize}` : "Not enough. You can try again.";
+      over = prize ? `${battle.foeName} is still standing. ${prize}` : `${battle.foeName} is still standing.`;
     } else if (last) {
       seal(false);
       over = "It got away.";
     }
-    const hit = !spent
-      ? "No PP left."
-      : correct
-        ? move?.power === 0
-          ? `${nameOf(lead)} used ${move.name}. Brace is up.`
-          : `${nameOf(lead)} used ${move?.name ?? "Bash"}. Hit for ${dealtBase}.${mult > 1 ? " It's super effective." : mult < 1 && mult > 0 ? " It's not very effective." : mult === 0 ? " It had no effect." : ""}`
-        : battle.guard
-          ? "The Guard held."
-          : "The other side hit you.";
+    const hit = !correct
+      ? `${battle.foeName} used ${battle.foeMove ?? "Bash"}. ${taken} damage.${battle.guard ? " Guard cut it." : ""}`
+      : !move
+        ? "Pick an attack. Nothing landed."
+        : !spent
+          ? `${move.name} is out of PP. Nothing landed.`
+          : move.power === 0
+            ? `${nameOf(lead)} used ${move.name}. Brace is up.`
+            : `${nameOf(lead)} used ${move.name}. Attack ${strike(lead, current)} + ${move.power}. Hit for ${dealtBase}.${mult > 1 ? " Super effective." : mult < 1 && mult > 0 ? " Not very effective." : mult === 0 ? " No effect." : ""}`;
     setBattle({
       ...battle,
       right,
       you: hp,
       youMax,
       foeHp,
-      fainted: false,
+      fainted,
       guard: correct && move?.power === 0 ? true : correct ? battle.guard : false,
       boost: correct ? false : battle.boost,
       menu: null,
@@ -1536,9 +1560,11 @@ export function MonsterQuest({
   const advance = () => {
     if (!battle?.reveal) return;
     if (battle.over) {
+      const wonLeader = battle.foeKind === "leader" && battle.over.startsWith("You won");
       const wonRival = battle.over.startsWith("You won") && battle.title.startsWith("Rival:");
       busyRef.current = false;
       setBattle(null);
+      if (wonLeader && city && !(loadBag().aces ?? []).includes(city.id)) setGift(city.id);
       if (wonRival && city) {
         setHold(city.id);
         go("route", 6, 9);
@@ -2139,11 +2165,11 @@ export function MonsterQuest({
               <div className="mt-1 h-3 border-2 border-black bg-white">
                 <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.foeHp / battle.foeMax) * 100)}%` }} />
               </div>
-              <p className="mt-1 text-xs">HP {Math.max(0, battle.foeHp)}/{battle.foeMax}</p>
+              <p className="mt-1 text-xs">HP {Math.max(0, battle.foeHp)}/{battle.foeMax} · {battle.foeMove ?? "Bash"} hits for {battle.foePower ?? 4}</p>
             </div>
             <div className="flex flex-col items-center">
-              {battle.foeKind === "wild" && battle.foeSpecies ? (
-                <img src={monSrc(battle.foeSpecies, stageOf(3 + Math.max(0, cities.findIndex((item) => item.id === city?.id))))} alt="" className="h-28 w-auto bg-transparent object-contain" />
+              {battle.foeSpecies ? (
+                <img src={monSrc(battle.foeSpecies, battle.foeStage ?? 0)} alt="" className="h-28 w-auto bg-transparent object-contain" />
               ) : (
                 <PixelActor kind={battle.foeKind} className="h-28" />
               )}
@@ -2161,7 +2187,7 @@ export function MonsterQuest({
               <div className="mt-1 h-3 border-2 border-black bg-white">
                 <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.you / battle.youMax) * 100)}%` }} />
               </div>
-              <p className="mt-1 text-xs">HP {Math.max(0, battle.you)}/{battle.youMax}</p>
+              <p className="mt-1 text-xs">HP {Math.max(0, battle.you)}/{battle.youMax} · Atk {lead ? strike(lead, bag ?? loadBag()) : 0}</p>
               {lead ? (
                 <div className="mt-1 h-2 border-2 border-black bg-white">
                   <div className="h-full bg-[#3d6fd8]" style={{ width: `${Math.min(100, (expPace(lead.exp).into / expPace(lead.exp).need) * 100)}%` }} />
@@ -2350,10 +2376,37 @@ export function MonsterQuest({
           </div>
         </div>
       ) : null}
+      {gift && GYM_GIFT[gift] ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3 sm:items-center">
+          <div className="w-full max-w-lg border-4 border-black bg-[#f8f8d8] p-3 text-black">
+            <p className="font-serif text-xl">The badge comes with a choice.</p>
+            <p className="mt-1 text-sm">Pick one. It is strong, and this gym will not offer another.</p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {GYM_GIFT[gift].map((pick) => (
+                <button
+                  key={pick.name}
+                  type="button"
+                  onClick={() => {
+                    const note = claimGift(gift, pick, Math.max(0, cities.findIndex((item) => item.id === gift)));
+                    setBag(loadBag());
+                    setLine(note);
+                    setGift(null);
+                  }}
+                  className="border-4 border-black bg-white p-2 text-left"
+                >
+                  <img src={monSrc(pick.species, pick.stage)} alt="" className="mx-auto h-20 w-20 object-contain" />
+                  <p className="text-sm font-bold">{pick.name}</p>
+                  <p className="text-xs">{speciesType[pick.species]} · {pick.move}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
       {shopOpen ? (
         <div className="absolute inset-x-0 top-16 z-20 max-h-[70vh] overflow-auto border-4 border-black bg-[#f8f8d8] p-3 text-black">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-bold tracking-wide uppercase">Town shop · Quest ${questCash()}</p>
+            <p className="text-xs font-bold tracking-wide uppercase">Town shop · Quest ${questCash()} · max HP {bag?.party[0] ? maxHp(bag.party[0], bag) : 0} · HP Up +{bag?.hpBonus ?? 0}</p>
             <button type="button" onClick={() => setShopOpen(false)} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">Close</button>
           </div>
           <ul className="mt-2 flex flex-col gap-2">

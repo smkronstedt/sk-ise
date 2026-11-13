@@ -54,6 +54,8 @@ export type QuestBag = {
   updatedAt: number;
   /** The exclusive starter this trainer chose. Missing means they still need to pick. */
   starter?: SpeciesId;
+  /** Gyms whose prize creature was already chosen. */
+  aces?: string[];
   nurseDay?: Record<string, string>;
 };
 
@@ -69,7 +71,7 @@ export const shopItems = [
   { id: "repel", name: "Repel", price: 12, note: "No wild ones for 30 steps." },
   { id: "guard", name: "Guard", price: 14, note: "The next hit you take is weak." },
   { id: "xattack", name: "X Attack", price: 14, note: "Your next hit hits twice as hard." },
-  { id: "hp", name: "HP Up", price: 40, note: "Permanent. +6 max HP." },
+  { id: "hp", name: "HP Up", price: 40, note: "Permanent +6 max HP. A wrong answer hurts a fixed amount, so more HP means you stay up longer." },
   { id: "protein", name: "Protein", price: 45, note: "Permanent. Hits harder." },
   { id: "candy", name: "Rare Candy", price: 50, note: "Goes in the bag. Use it on one creature for a level." },
   { id: "share", name: "Exp. Share", price: 75, note: "Once. The rest of the party gains experience." },
@@ -371,6 +373,7 @@ function starterBag(): QuestBag {
     mastersBought: 0,
     candies: 0,
     updatedAt: 1,
+    aces: [],
     nurseDay: {},
   };
 }
@@ -391,6 +394,7 @@ export function loadBag(): QuestBag {
       party: Array.isArray(parsed.party) ? parsed.party : [],
       box: parsed.box ?? [],
       starter: parsed.starter,
+      aces: parsed.aces ?? [],
       nurseDay: parsed.nurseDay ?? {},
       balls: {
         ball: parsed.balls?.ball ?? 8,
@@ -411,11 +415,114 @@ export function saveBag(bag: QuestBag) {
   if (typeof window !== "undefined") window.dispatchEvent(new Event("ise-progress"));
 }
 
-export function foeHealth(kind: "trainer" | "leader" | "rival" | "wild", count: number, cityIndex: number) {
-  if (kind === "wild") return 10 + cityIndex * 2;
-  if (kind === "leader") return 22 + count * 2;
-  if (kind === "rival") return 28;
-  return 12 + count * 2;
+export function foeHealth(kind: "trainer" | "leader" | "rival" | "wild", _count: number, cityIndex: number) {
+  if (kind === "wild") return 14 + cityIndex * 3;
+  if (kind === "leader") return 52 + cityIndex * 8;
+  if (kind === "rival") return 40 + cityIndex * 6;
+  return 26 + cityIndex * 5;
+}
+
+/** Damage a wrong answer deals. Leaders hit hardest, and later towns hit harder. */
+export function foeStrike(kind: "trainer" | "leader" | "rival" | "wild", cityIndex: number) {
+  const base = kind === "leader" ? 8 : kind === "rival" ? 7 : kind === "wild" ? 3 : 5;
+  return base + cityIndex;
+}
+
+export type Partner = { species: SpeciesId; stage: 0 | 1 | 2 | 3; name: string; move: string };
+
+export const GYM_ACE: Record<string, Partner> = {
+  stones: { species: "pebble", stage: 2, name: "Crag", move: "Stone Toss" },
+  oncology: { species: "coal", stage: 3, name: "Drake", move: "Crownfire" },
+  urogyn: { species: "dew", stage: 3, name: "Kraken", move: "Tidal" },
+  core: { species: "pip", stage: 3, name: "Monarch", move: "Royal Bloom" },
+  andrology: { species: "spark", stage: 3, name: "Tempest", move: "Stormcall" },
+  peds: { species: "pip", stage: 2, name: "Arbor", move: "Vine Whip" },
+  basic: { species: "wick", stage: 2, name: "Pyre", move: "Blaze" },
+  obstruction: { species: "pebble", stage: 2, name: "Crag", move: "Ground Crack" },
+};
+
+export const GYM_GIFT: Record<string, Partner[]> = {
+  stones: [
+    { species: "pebble", stage: 2, name: "Crag", move: "Stone Toss" },
+    { species: "coal", stage: 2, name: "Inferno", move: "Blaze" },
+    { species: "spark", stage: 2, name: "Storm", move: "Thunder" },
+  ],
+  oncology: [
+    { species: "coal", stage: 3, name: "Drake", move: "Crownfire" },
+    { species: "wick", stage: 2, name: "Pyre", move: "Blaze" },
+    { species: "dew", stage: 2, name: "Levi", move: "Tidal" },
+  ],
+  urogyn: [
+    { species: "dew", stage: 3, name: "Kraken", move: "Tidal" },
+    { species: "drop", stage: 2, name: "Tide", move: "Surge" },
+    { species: "pip", stage: 2, name: "Arbor", move: "Vine Whip" },
+  ],
+  core: [
+    { species: "pip", stage: 3, name: "Monarch", move: "Royal Bloom" },
+    { species: "spark", stage: 2, name: "Storm", move: "Thunder" },
+    { species: "pebble", stage: 2, name: "Crag", move: "Stone Toss" },
+  ],
+  andrology: [
+    { species: "spark", stage: 3, name: "Tempest", move: "Stormcall" },
+    { species: "coal", stage: 2, name: "Inferno", move: "Blaze" },
+    { species: "wick", stage: 2, name: "Pyre", move: "Flare" },
+  ],
+  peds: [
+    { species: "pip", stage: 2, name: "Arbor", move: "Vine Whip" },
+    { species: "sprout", stage: 2, name: "Canopy", move: "Bloom Burst" },
+    { species: "dew", stage: 1, name: "Coral", move: "Bubble" },
+  ],
+  basic: [
+    { species: "wick", stage: 2, name: "Pyre", move: "Blaze" },
+    { species: "sprout", stage: 2, name: "Canopy", move: "Bloom Burst" },
+    { species: "drop", stage: 2, name: "Tide", move: "Surge" },
+  ],
+  obstruction: [
+    { species: "pebble", stage: 2, name: "Crag", move: "Ground Crack" },
+    { species: "drop", stage: 2, name: "Tide", move: "Surge" },
+    { species: "coal", stage: 1, name: "Blaze", move: "Cinder" },
+  ],
+};
+
+const TRAINER_POOL: Record<string, SpeciesId[]> = {
+  stones: ["pebble", "sprout"],
+  oncology: ["wick", "coal"],
+  urogyn: ["drop", "dew"],
+  core: ["pip", "spark"],
+  andrology: ["spark", "wick"],
+  peds: ["pip", "sprout"],
+  basic: ["wick", "sprout"],
+  obstruction: ["pebble", "drop"],
+};
+
+function nameHash(name: string) {
+  let n = 0;
+  for (let i = 0; i < name.length; i += 1) n += name.charCodeAt(i) * (i + 3);
+  return n;
+}
+
+export function partnerFor(cityId: string, name: string, kind: "trainer" | "leader" | "rival" | "wild"): Partner {
+  if (kind === "leader" && GYM_ACE[cityId]) return GYM_ACE[cityId];
+  if (kind === "rival") return { species: "coal", stage: 2, name: "Inferno", move: "Cinder" };
+  const pool = TRAINER_POOL[cityId] ?? ["sprout"];
+  const species = pool[nameHash(name) % pool.length];
+  const stage = (nameHash(name) % 2) as 0 | 1;
+  const move = species === "pebble" ? "Stone Toss" : species === "spark" ? "Jolt" : species === "drop" || species === "dew" ? "Spray" : species === "wick" || species === "coal" ? "Flare" : "Leaf Cut";
+  return { species, stage, name: lines[species].names[Math.min(stage, lines[species].names.length - 1)], move };
+}
+
+export function claimGift(cityId: string, pick: Partner, cityIndex: number): string {
+  const bag = loadBag();
+  const taken = bag.aces ?? [];
+  if (taken.includes(cityId)) return "You already chose this gym's creature.";
+  const floor = pick.stage >= 3 ? 28 : pick.stage === 2 ? 16 : 8;
+  const creature = makeCreature(pick.species, Math.max(floor, 8 + cityIndex * 2), bag.hpBonus);
+  if (bag.party.length < 6) bag.party.push(creature);
+  else bag.box.push(creature);
+  bag.aces = [...taken, cityId];
+  saveBag(bag);
+  const where = bag.party.includes(creature) ? "your party" : "the box";
+  return `${pick.name} joins ${where} at level ${levelOf(creature.exp)}.`;
 }
 
 export function grantExp(creature: Creature, amount: number) {
