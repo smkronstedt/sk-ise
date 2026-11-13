@@ -1427,7 +1427,7 @@ export function MonsterQuest({
       guard: correct && move?.power === 0 ? true : correct ? battle.guard : false,
       boost: correct ? false : battle.boost,
       menu: null,
-      moveId: battle.committed ? battle.moveId : undefined,
+      moveId: undefined,
       reveal: {
         correct,
         note: [hit, grew, prize, `Correct: ${"ABCDE"[question.answer]}. ${question.choices[question.answer]}`].filter(Boolean).join(" "),
@@ -1453,7 +1453,7 @@ export function MonsterQuest({
       setBattle({ ...battle, over: battle.foeKind === "wild" ? "It got away." : "Not enough. You can try again.", menu: null });
       return;
     }
-    setBattle({ ...battle, index: battle.index + 1, reveal: null, menu: battle.committed ? "ask" : null });
+    setBattle({ ...battle, index: battle.index + 1, reveal: null, menu: "fight", moveId: undefined, committed: false });
   };
 
   const run = () => {
@@ -1939,7 +1939,22 @@ export function MonsterQuest({
           </button>
         </div>
       ) : null}
-      <div className="flex items-center justify-between gap-3 border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
+      <div className="border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
+        <div className="flex gap-1 overflow-x-auto pb-2">
+          {cities.map((item) => {
+            const earned = stops.some((stop) => stop.kind === "gym" && stop.city.id === item.id && stop.done);
+            return (
+              <div
+                key={item.id}
+                title={earned ? `${item.element} badge. ${item.leader} is beaten.` : `${item.element} badge. ${item.leader} is still standing.`}
+                className={`shrink-0 border-4 px-2 py-1 text-xs font-bold ${earned ? "border-black bg-white" : "border-[#c8b56a] bg-[#efe6c0] text-black/40"}`}
+              >
+                {item.element}{earned ? " · got" : ""}
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="font-serif text-xl">
             {scene === "home"
@@ -2003,6 +2018,7 @@ export function MonsterQuest({
             <button type="button" aria-label="Right" onPointerDown={() => keysRef.current.add("arrowright")} onPointerUp={() => keysRef.current.delete("arrowright")} onPointerLeave={() => keysRef.current.delete("arrowright")} className="min-h-11 min-w-11 border-4 border-black bg-white text-sm font-bold">→</button>
           </div>
         </div>
+        </div>
       </div>
       {battle ? (
         <div>
@@ -2048,11 +2064,11 @@ export function MonsterQuest({
         </div>
           <div className="mt-3 border-4 border-double border-black bg-[#f8f8d8] p-3">
             <p className="text-xs font-bold uppercase">{battle.title}</p>
-            {battle.menu === "ask" && question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
-            {question?.image && (battle.menu === "ask" || battle.reveal) ? (
+            {(battle.menu === "ask" || battle.menu === "fight") && question ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
+            {question?.image && (battle.menu === "ask" || battle.menu === "fight" || battle.reveal) ? (
               <img src={question.image} alt="Arteries to the testis" className="mt-2 max-h-56 w-full bg-white object-contain" />
             ) : null}
-            {!battle.menu && !battle.reveal && !battle.committed ? <p className="mt-2 text-sm font-bold">Fight the whole set, or run. This is the only time it asks.</p> : null}
+            {!battle.menu && !battle.reveal && !battle.over ? <p className="mt-2 text-sm font-bold">Pick an attack for this question, or run.</p> : null}
             {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
             {battle.reveal && question ? (
               <p className="mt-2 text-sm font-bold">Correct answer: {"ABCDE"[question.answer]}. {question.choices[question.answer]}</p>
@@ -2068,7 +2084,7 @@ export function MonsterQuest({
               </p>
             ) : null}
             {battle.over ? <p className="mt-2 text-sm font-bold">{battle.over} {battle.right}/{battle.ids.length}.</p> : null}
-            {!battle.reveal && !battle.fainted && !battle.over && !battle.menu && !battle.committed ? (
+            {!battle.reveal && !battle.fainted && !battle.over && !battle.menu ? (
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => setBattle({ ...battle, menu: "fight" })} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Fight</button>
                 <button type="button" onClick={run} className="min-h-14 border-4 border-black bg-white text-sm font-bold">Run</button>
@@ -2081,7 +2097,7 @@ export function MonsterQuest({
                     key={move.id}
                     type="button"
                     disabled={move.pp <= 0}
-                    onClick={() => setBattle({ ...battle, committed: true, menu: "ask", moveId: move.id })}
+                    onClick={() => setBattle({ ...battle, committed: false, menu: "ask", moveId: move.id })}
                     className="min-h-14 border-4 border-black bg-white px-2 text-left text-sm font-bold disabled:opacity-40"
                   >
                     {move.def.name}
