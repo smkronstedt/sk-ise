@@ -9,6 +9,9 @@ import { cashForMode } from "@/lib/desk/purse";
 import { deskModes, loadMode, saveMode, type DeskMode } from "@/lib/desk/modes";
 import { syncDeviceProgress } from "@/lib/progress-sync";
 import { challengeBoard } from "@/lib/challenges-api";
+import { BadgeRow } from "@/components/desk/badge";
+import { useDesk } from "@/lib/desk/provider";
+import { badgeElements } from "@/lib/desk/route";
 
 const study = [
   { to: "/bank", label: "Bank" },
@@ -35,6 +38,8 @@ export function Shell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const dueCount = typeof window !== "undefined" ? loadCards().filter((c) => c.due <= Date.now() && c.source !== "full").length : 0;
   const session = authClient.useSession();
+  const desk = useDesk();
+  const gymBadges = badgeElements(desk.state.tests);
   const [syncNote, setSyncNote] = useState("Saved on this device");
   const [mode, setMode] = useState<DeskMode>("classic");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -256,6 +261,7 @@ export function Shell({ children }: { children: ReactNode }) {
           {authEnabled ? (
             session.data?.user ? (
               <div className="flex items-center gap-2">
+                <BadgeRow elements={gymBadges} />
                 <div className="relative">
                 <button
                   type="button"

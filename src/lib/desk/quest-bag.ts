@@ -52,6 +52,9 @@ export type QuestBag = {
   mastersBought: number;
   candies: number;
   updatedAt: number;
+  hpUps?: number;
+  proteins?: number;
+  prime?: "guard" | "boost";
   /** The exclusive starter this trainer chose. Missing means they still need to pick. */
   starter?: SpeciesId;
   /** Gyms whose prize creature was already chosen. */
@@ -71,8 +74,8 @@ export const shopItems = [
   { id: "repel", name: "Repel", price: 12, note: "No wild ones for 30 steps." },
   { id: "guard", name: "Guard", price: 14, note: "The next hit you take is weak." },
   { id: "xattack", name: "X Attack", price: 14, note: "Your next hit hits twice as hard." },
-  { id: "hp", name: "HP Up", price: 40, note: "Permanent +6 max HP. A wrong answer hurts a fixed amount, so more HP means you stay up longer." },
-  { id: "protein", name: "Protein", price: 45, note: "Permanent. Hits harder." },
+  { id: "hp", name: "HP Up", price: 40, note: "Held item. Use it outside a fight. +6 max HP." },
+  { id: "protein", name: "Protein", price: 45, note: "Held item. Use it outside a fight. Hits harder." },
   { id: "candy", name: "Rare Candy", price: 50, note: "Goes in the bag. Use it on one creature for a level." },
   { id: "share", name: "Exp. Share", price: 75, note: "Once. The rest of the party gains experience." },
   { id: "charm", name: "Catch Charm", price: 90, note: "Once. Balls work better. Not a Master Ball." },
@@ -373,6 +376,8 @@ function starterBag(): QuestBag {
     mastersBought: 0,
     candies: 0,
     updatedAt: 1,
+    hpUps: 0,
+    proteins: 0,
     aces: [],
     nurseDay: {},
   };
@@ -395,6 +400,9 @@ export function loadBag(): QuestBag {
       box: parsed.box ?? [],
       starter: parsed.starter,
       aces: parsed.aces ?? [],
+      hpUps: parsed.hpUps ?? 0,
+      proteins: parsed.proteins ?? 0,
+      prime: parsed.prime,
       nurseDay: parsed.nurseDay ?? {},
       balls: {
         ball: parsed.balls?.ball ?? 8,
@@ -593,12 +601,15 @@ export function buyItem(id: ShopId, badges: number): string {
   if (id === "charm") bag.charm = true;
   if (id === "ball" || id === "great" || id === "ultra" || id === "master") bag.balls[id] += 1;
   if (id === "master") bag.mastersBought += 1;
-  if (id === "hp") {
-    bag.hpBonus += 6;
-    for (const creature of [...bag.party, ...bag.box]) creature.hp += 6;
-  }
-  if (id === "protein") bag.power += 1;
   let note = `Bought ${item.name}.`;
+  if (id === "hp") {
+    bag.hpUps = (bag.hpUps ?? 0) + 1;
+    note = "HP Up is in the bag. Use it outside a fight and max HP goes up.";
+  }
+  if (id === "protein") {
+    bag.proteins = (bag.proteins ?? 0) + 1;
+    note = "Protein is in the bag. Use it outside a fight and attack goes up.";
+  }
   if (id === "candy") {
     bag.candies += 1;
     note = "Rare Candy is in the bag. Open Start, then use it on the one you choose.";
@@ -648,6 +659,49 @@ export function useHeld(kind: "candy" | "potion" | "super" | "revive" | "max", i
   }
   saveBag(bag);
   return `${nameOf(creature)} got back up.`;
+}
+
+export function useVitamin(kind: "hp" | "protein"): string {
+  const bag = loadBag();
+  if (kind === "hp") {
+    if ((bag.hpUps ?? 0) <= 0) return "No HP Up in the bag.";
+    bag.hpUps = (bag.hpUps ?? 0) - 1;
+    bag.hpBonus += 6;
+    for (const creature of [...bag.party, ...bag.box]) creature.hp += 6;
+    saveBag(bag);
+    const lead = bag.party[0];
+    return lead ? `Max HP is ${maxHp(lead, bag)}. A wrong answer takes less of the bar.` : "Max HP went up.";
+  }
+  if ((bag.proteins ?? 0) <= 0) return "No Protein in the bag.";
+  bag.proteins = (bag.proteins ?? 0) - 1;
+  bag.power += 1;
+  saveBag(bag);
+  const lead = bag.party[0];
+  return lead ? `${nameOf(lead)} hits for ${strike(lead, bag)} before the move.` : "Attack went up.";
+}
+
+export function primeItem(kind: "guard" | "xattack"): string {
+  const bag = loadBag();
+  if (kind === "guard") {
+    if (bag.guards <= 0) return "No Guards.";
+    bag.guards -= 1;
+    bag.prime = "guard";
+  } else {
+    if (bag.xAttacks <= 0) return "No X Attacks.";
+    bag.xAttacks -= 1;
+    bag.prime = "boost";
+  }
+  saveBag(bag);
+  return kind === "guard" ? "Guard is set for the next fight." : "The next fight hits harder.";
+}
+
+export function takePrime(): "guard" | "boost" | undefined {
+  const bag = loadBag();
+  const prime = bag.prime;
+  if (!prime) return undefined;
+  bag.prime = undefined;
+  saveBag(bag);
+  return prime;
 }
 
 export function drink(kind: "potion" | "super", index = 0): string {

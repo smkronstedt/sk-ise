@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Shell } from "@/components/desk/shell";
+import { BadgeRow } from "@/components/desk/badge";
+import { useDesk } from "@/lib/desk/provider";
+import { badgeElements } from "@/lib/desk/route";
 import { authClient } from "@/lib/auth/client";
 import { loadProfile, saveProfile } from "@/lib/account-api";
 
@@ -10,6 +13,8 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const session = authClient.useSession();
+  const desk = useDesk();
+  const gymBadges = badgeElements(desk.state.tests);
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [image, setImage] = useState("");
@@ -78,6 +83,10 @@ function ProfilePage() {
             Photo
             <input type="file" accept="image/*" onChange={(event) => onPhoto(event.target.files?.[0])} className="mt-1 block text-sm font-normal" />
           </label>
+          <div>
+            <p className="font-serif text-2xl">{name || "Your name"}</p>
+            <BadgeRow elements={gymBadges} size="md" />
+          </div>
         </div>
         <label className="text-sm font-semibold">
           Name

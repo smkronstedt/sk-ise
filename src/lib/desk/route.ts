@@ -35,7 +35,7 @@ export const cities: City[] = [
     id: "oncology",
     element: "Fire",
     city: "Onco Harbor",
-    leader: "Sera Voss",
+    leader: "Señor Guilherme",
     subject: "Oncology",
     hall: "/field/gym-fire.jpg",
     trainers: [
