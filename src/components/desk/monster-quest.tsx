@@ -191,6 +191,18 @@ function buildHome(): World {
   };
 }
 
+const gymPictures: Record<string, HTMLImageElement> = {};
+
+function gymHall(src: string) {
+  if (!gymPictures[src]) {
+    const img = new Image();
+    img.src = src;
+    gymPictures[src] = img;
+  }
+  const img = gymPictures[src];
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
 function parkAtHome() {
   if (typeof localStorage === "undefined") return;
   const key = "callroom-quest-parked-home-v2";
@@ -1669,18 +1681,18 @@ export function MonsterQuest({
       const rect = canvas.getBoundingClientRect();
       const x = Math.min(cols - 1, Math.max(0, Math.floor(((event.clientX - rect.left) / rect.width) * cols)));
       const y = Math.min(rows - 1, Math.max(0, Math.floor(((event.clientY - rect.top) / rect.height) * rows)));
-      const npc = map.npcs.find((one) => one.x === x && one.y === y);
-      if (npc && Math.abs(npc.x - player.x) + Math.abs(npc.y - player.y) <= 1) {
-        apiRef.current.talk(npc);
+      const person = map.npcs.find((one) => one.x === x && one.y - y >= 0 && one.y - y <= 1);
+      if (person && Math.abs(person.x - player.x) + Math.abs(person.y - player.y) <= 1) {
+        apiRef.current.talk(person);
         return;
       }
-      if (npc) {
+      if (person) {
         const nextTo = [[0, -1], [0, 1], [-1, 0], [1, 0]]
-          .map(([dx, dy]) => ({ x: npc.x + dx, y: npc.y + dy }))
+          .map(([dx, dy]) => ({ x: person.x + dx, y: person.y + dy }))
           .filter((spot) => canWalk(map, spot.x, spot.y))
           .sort((a, b) => Math.abs(a.x - player.x) + Math.abs(a.y - player.y) - (Math.abs(b.x - player.x) + Math.abs(b.y - player.y)))[0];
         if (nextTo) {
-          pending = npc;
+          pending = person;
           routeTo(nextTo.x, nextTo.y);
         }
         return;
@@ -1782,7 +1794,14 @@ export function MonsterQuest({
       ctx.imageSmoothingEnabled = true;
       ctx.clearRect(0, 0, cols * TILE, rows * TILE);
       if (scene === "center") drawCenter(ctx, frame);
-      else {
+      else if (scene === "gym" && here?.hall && gymHall(here.hall)) {
+        ctx.drawImage(gymHall(here.hall) as HTMLImageElement, 0, 0, cols * TILE, rows * TILE);
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            if (map.tiles[y][x] === 4) drawProp(ctx, 4, x, y, true);
+          }
+        }
+      } else {
         for (let y = 0; y < rows; y++) {
           for (let x = 0; x < cols; x++) {
             const tile = map.tiles[y][x];
@@ -1873,7 +1892,7 @@ export function MonsterQuest({
       drawActor(ctx, drawX, drawY, "player", stepPhase, player.face);
       const washIndex = Math.max(0, cities.findIndex((item) => item.id === id));
       let wash = ["#d7b98a", "#7eb6d6", "#f0e27a", "#7dcea0", "#c39bd3", "#e6d5f2", "#e59866", "#c4a484"][washIndex % 8];
-      let washAlpha = scene === "center" ? 0 : scene === "town" || scene === "home" ? 0.16 : 0.05;
+      let washAlpha = scene === "center" || scene === "gym" ? 0 : scene === "town" || scene === "home" ? 0.16 : 0.05;
       if (scene === "route" && id === "stones") {
         wash = "#241433";
         washAlpha = 0.34;
