@@ -12,7 +12,7 @@ import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } 
 import { DEX, loadField, portraitFor } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, DeskState, TestBlock } from "@/lib/desk/types";
-import { drawActor, drawCreature, drawGround, drawProp, lookFor, PixelActor, TILE } from "@/components/desk/quest-art";
+import { drawActor, drawCreature, drawGround, drawProp, DressedActor, lookFor, PixelActor, TILE } from "@/components/desk/quest-art";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
 import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
 import { isPopqText, PopqFigure } from "@/components/desk/popq-figure";
@@ -132,6 +132,8 @@ type Battle = {
   foeStage?: 0 | 1 | 2 | 3;
   foeMove?: string;
   foePower?: number;
+  trainerLabel?: string;
+  trainerCoat?: string;
   title: string;
   need: number;
   reveal: { correct: boolean; note: string } | null;
@@ -1243,6 +1245,8 @@ export function MonsterQuest({
       foeStage: partner.stage,
       foeMove: partner.move,
       foePower: foeStrike(npc.kind, cityIndex),
+      trainerLabel: npc.name,
+      trainerCoat: coatFor(npc.kind, city?.id ?? "stones", npc.name),
       title: npc.testName,
       need: npc.need,
       reveal: null,
@@ -2163,21 +2167,21 @@ export function MonsterQuest({
         <div className="relative bg-[#7ec8e3] px-3 pt-3 pb-2 text-black">
           <div className="absolute inset-x-0 bottom-0 h-24 bg-[#5eae45]" />
           <div className="absolute inset-x-0 bottom-0 h-8 bg-[#498a36]" />
-          <div className="relative grid grid-cols-[1fr_8rem] items-end gap-2">
+          <div className="relative grid grid-cols-[1fr_auto] items-end gap-2">
             <div className="mb-10 border-4 border-black bg-[#f8f8d8] p-2">
-              <p className="text-xs font-bold uppercase">{battle.foeName} · {battle.foeType}</p>
+              <p className="text-xs font-bold uppercase">{battle.foeKind === "wild" ? battle.foeName : `${battle.trainerLabel} · ${battle.foeName}`} · {battle.foeType}</p>
               <div className="mt-1 h-3 border-2 border-black bg-white">
                 <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.foeHp / battle.foeMax) * 100)}%` }} />
               </div>
               <p className="mt-1 text-xs">HP {Math.max(0, battle.foeHp)}/{battle.foeMax} · {battle.foeMove ?? "Bash"} hits for {battle.foePower ?? 4}</p>
             </div>
-            <div className="flex flex-col items-center">
+            <div className="flex items-end justify-end gap-1">
+              {battle.foeKind !== "wild" ? (
+                <DressedActor kind={battle.foeKind === "leader" ? "leader" : battle.foeKind === "rival" ? "rival" : "trainer"} coat={battle.trainerCoat} className="h-28" />
+              ) : null}
               {battle.foeSpecies ? (
-                <img src={monSrc(battle.foeSpecies, battle.foeStage ?? 0)} alt="" className="h-28 w-auto bg-transparent object-contain" />
-              ) : (
-                <PixelActor kind={battle.foeKind} className="h-28" />
-              )}
-              <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
+                <img src={monSrc(battle.foeSpecies, battle.foeStage ?? 0)} alt="" className="h-20 w-auto bg-transparent object-contain" />
+              ) : null}
             </div>
           </div>
           <div className="relative mt-1 grid grid-cols-[8rem_1fr] items-end gap-2">

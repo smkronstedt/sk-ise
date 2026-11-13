@@ -276,3 +276,17 @@ export function PixelActor({ kind, className = "h-32" }: { kind: ActorKind; clas
   }, [kind]);
   return <img src={artSrc[kind]} alt="" className={`${className} w-auto max-w-none object-contain object-bottom [image-rendering:pixelated] ${ready ? "" : "opacity-0"}`} />;
 }
+
+export function DressedActor({ kind, coat, className = "h-28" }: { kind: ActorKind; coat?: string; className?: string }) {
+  const [src, setSrc] = useState(artSrc[kind]);
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      art[kind] = img;
+      const sheet = coat ? clothesSheet(kind, coat) : null;
+      setSrc(sheet ? sheet.toDataURL() : artSrc[kind]);
+    };
+    img.src = artSrc[kind];
+  }, [kind, coat]);
+  return <img src={src} alt="" className={`${className} w-auto max-w-none object-contain object-bottom`} />;
+}

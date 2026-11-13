@@ -10,13 +10,63 @@ const tone: Record<string, { rim: string; face: string; mark: string }> = {
 };
 
 function Mark({ element, color }: { element: string; color: string }) {
-  if (element === "Fire") return <path d="M24 12c2 4 6 5 6 10a6 6 0 1 1-12 0c0-3 2-4 3-7 1 2 2 3 3-3z" fill={color} />;
-  if (element === "Water") return <path d="M24 12c4 5 8 8 8 13a8 8 0 1 1-16 0c0-5 4-8 8-13z" fill={color} />;
-  if (element === "Electric") return <path d="M26 11h-6l-2 9h5l-2 10 9-13h-6z" fill={color} />;
-  if (element === "Grass") return <path d="M24 12c-6 4-8 10-8 14 4-2 6-2 8 2 2-4 4-4 8-2 0-4-2-10-8-14z" fill={color} />;
-  if (element === "Psychic") return <circle cx="24" cy="21" r="5" fill="none" stroke={color} strokeWidth="2.5" />;
-  if (element === "Poison") return <circle cx="24" cy="20" r="5" fill={color} />;
-  if (element === "Ground") return <path d="M14 26h20l-3-6-4 3-3-5-4 4-3-2z" fill={color} />;
+  if (element === "Rock") {
+    return (
+      <g fill={color}>
+        <ellipse cx="24" cy="27" rx="10" ry="5" />
+        <ellipse cx="21" cy="21" rx="7" ry="4.5" />
+        <ellipse cx="27" cy="16" rx="4.5" ry="3.2" />
+      </g>
+    );
+  }
+  if (element === "Fire") {
+    return <path d="M24 8c1 5 8 7 8 14a8 8 0 0 1-16 0c0-4 3-6 4-9 1 3 2 4 4-5z" fill={color} />;
+  }
+  if (element === "Water") {
+    return (
+      <g fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round">
+        <path d="M10 16c2.4 0 2.4-3 4.8-3s2.4 3 4.8 3 2.4-3 4.8-3 2.4 3 4.8 3" />
+        <path d="M10 22c2.4 0 2.4-3 4.8-3s2.4 3 4.8 3 2.4-3 4.8-3 2.4 3 4.8 3" />
+        <path d="M10 28c2.4 0 2.4-3 4.8-3s2.4 3 4.8 3 2.4-3 4.8-3 2.4 3 4.8 3" />
+      </g>
+    );
+  }
+  if (element === "Electric") return <path d="M27 8h-8l-3 11h6l-3 12 12-15h-7z" fill={color} />;
+  if (element === "Grass") {
+    return (
+      <g fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
+        <circle cx="24" cy="16" r="8" />
+        <path d="M24 8v16M16 16h16M18.5 10.5l11 11M29.5 10.5l-11 11" />
+        <path d="M24 24v8M20 32h8" />
+      </g>
+    );
+  }
+  if (element === "Psychic") {
+    return (
+      <g fill="none" stroke={color} strokeWidth="2">
+        <circle cx="24" cy="20" r="8" />
+        <circle cx="24" cy="20" r="3" fill={color} stroke="none" />
+        <path d="M16 28c3 3 5 4 8 4s5-1 8-4" />
+      </g>
+    );
+  }
+  if (element === "Poison") {
+    return (
+      <g fill={color}>
+        <path d="M20 10h8l-1 6h3l-6 14-6-14h3z" />
+        <circle cx="18" cy="28" r="2" />
+        <circle cx="30" cy="27" r="1.6" />
+      </g>
+    );
+  }
+  if (element === "Ground") {
+    return (
+      <g fill="none" stroke={color} strokeWidth="2">
+        <circle cx="24" cy="21" r="9" />
+        <path d="M15 21h18M24 12c2 3 2 6 0 9s-2 6 0 9M24 12c-2 3-2 6 0 9s2 6 0 9" />
+      </g>
+    );
+  }
   return <path d="M24 13l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z" fill={color} />;
 }
 
