@@ -2315,7 +2315,7 @@ export function MonsterQuest({
           <p className="text-sm font-bold">{line}</p>
           {notice ? <p className="mt-1 text-sm">{notice}</p> : null}
           <p className="mt-1 text-xs">West door is the shop. The door with the red cross is the Center. It heals everyone, free. {bag?.repelLeft ? `Repel ${bag.repelLeft}. ` : ""}{badges}/{cities.length} badges.{champion ? " Champion." : ""}</p>
-          <p className="mt-2 text-xs font-bold">Out follows you and fights. Tap Switch to change who is out. One Rare Candy is shared. You have {bag?.candies ?? 0}.</p>
+          <p className="mt-2 text-xs font-bold">The six with you. Change them in Start, then the guide. Out walks and fights. HP already +{bag?.hpBonus ?? 0}. Attack already +{bag?.power ?? 0}.</p>
           {bag ? (
             <div className="mt-2 flex gap-2 overflow-x-auto">
               {bag.party.map((creature, index) => (
@@ -2330,24 +2330,6 @@ export function MonsterQuest({
                     type="button"
                     disabled={bag.candies <= 0}
                     onClick={() => { setNotice(useHeld("candy", index, false)); setBag(loadBag()); }}
-                    className="mt-1 min-h-11 w-full border-4 border-black bg-[#fff4a8] text-[11px] font-bold disabled:opacity-40"
-                  >
-                    Candy
-                  </button>
-                </div>
-              ))}
-              {bag.box.map((creature, index) => (
-                <div key={creature.id} className="min-w-28 border-4 border-[#c8b56a] bg-white p-1">
-                  <img src={creatureSrc(creature)} alt="" className="mx-auto h-14 w-14 rounded-full object-cover" />
-                  <p className="truncate text-[11px] font-bold">{nameOf(creature)} Lv {levelOf(creature.exp)}</p>
-                  <p className="text-[11px]">HP {creature.hp}/{maxHp(creature, bag)}</p>
-                  <button type="button" onClick={() => { swapBox(index); setBag(loadBag()); }} className="mt-1 min-h-11 w-full border-4 border-black bg-white text-[11px] font-bold">
-                    Send out
-                  </button>
-                  <button
-                    type="button"
-                    disabled={bag.candies <= 0}
-                    onClick={() => { setNotice(useHeld("candy", index, true)); setBag(loadBag()); }}
                     className="mt-1 min-h-11 w-full border-4 border-black bg-[#fff4a8] text-[11px] font-bold disabled:opacity-40"
                   >
                     Candy

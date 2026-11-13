@@ -392,8 +392,16 @@ export function loadBag(): QuestBag {
   try {
     const raw = localStorage.getItem(BAG_KEY);
     if (!raw) return starterBag();
-    const parsed = JSON.parse(raw) as QuestBag;
-    return clamp({
+    const parsed = JSON.parse(raw) as QuestBag & { hpUps?: number; proteins?: number };
+    const legacyVitamins = !Object.prototype.hasOwnProperty.call(parsed, "hpUps") && !Object.prototype.hasOwnProperty.call(parsed, "proteins");
+    if (legacyVitamins) {
+      const refundHp = Math.floor((parsed.hpBonus ?? 0) / 6);
+      parsed.hpUps = refundHp;
+      parsed.hpBonus = (parsed.hpBonus ?? 0) - refundHp * 6;
+      parsed.proteins = parsed.power ?? 0;
+      parsed.power = 0;
+    }
+    const bag = clamp({
       ...starterBag(),
       ...parsed,
       party: Array.isArray(parsed.party) ? parsed.party : [],
@@ -412,6 +420,8 @@ export function loadBag(): QuestBag {
       },
       candies: parsed.candies ?? 0,
     });
+    if (legacyVitamins) saveBag(bag);
+    return bag;
   } catch {
     return starterBag();
   }
