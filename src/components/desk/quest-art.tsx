@@ -102,7 +102,7 @@ export function drawActor(ctx: CanvasRenderingContext2D, tx: number, ty: number,
   ctx.restore();
 }
 
-export function drawCreature(ctx: CanvasRenderingContext2D, tx: number, ty: number, file: string, face: QuestFace, step: number) {
+export function drawCreature(ctx: CanvasRenderingContext2D, tx: number, ty: number, file: string, face: QuestFace, step: number, evolved = false) {
   const key = `mon:${file}`;
   if (!art[key]) {
     const img = new Image();
@@ -110,7 +110,8 @@ export function drawCreature(ctx: CanvasRenderingContext2D, tx: number, ty: numb
     art[key] = img;
   }
   const bob = step > 0 && Math.floor(step * 8) % 2 ? 2 : 0;
-  const height = TILE * 1.7;
+  // Player is TILE * 1.85. Base forms ~20% smaller. Evolved forms grow closer to player size.
+  const height = evolved ? TILE * 1.75 : TILE * 1.48;
   const width = height * 0.85;
   const baseX = tx * TILE;
   const baseY = ty * TILE;
