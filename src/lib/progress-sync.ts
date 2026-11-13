@@ -1,5 +1,5 @@
 import { loadProgress, saveProgress } from "@/lib/progress-api";
-import { loadActivity, mergeActivity, saveActivity, dayKey, type DayLog } from "@/lib/desk/activity";
+import { loadActivity, mergeActivity, saveActivity, dayKey, alignActivityClock, type DayLog } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadDaily, mergeDaily, saveDaily } from "@/lib/desk/daily";
 import type { ItemAnswer, TestBlock } from "@/lib/desk/types";
@@ -372,6 +372,47 @@ export async function ensureCorrectLog() {
   }
 }
 
+type CountedTest = { createdAt?: number; finishedAt?: number; answers?: Record<string, { choice?: number | null; submitted?: boolean }> };
+
+/** Tests finished today count toward today's rank and streak even if the live log was missed. */
+export function backfillActivity(days: Record<string, DayLog>, tests: CountedTest[]) {
+  const buckets = new Map<string, { questions: number; correct: number }>();
+  for (const test of tests) {
+    const stamp = test.finishedAt || test.createdAt;
+    if (!stamp) continue;
+    const key = dayKey(new Date(stamp));
+    let questions = 0;
+    let correct = 0;
+    for (const [id, answer] of Object.entries(test.answers ?? {})) {
+      if (!answer?.submitted || answer.choice == null) continue;
+      questions += 1;
+      const question = getQuestion(id);
+      if (question && answer.choice === question.answer) correct += 1;
+    }
+    const have = buckets.get(key) ?? { questions: 0, correct: 0 };
+    buckets.set(key, { questions: have.questions + questions, correct: have.correct + correct });
+  }
+  const out: Record<string, DayLog> = { ...days };
+  for (const [key, add] of buckets) {
+    const row = out[key] ?? { questions: 0, cards: 0 };
+    out[key] = {
+      ...row,
+      questions: Math.max(row.questions ?? 0, add.questions),
+      cards: row.cards ?? 0,
+      correct: Math.max(row.correct ?? 0, add.correct),
+    };
+  }
+  return out;
+}
+
+async function repairActivity(remote?: Record<string, DayLog> | null) {
+  await loadCatalog();
+  const desk = read(DESK) as { tests?: CountedTest[] } | null;
+  const merged = backfillActivity(alignActivityClock(mergeActivity(loadActivity(), remote)), desk?.tests ?? []);
+  saveActivity(merged);
+  return merged;
+}
+
 let syncing: Promise<"synced" | "device"> | null = null;
 let syncAgain = false;
 
@@ -422,8 +463,9 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
       return "synced";
     }
     if (!remote?.payload) {
+      await ensureCorrectLog();
+      await repairActivity(null);
       if (hasLocalWork(localBundle())) {
-        await ensureCorrectLog();
         await saveProgress({ data: { payload: JSON.stringify(pack(localBundle())) } });
       }
       if (userId) localStorage.setItem(OWNER, userId);
@@ -433,7 +475,9 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
     const newer = await loadProgress();
     const unpacked = newer?.payload ? unpack(newer.payload) : first;
     if (playingNow()) {
-      await saveProgress({ data: { payload: JSON.stringify(pack(localBundle())) } });
+      await repairActivity(unpacked.remoteActivity);
+      const uploaded = mergeBundles(localBundle(), unpacked.remoteBundle);
+      await saveProgress({ data: { payload: JSON.stringify(pack(uploaded)) } });
       if (userId) localStorage.setItem(OWNER, userId);
       return "synced";
     }
@@ -446,6 +490,7 @@ async function syncOnce(userId?: string): Promise<"synced" | "device"> {
       localStorage.removeItem(SEED);
     }
     await ensureCorrectLog();
+    await repairActivity(unpacked.remoteActivity);
     const fresh = mergeBundles(localBundle(), merged);
     await saveProgress({ data: { payload: JSON.stringify(pack(fresh)) } });
     if (userId) localStorage.setItem(OWNER, userId);

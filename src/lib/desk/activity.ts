@@ -1,3 +1,5 @@
+import { centralToday } from "@/lib/desk/periods";
+
 const KEY = "callroom-activity-v1";
 const LIFE = "callroom-correct-lifetime";
 
@@ -10,10 +12,32 @@ export const MISSIONS = [
 
 export type DayLog = { questions: number; cards: number; correct?: number };
 
-export function dayKey(date = new Date()) {
+function deviceDay(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** Study days use Central time, the same clock as the leaderboard. */
+export function dayKey(date = new Date()) {
+  return centralToday(date);
+}
+
+/** If this phone's calendar day is not Central, today's log still counts today. */
+export function alignActivityClock(days: Record<string, DayLog>) {
+  const central = centralToday();
+  const local = deviceDay();
+  if (local === central || !days[local]) return days;
+  const from = days[local];
+  const have = days[central] ?? { questions: 0, cards: 0 };
+  const next: Record<string, DayLog> = { ...days };
+  next[central] = {
+    questions: Math.max(have.questions ?? 0, from.questions ?? 0),
+    cards: Math.max(have.cards ?? 0, from.cards ?? 0),
+    correct: Math.max(have.correct ?? 0, from.correct ?? 0),
+  };
+  delete next[local];
+  return next;
 }
 
 export function loadActivity(): Record<string, DayLog> {
@@ -21,7 +45,10 @@ export function loadActivity(): Record<string, DayLog> {
     const raw = localStorage.getItem(KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, DayLog>;
-    return parsed && typeof parsed === "object" ? parsed : {};
+    if (!parsed || typeof parsed !== "object") return {};
+    const aligned = alignActivityClock(parsed);
+    if (aligned !== parsed && JSON.stringify(aligned) !== raw) localStorage.setItem(KEY, JSON.stringify(aligned));
+    return aligned;
   } catch {
     return {};
   }
