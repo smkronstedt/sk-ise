@@ -278,9 +278,9 @@ function valeNpc(
     x,
     y,
     face: "down",
-    sight: 2,
+    sight: 0,
     done: false,
-    ready: true,
+    ready: false,
     count,
     need: 0.6,
     adaptive: true,
@@ -296,23 +296,21 @@ function valeNpc(
 function buildVale(): World {
   const tiles = sized(21, 15);
   openGround(tiles);
-  for (let y = 3; y <= 13; y++) tiles[y][10] = 1;
-  for (let x = 4; x <= 16; x++) tiles[8][x] = 1;
+  for (let x = 1; x <= 19; x++) tiles[1][x] = 8;
   tiles[13][10] = 5;
   tiles[14][10] = 5;
-  tiles[4][4] = 2;
-  tiles[4][16] = 2;
-  tiles[11][4] = 2;
-  tiles[11][16] = 2;
   return {
     tiles,
-    start: { x: 10, y: 11 },
+    start: { x: 10, y: 12 },
     npcs: [
-      valeNpc("elena", "Nurse Elena", 6, 6, "core", 10, "Nurse Elena: You found the north tree. I like people who look. Ten questions, whenever you want another round.", "trainer", "/quest/joy-a.png"),
-      valeNpc("aria", "Dr. Aria", 14, 6, "oncology", 12, "Dr. Aria: Most people walk past that tree. You didn't. Stay a minute.", "leader", "/quest/joy-b.png"),
-      valeNpc("maya", "Resident Maya", 6, 10, "peds", 8, "Resident Maya: The yellow one. I was hoping it would be you.", "trainer", "/quest/joy-b.png"),
-      valeNpc("lina", "Nurse Lina", 14, 10, "urogyn", 8, "Nurse Lina: Come back when you want another set. I'll be right here.", "trainer", "/quest/joy-a.png"),
-      valeNpc("misty", "Misty Vale", 10, 4, "all", 16, "Misty Vale: The ward is quiet. Sixteen questions, if you want the long version.", "leader", "/quest/joy-b.png"),
+      valeNpc("elena", "Elena", 4, 5, "core", 0, "Elena: Sit by me. I kept the cushion under the lamp.", "townsman", "lounge:elena"),
+      valeNpc("aria", "Aria", 16, 5, "oncology", 0, "Aria: I poured yours before you came in. Stay a while.", "townsman", "lounge:aria"),
+      valeNpc("maya", "Maya", 4, 9, "peds", 0, "Maya: This is better than standing around. Come sit. The music is low.", "townsman", "lounge:maya"),
+      valeNpc("lina", "Lina", 16, 9, "urogyn", 0, "Lina: Two glasses. One is yours if you want it.", "townsman", "lounge:lina"),
+      valeNpc("misty", "Misty", 10, 4, "all", 0, "Misty: We can just sit. I like when you stay.", "townsman", "lounge:misty"),
+      valeNpc("cushion", "Cushion", 7, 7, "core", 0, "You sit. The cushion is low, the lamp is warm, and nobody is in a hurry.", "townsman", "lounge:seat"),
+      valeNpc("tea", "Tea", 10, 8, "core", 0, "Pomegranate tea, and a small glass of something cold. She slides one over. No rush.", "townsman", "lounge:tea"),
+      valeNpc("cushion-2", "Cushion", 13, 7, "core", 0, "You sit on the other side. Close enough to talk, and the table is between you.", "townsman", "lounge:seat"),
     ],
   };
 }
@@ -1013,6 +1011,138 @@ function paintYellowTree(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.restore();
 }
 
+function drawLoungeGuest(ctx: CanvasRenderingContext2D, tx: number, ty: number, sprite: string) {
+  if (sprite === "lounge:seat" || sprite === "lounge:tea") return;
+  const look = {
+    "lounge:elena": { hair: "#2a160f", cloth: "#0e6b4a", trim: "#e2b340", cut: "kaftan" },
+    "lounge:aria": { hair: "#1a1a1a", cloth: "#f4efe4", trim: "#1c1c1c", cut: "trousers" },
+    "lounge:maya": { hair: "#6b2a18", cloth: "#a3472c", trim: "#e7c27a", cut: "dress" },
+    "lounge:lina": { hair: "#3a2414", cloth: "#1c6e78", trim: "#f7f4ee", cut: "jacket" },
+    "lounge:misty": { hair: "#140c10", cloth: "#6e2438", trim: "#e2b340", cut: "gown" },
+  }[sprite];
+  if (!look) return;
+  const x = tx * TILE + TILE / 2;
+  const y = ty * TILE + TILE - 2;
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.beginPath();
+  ctx.ellipse(x, y, 8, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  if (look.cut === "trousers") {
+    ctx.fillStyle = "#1c1c1c";
+    ctx.fillRect(x - 7, y - 16, 5, 12);
+    ctx.fillRect(x + 2, y - 16, 5, 12);
+    ctx.fillStyle = look.cloth;
+    ctx.fillRect(x - 6, y - 16, 3, 10);
+    ctx.fillRect(x + 3, y - 16, 3, 10);
+    ctx.fillStyle = look.trim;
+    ctx.fillRect(x - 8, y - 28, 16, 13);
+  } else if (look.cut === "jacket") {
+    ctx.fillStyle = "#2a211c";
+    ctx.fillRect(x - 4, y - 14, 3, 12);
+    ctx.fillRect(x + 1, y - 14, 3, 12);
+    ctx.fillStyle = look.trim;
+    ctx.fillRect(x - 6, y - 26, 12, 12);
+    ctx.fillStyle = look.cloth;
+    ctx.fillRect(x - 9, y - 27, 5, 14);
+    ctx.fillRect(x + 4, y - 27, 5, 14);
+  } else {
+    ctx.fillStyle = look.cloth;
+    ctx.beginPath();
+    ctx.moveTo(x - (look.cut === "kaftan" ? 11 : 8), y);
+    ctx.lineTo(x + (look.cut === "kaftan" ? 11 : 8), y);
+    ctx.lineTo(x + 6, y - 26);
+    ctx.lineTo(x - 6, y - 26);
+    ctx.fill();
+    ctx.fillStyle = look.trim;
+    ctx.fillRect(x - 7, y - 18, 14, 2);
+  }
+  ctx.fillStyle = "#e2b89a";
+  ctx.fillRect(x - 4, y - 34, 8, 8);
+  ctx.fillStyle = look.hair;
+  if (look.cut === "trousers") {
+    ctx.fillRect(x - 5, y - 38, 10, 6);
+  } else if (look.cut === "jacket") {
+    ctx.fillRect(x - 5, y - 38, 10, 5);
+    ctx.fillRect(x + 3, y - 28, 3, 10);
+  } else if (look.cut === "gown") {
+    ctx.fillRect(x - 6, y - 39, 12, 7);
+    ctx.fillRect(x - 7, y - 32, 3, 14);
+    ctx.fillRect(x + 4, y - 32, 3, 16);
+  } else if (look.cut === "dress") {
+    ctx.fillRect(x - 6, y - 38, 12, 6);
+    ctx.fillRect(x + 4, y - 32, 3, 12);
+  } else {
+    ctx.fillRect(x - 5, y - 39, 10, 8);
+  }
+  ctx.fillStyle = "#1a1208";
+  ctx.fillRect(x - 2, y - 31, 1, 1);
+  ctx.fillRect(x + 1, y - 31, 1, 1);
+  ctx.restore();
+}
+
+function paintLounge(ctx: CanvasRenderingContext2D, frame: number) {
+  const cols = 21;
+  const rows = 15;
+  ctx.fillStyle = "#4a2c22";
+  ctx.fillRect(0, 0, cols * TILE, rows * TILE);
+  ctx.fillStyle = "#7a1f33";
+  ctx.fillRect(2 * TILE, 2 * TILE, 17 * TILE, 10 * TILE);
+  ctx.strokeStyle = "#e2b340";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(2 * TILE + 5, 2 * TILE + 5, 17 * TILE - 10, 10 * TILE - 10);
+  ctx.strokeStyle = "rgba(226,179,64,0.45)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 6; i++) {
+    ctx.strokeRect(4 * TILE + i * 36, 4 * TILE, 18, 28);
+    ctx.strokeRect(5 * TILE + i * 28, 8 * TILE, 16, 22);
+  }
+  ctx.fillStyle = "#3a241c";
+  for (const x of [2, 6, 10, 14, 18]) {
+    ctx.fillRect(x * TILE + 8, TILE, 16, TILE);
+    ctx.beginPath();
+    ctx.arc(x * TILE + 16, TILE + 8, 14, Math.PI, 0);
+    ctx.fill();
+  }
+  const lantern = (x: number, y: number) => {
+    ctx.fillStyle = "#c9842a";
+    ctx.fillRect(x - 1, y - 10, 2, 10);
+    ctx.fillStyle = frame % 2 ? "#ffe14a" : "#f0c14a";
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  lantern(5 * TILE, 2 * TILE + 8);
+  lantern(16 * TILE, 2 * TILE + 8);
+  lantern(10 * TILE + 16, 3 * TILE);
+  const cushion = (x: number, y: number, color: string) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 16, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#e2b340";
+    ctx.stroke();
+  };
+  cushion(7 * TILE + 16, 7 * TILE + 18, "#1f4d3a");
+  cushion(13 * TILE + 16, 7 * TILE + 18, "#6e2438");
+  ctx.fillStyle = "#5c3a28";
+  ctx.fillRect(9 * TILE + 4, 8 * TILE, 3 * TILE - 8, 14);
+  ctx.fillStyle = "#f4efe4";
+  ctx.fillRect(10 * TILE + 2, 8 * TILE + 2, 6, 8);
+  ctx.fillStyle = "#f0c14a";
+  ctx.fillRect(11 * TILE + 4, 8 * TILE + 2, 5, 8);
+  ctx.fillStyle = "#8c2f3a";
+  ctx.beginPath();
+  ctx.arc(10 * TILE + 6, 8 * TILE + 6, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#e7eef3";
+  ctx.fillRect(10 * TILE + 10, 13 * TILE + 6, TILE - 4, TILE - 8);
+  ctx.fillStyle = "#1a1208";
+  ctx.font = "bold 8px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("YARD", 10 * TILE + TILE / 2, 14 * TILE + 12);
+}
+
 function paintPlace(ctx: CanvasRenderingContext2D, scene: Scene, cityId: string, frame: number) {
   const glow = (x: number, y: number, color: string, r: number) => {
     ctx.fillStyle = color;
@@ -1020,6 +1150,10 @@ function paintPlace(ctx: CanvasRenderingContext2D, scene: Scene, cityId: string,
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   };
+  if (scene === "vale") {
+    paintLounge(ctx, frame);
+    return;
+  }
   if (scene === "house") {
     const px = (sx: number, sy: number, w: number, h: number, color: string) => {
       ctx.fillStyle = color;
@@ -1408,7 +1542,7 @@ export function MonsterQuest({
     localStorage.setItem("callroom-quest-scene", next);
     setLine(
       next === "vale"
-        ? "Past the yellow tree. The south sign goes back to the lawn."
+        ? "The lounge. Low seats, tea on the table. The south door goes back to the yard."
         : next === "home"
         ? "Home. Your house is on the left. Professor Moka is in the lab."
         : next === "house"
@@ -2350,7 +2484,8 @@ export function MonsterQuest({
         }
       }
       for (const npc of map.npcs) {
-        if (npc.sprite) drawCreature(ctx, npc.x, npc.y, npc.sprite, npc.face, 0);
+        if (npc.sprite?.startsWith("lounge:")) drawLoungeGuest(ctx, npc.x, npc.y, npc.sprite);
+        else if (npc.sprite) drawCreature(ctx, npc.x, npc.y, npc.sprite, npc.face, 0);
         else {
           const actor = npc.kind === "leader" ? "leader" : npc.kind === "rival" ? "rival" : "trainer";
           drawActor(ctx, npc.x, npc.y, actor, 0, npc.face, coatFor(npc.kind, id, npc.name));
@@ -2507,7 +2642,7 @@ export function MonsterQuest({
         <div>
           <h2 className="font-serif text-xl">
             {scene === "vale"
-              ? "North lawn"
+              ? "The lounge"
               : scene === "home"
               ? "Home"
               : scene === "house"
@@ -2529,7 +2664,7 @@ export function MonsterQuest({
                         : "Championship"}
           </h2>
           {scene === "home" ? <p className="text-xs">Your house is on the left. Professor Moka is in the lab. The south road is the trail to Quarry End.</p> : null}
-          {scene === "vale" ? <p className="text-xs">South sign goes back to the lawn. Talk to anyone on the path.</p> : null}
+          {scene === "vale" ? <p className="text-xs">Sit on a cushion or take the tea. Talk to whoever is nearest. The south door goes back to the yard.</p> : null}
           {scene === "house" ? <p className="text-xs">{houseFloor === 1 ? "Click the stairs, the awards, or the television. North door is the pool. South door leaves." : "Click the stairs to go down. The balcony is along the north wall."}</p> : null}
           {scene === "yard" ? <p className="text-xs">The pool is behind the house. One tree beside it is yellow. Walk into that one. The north door goes back in.</p> : null}
           {scene === "route" && city?.id === "stones" ? <p className="text-xs">South sign goes home. North sign goes to Quarry End. Neither needs a badge.</p> : null}
