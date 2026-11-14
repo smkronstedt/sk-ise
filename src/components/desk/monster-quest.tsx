@@ -1011,74 +1011,29 @@ function paintYellowTree(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.restore();
 }
 
+const loungeArt: Record<string, HTMLImageElement> = {};
+
 function drawLoungeGuest(ctx: CanvasRenderingContext2D, tx: number, ty: number, sprite: string) {
-  if (sprite === "lounge:seat" || sprite === "lounge:tea") return;
-  const look = {
-    "lounge:elena": { hair: "#2a160f", cloth: "#0e6b4a", trim: "#e2b340", cut: "kaftan" },
-    "lounge:aria": { hair: "#1a1a1a", cloth: "#f4efe4", trim: "#1c1c1c", cut: "trousers" },
-    "lounge:maya": { hair: "#6b2a18", cloth: "#a3472c", trim: "#e7c27a", cut: "dress" },
-    "lounge:lina": { hair: "#3a2414", cloth: "#1c6e78", trim: "#f7f4ee", cut: "jacket" },
-    "lounge:misty": { hair: "#140c10", cloth: "#6e2438", trim: "#e2b340", cut: "gown" },
+  const file = {
+    "lounge:elena": "/quest/lounge/elena.png",
+    "lounge:aria": "/quest/lounge/aria.png",
+    "lounge:maya": "/quest/lounge/maya.png",
+    "lounge:lina": "/quest/lounge/lina.png",
+    "lounge:misty": "/quest/lounge/misty.png",
   }[sprite];
-  if (!look) return;
-  const x = tx * TILE + TILE / 2;
-  const y = ty * TILE + TILE - 2;
-  ctx.save();
-  ctx.fillStyle = "rgba(0,0,0,0.25)";
-  ctx.beginPath();
-  ctx.ellipse(x, y, 8, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  if (look.cut === "trousers") {
-    ctx.fillStyle = "#1c1c1c";
-    ctx.fillRect(x - 7, y - 16, 5, 12);
-    ctx.fillRect(x + 2, y - 16, 5, 12);
-    ctx.fillStyle = look.cloth;
-    ctx.fillRect(x - 6, y - 16, 3, 10);
-    ctx.fillRect(x + 3, y - 16, 3, 10);
-    ctx.fillStyle = look.trim;
-    ctx.fillRect(x - 8, y - 28, 16, 13);
-  } else if (look.cut === "jacket") {
-    ctx.fillStyle = "#2a211c";
-    ctx.fillRect(x - 4, y - 14, 3, 12);
-    ctx.fillRect(x + 1, y - 14, 3, 12);
-    ctx.fillStyle = look.trim;
-    ctx.fillRect(x - 6, y - 26, 12, 12);
-    ctx.fillStyle = look.cloth;
-    ctx.fillRect(x - 9, y - 27, 5, 14);
-    ctx.fillRect(x + 4, y - 27, 5, 14);
-  } else {
-    ctx.fillStyle = look.cloth;
-    ctx.beginPath();
-    ctx.moveTo(x - (look.cut === "kaftan" ? 11 : 8), y);
-    ctx.lineTo(x + (look.cut === "kaftan" ? 11 : 8), y);
-    ctx.lineTo(x + 6, y - 26);
-    ctx.lineTo(x - 6, y - 26);
-    ctx.fill();
-    ctx.fillStyle = look.trim;
-    ctx.fillRect(x - 7, y - 18, 14, 2);
+  if (!file) return;
+  if (!loungeArt[file]) {
+    const img = new Image();
+    img.src = file;
+    loungeArt[file] = img;
   }
-  ctx.fillStyle = "#e2b89a";
-  ctx.fillRect(x - 4, y - 34, 8, 8);
-  ctx.fillStyle = look.hair;
-  if (look.cut === "trousers") {
-    ctx.fillRect(x - 5, y - 38, 10, 6);
-  } else if (look.cut === "jacket") {
-    ctx.fillRect(x - 5, y - 38, 10, 5);
-    ctx.fillRect(x + 3, y - 28, 3, 10);
-  } else if (look.cut === "gown") {
-    ctx.fillRect(x - 6, y - 39, 12, 7);
-    ctx.fillRect(x - 7, y - 32, 3, 14);
-    ctx.fillRect(x + 4, y - 32, 3, 16);
-  } else if (look.cut === "dress") {
-    ctx.fillRect(x - 6, y - 38, 12, 6);
-    ctx.fillRect(x + 4, y - 32, 3, 12);
-  } else {
-    ctx.fillRect(x - 5, y - 39, 10, 8);
-  }
-  ctx.fillStyle = "#1a1208";
-  ctx.fillRect(x - 2, y - 31, 1, 1);
-  ctx.fillRect(x + 1, y - 31, 1, 1);
-  ctx.restore();
+  const img = loungeArt[file];
+  if (!img.complete || img.naturalWidth < 1) return;
+  const height = TILE * 4.6;
+  const width = height * (img.naturalWidth / img.naturalHeight);
+  const x = tx * TILE + (TILE - width) / 2;
+  const y = ty * TILE + TILE - height + 6;
+  ctx.drawImage(img, x, y, width, height);
 }
 
 function paintLounge(ctx: CanvasRenderingContext2D, frame: number) {
@@ -1089,14 +1044,11 @@ function paintLounge(ctx: CanvasRenderingContext2D, frame: number) {
   ctx.fillStyle = "#7a1f33";
   ctx.fillRect(2 * TILE, 2 * TILE, 17 * TILE, 10 * TILE);
   ctx.strokeStyle = "#e2b340";
-  ctx.lineWidth = 3;
-  ctx.strokeRect(2 * TILE + 5, 2 * TILE + 5, 17 * TILE - 10, 10 * TILE - 10);
-  ctx.strokeStyle = "rgba(226,179,64,0.45)";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2 * TILE + 6, 2 * TILE + 6, 17 * TILE - 12, 10 * TILE - 12);
+  ctx.strokeStyle = "#f0d78a";
   ctx.lineWidth = 1;
-  for (let i = 0; i < 6; i++) {
-    ctx.strokeRect(4 * TILE + i * 36, 4 * TILE, 18, 28);
-    ctx.strokeRect(5 * TILE + i * 28, 8 * TILE, 16, 22);
-  }
+  ctx.strokeRect(2 * TILE + 12, 2 * TILE + 12, 17 * TILE - 24, 10 * TILE - 24);
   ctx.fillStyle = "#3a241c";
   for (const x of [2, 6, 10, 14, 18]) {
     ctx.fillRect(x * TILE + 8, TILE, 16, TILE);
