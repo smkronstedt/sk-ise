@@ -146,6 +146,7 @@ type Battle = {
   boost: boolean;
   committed?: boolean;
   fromId?: string;
+  portrait?: string;
 };
 
 
@@ -268,6 +269,7 @@ function valeNpc(
   count: number,
   line: string,
   kind: Npc["kind"],
+  sprite: string,
 ): Npc {
   return {
     id,
@@ -286,7 +288,8 @@ function valeNpc(
     testName: `Ward: ${name}`,
     blueprint,
     line,
-    foe: "/field/towns/trainer.jpg?v=2",
+    foe: sprite,
+    sprite,
   };
 }
 
@@ -305,11 +308,11 @@ function buildVale(): World {
     tiles,
     start: { x: 10, y: 11 },
     npcs: [
-      valeNpc("elena", "Nurse Elena", 6, 6, "core", 10, "Nurse Elena: You found the north tree. I like people who look. Ten questions, whenever you want another round.", "trainer"),
-      valeNpc("aria", "Dr. Aria", 14, 6, "oncology", 12, "Dr. Aria: Most people walk past that tree. You didn't. Stay a minute.", "leader"),
-      valeNpc("maya", "Resident Maya", 6, 10, "peds", 8, "Resident Maya: The yellow one. I was hoping it would be you.", "trainer"),
-      valeNpc("lina", "Nurse Lina", 14, 10, "urogyn", 8, "Nurse Lina: Come back when you want another set. I'll be right here.", "trainer"),
-      valeNpc("misty", "Misty Vale", 10, 4, "all", 16, "Misty Vale: The ward is quiet. Sixteen questions, if you want the long version.", "leader"),
+      valeNpc("elena", "Nurse Elena", 6, 6, "core", 10, "Nurse Elena: You found the north tree. I like people who look. Ten questions, whenever you want another round.", "trainer", "/quest/joy-a.png"),
+      valeNpc("aria", "Dr. Aria", 14, 6, "oncology", 12, "Dr. Aria: Most people walk past that tree. You didn't. Stay a minute.", "leader", "/quest/joy-b.png"),
+      valeNpc("maya", "Resident Maya", 6, 10, "peds", 8, "Resident Maya: The yellow one. I was hoping it would be you.", "trainer", "/quest/joy-b.png"),
+      valeNpc("lina", "Nurse Lina", 14, 10, "urogyn", 8, "Nurse Lina: Come back when you want another set. I'll be right here.", "trainer", "/quest/joy-a.png"),
+      valeNpc("misty", "Misty Vale", 10, 4, "all", 16, "Misty Vale: The ward is quiet. Sixteen questions, if you want the long version.", "leader", "/quest/joy-b.png"),
     ],
   };
 }
@@ -992,27 +995,21 @@ function coatFor(kind: string, cityId: string, name: string) {
 }
 
 function paintYellowTree(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  const px = x * TILE + TILE / 2;
-  const py = y * TILE + TILE / 2;
+  const px = x * TILE - 6;
+  const py = y * TILE - TILE * 0.95;
+  const w = TILE + 12;
+  const h = TILE * 2;
   ctx.save();
-  ctx.fillStyle = "#c9842a";
-  ctx.fillRect(px - 4, py + 2, 8, 18);
-  ctx.fillStyle = "#ffe14a";
   ctx.beginPath();
-  ctx.arc(px, py - 8, 22, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#1a1208";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.fillStyle = "#f5c400";
-  ctx.beginPath();
-  ctx.arc(px - 12, py, 12, 0, Math.PI * 2);
-  ctx.arc(px + 12, py, 12, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#1a1208";
-  ctx.font = "bold 10px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("TREE", px, py + 28);
+  ctx.rect(px, py, w, h * 0.62);
+  ctx.clip();
+  ctx.globalCompositeOperation = "color";
+  ctx.fillStyle = "#e6b000";
+  ctx.fillRect(px, py, w, h);
+  ctx.globalCompositeOperation = "multiply";
+  ctx.globalAlpha = 0.28;
+  ctx.fillStyle = "#ffe566";
+  ctx.fillRect(px, py, w, h);
   ctx.restore();
 }
 
@@ -1325,6 +1322,7 @@ export function MonsterQuest({
   const [valeAsk, setValeAsk] = useState(false);
   const [valeWord, setValeWord] = useState("");
   const valeLock = useRef(false);
+  const valeAskRef = useRef(false);
   const bagRef = useRef<QuestBag | null>(null);
   const followRef = useRef<string | null>(null);
   const repelRef = useRef(0);
@@ -1381,6 +1379,7 @@ export function MonsterQuest({
     if (!musicOn()) return;
     setTownMusic(true, "canyon");
   }, [city?.id]);
+  valeAskRef.current = valeAsk;
   pausedRef.current = caseOpen || shopOpen || tvOpen || valeAsk || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || Boolean(bag && !bag.starter) || Boolean(play) || trialOpen || Boolean(gift);
 
   const sail = (dir: 1 | -1) => {
@@ -1516,6 +1515,7 @@ export function MonsterQuest({
       boost: prime === "boost",
       committed: false,
       fromId: npc.id,
+      portrait: npc.sprite,
     });
   };
 
@@ -2101,6 +2101,9 @@ export function MonsterQuest({
     };
 
     const onKey = (event: KeyboardEvent) => {
+      const target = event.target;
+      const typing = target instanceof HTMLElement && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (typing || valeAskRef.current) return;
       const move = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"];
       if (move.includes(event.key.toLowerCase())) event.preventDefault();
       if (event.type === "keydown") {
@@ -2528,7 +2531,7 @@ export function MonsterQuest({
           {scene === "home" ? <p className="text-xs">Your house is on the left. Professor Moka is in the lab. The south road is the trail to Quarry End.</p> : null}
           {scene === "vale" ? <p className="text-xs">South sign goes back to the lawn. Talk to anyone on the path.</p> : null}
           {scene === "house" ? <p className="text-xs">{houseFloor === 1 ? "Click the stairs, the awards, or the television. North door is the pool. South door leaves." : "Click the stairs to go down. The balcony is along the north wall."}</p> : null}
-          {scene === "yard" ? <p className="text-xs">The pool is behind the house. The yellow tree beside it is the way through. Walk into it. The door on the north side goes back in.</p> : null}
+          {scene === "yard" ? <p className="text-xs">The pool is behind the house. One tree beside it is yellow. Walk into that one. The north door goes back in.</p> : null}
           {scene === "route" && city?.id === "stones" ? <p className="text-xs">South sign goes home. North sign goes to Quarry End. Neither needs a badge.</p> : null}
           {scene === "route" && city?.id === "oncology" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
           {scene === "route" && city?.id === "urogyn" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
@@ -2591,7 +2594,9 @@ export function MonsterQuest({
               <p className="mt-1 text-xs">HP {Math.max(0, battle.foeHp)}/{battle.foeMax} · {battle.foeMove ?? "Bash"} hits for {battle.foePower ?? 4}</p>
             </div>
             <div className="flex items-end justify-end gap-1">
-              {battle.foeKind !== "wild" ? (
+              {battle.portrait ? (
+                <img src={battle.portrait} alt="" className="h-36 w-auto object-contain [image-rendering:pixelated]" />
+              ) : battle.foeKind !== "wild" ? (
                 <DressedActor kind={battle.foeKind === "leader" ? "leader" : battle.foeKind === "rival" ? "rival" : "trainer"} coat={battle.trainerCoat} className="h-28" />
               ) : null}
               {battle.foeSpecies ? (
