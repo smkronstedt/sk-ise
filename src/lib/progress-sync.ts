@@ -1,8 +1,10 @@
 import { loadProgress, saveProgress } from "@/lib/progress-api";
-import { loadActivity, mergeActivity, saveActivity, dayKey, alignActivityClock, type DayLog } from "@/lib/desk/activity";
+import { loadActivity, mergeActivity, saveActivity, dayKey, alignActivityClock, ensureLifetime, type DayLog } from "@/lib/desk/activity";
+import { uniqueCorrectCount } from "@/lib/desk/adapt";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { loadDaily, mergeDaily, saveDaily } from "@/lib/desk/daily";
-import type { ItemAnswer, TestBlock } from "@/lib/desk/types";
+import { loadBankProgress } from "@/lib/desk/original-bank";
+import type { DeskState, ItemAnswer, TestBlock } from "@/lib/desk/types";
 import type { Card } from "@/lib/cards";
 import { BAG_KEY, mergeBags } from "@/lib/desk/quest-bag";
 
@@ -346,14 +348,14 @@ export async function ensureCorrectLog() {
       if (!getQuestion("UQB-0001")) return;
     }
     const seeded = new Map<string, number>();
+    const bank = loadBankProgress().answers;
     for (const test of tests) {
       const stamp = test.finishedAt || test.createdAt;
       if (!stamp) continue;
       let count = 0;
       for (const [id, answer] of Object.entries(test.answers ?? {})) {
         if (!answer?.submitted || answer.choice == null) continue;
-        const question = getQuestion(id);
-        if (question && answer.choice === question.answer) count += 1;
+        if (scored(id, answer.choice, bank)) count += 1;
       }
       if (!count) continue;
       const key = dayKey(new Date(stamp));
@@ -372,10 +374,20 @@ export async function ensureCorrectLog() {
   }
 }
 
+function scored(id: string, choice: number | null | undefined, bank: ReturnType<typeof loadBankProgress>["answers"]) {
+  if (choice == null) return null;
+  const question = getQuestion(id);
+  if (question) return choice === question.answer;
+  const row = bank[id];
+  if (!row) return null;
+  return row.correct === true;
+}
+
 type CountedTest = { createdAt?: number; finishedAt?: number; answers?: Record<string, { choice?: number | null; submitted?: boolean }> };
 
 /** Tests finished today count toward today's rank and streak even if the live log was missed. */
 export function backfillActivity(days: Record<string, DayLog>, tests: CountedTest[]) {
+  const bank = loadBankProgress().answers;
   const buckets = new Map<string, { questions: number; correct: number }>();
   for (const test of tests) {
     const stamp = test.finishedAt || test.createdAt;
@@ -385,9 +397,10 @@ export function backfillActivity(days: Record<string, DayLog>, tests: CountedTes
     let correct = 0;
     for (const [id, answer] of Object.entries(test.answers ?? {})) {
       if (!answer?.submitted || answer.choice == null) continue;
+      const right = scored(id, answer.choice, bank);
+      if (right == null) continue;
       questions += 1;
-      const question = getQuestion(id);
-      if (question && answer.choice === question.answer) correct += 1;
+      if (right) correct += 1;
     }
     const have = buckets.get(key) ?? { questions: 0, correct: 0 };
     buckets.set(key, { questions: have.questions + questions, correct: have.correct + correct });
@@ -407,10 +420,13 @@ export function backfillActivity(days: Record<string, DayLog>, tests: CountedTes
 
 async function repairActivity(remote?: Record<string, DayLog> | null) {
   await loadCatalog();
-  const desk = read(DESK) as { tests?: CountedTest[] } | null;
+  const desk = read(DESK) as DeskState | null;
   const merged = backfillActivity(alignActivityClock(mergeActivity(loadActivity(), remote)), desk?.tests ?? []);
-  saveActivity(merged);
-  return merged;
+  const fresh = mergeActivity(merged, loadActivity());
+  saveActivity(fresh);
+  const summed = Object.values(fresh).reduce((sum, row) => sum + (row.correct ?? 0), 0);
+  ensureLifetime(Math.max(summed, desk ? uniqueCorrectCount(desk) : 0));
+  return fresh;
 }
 
 let syncing: Promise<"synced" | "device"> | null = null;

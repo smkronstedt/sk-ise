@@ -45,6 +45,7 @@ export type PlaceLook = {
 
 export const PLACE: Record<string, PlaceLook> = {
   home: { grass: "#d7e8b8", path: "#f0ddb0", roof: "#f7f1e6", water: "#9fd0ea", tree: "#3f8a45", tall: "#8fbf55" },
+  vale: { grass: "#e7f0c8", path: "#f6e7a8", roof: "#f4efe4", water: "#b7dff2", tree: "#6aaa3a", tall: "#d6e56a" },
   stones: { grass: "#c9c2a4", path: "#d9c7a4", roof: "#8d8478", water: "#8aa4b5", tree: "#6a7050", tall: "#b7b48a" },
   oncology: { grass: "#b7d7b0", path: "#e7d3b0", roof: "#8d2e2a", water: "#3d92c8", tree: "#2f7a48", tall: "#7fbf6a" },
   urogyn: { grass: "#8fb4b0", path: "#c5d0d4", roof: "#243246", water: "#1d4e6a", tree: "#1e4a44", tall: "#6a9a90" },
