@@ -7,7 +7,7 @@ import type { BlueprintId, DeskState, Focus, Mode, Pool, TestBlock } from "./typ
 const KEY = "callroom-desk-v1";
 
 function empty(): DeskState {
-  return { tests: [], marks: {}, notes: {}, focus: {}, fresh: {} };
+  return { tests: [], marks: {}, notes: {}, focus: {}, fresh: {}, noImage: {} };
 }
 
 function load(): DeskState {
@@ -21,6 +21,7 @@ function load(): DeskState {
       notes: parsed.notes ?? {},
       focus: parsed.focus ?? {},
       fresh: parsed.fresh ?? {},
+      noImage: parsed.noImage ?? {},
     };
   } catch {
     return empty();
@@ -33,6 +34,7 @@ type DeskApi = {
   setFocus: (id: BlueprintId, focus: Focus) => void;
   setFocusMap: (focus: Partial<Record<BlueprintId, Focus>>) => void;
   toggleMark: (questionId: string) => void;
+  flagNoImage: (questionId: string) => void;
   setNote: (questionId: string, note: string) => void;
   createTest: (input: {
     name?: string;
@@ -77,6 +79,11 @@ export function DeskProvider({ children }: { children: ReactNode }) {
       commit((current) => ({
         ...current,
         marks: { ...current.marks, [questionId]: !current.marks[questionId] },
+      })),
+    flagNoImage: (questionId) =>
+      commit((current) => ({
+        ...current,
+        noImage: { ...(current.noImage ?? {}), [questionId]: true },
       })),
     setNote: (questionId, note) =>
       commit((current) => ({ ...current, notes: { ...current.notes, [questionId]: note } })),
