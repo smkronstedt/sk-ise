@@ -17,7 +17,8 @@ export function earnedPurse(): number {
   } catch {
     floor = countBankCorrect();
   }
-  return ensureLifetime(floor) + prizeStatus().purse + trainingSummary().purse;
+  const bonus = Number(localStorage.getItem("ise-lecture-bonus") || "0") + Number(localStorage.getItem("ise-card-bonus") || "0");
+  return ensureLifetime(floor) + prizeStatus().purse + trainingSummary().purse + (Number.isFinite(bonus) ? bonus : 0);
 }
 
 export function questSpent(): number {

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 const points = [
-  { title: "Question bank", body: "1,295 UQB items plus SASP booklets. Tutor mode, topic filters, missed and marked, and a separate hard set." },
+  { title: "Question bank", body: "1,295 UQB items plus SASP-based study material. Tutor mode, topic filters, missed and marked, and a separate hard set." },
   { title: "Guidelines", body: "A trainer built from the statements, so the explanation points at the recommendation you are supposed to know." },
   { title: "Cards", body: "Misses and flags become cards. They come back on a schedule instead of sitting in a list." },
   { title: "Monster Quest", body: "Walk the towns, battle trainers with questions, catch creatures, and climb ranks while you study." },

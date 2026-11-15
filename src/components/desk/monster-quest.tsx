@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Badge } from "@/components/desk/badge";
 import { TownTrial } from "@/components/desk/town-trial";
-import { addCard } from "@/lib/cards";
+import { addCard, loadCards, saveCards, schedule } from "@/lib/cards";
 import { drawQuestionIds } from "@/lib/desk/adapt";
 import { noteRow } from "@/lib/desk/honors";
 import { logActivity, logCorrect } from "@/lib/desk/activity";
@@ -110,6 +110,7 @@ type Npc = {
   topics?: string[];
   rematch?: boolean;
   prostate?: boolean;
+  mode?: "missed" | "adaptive" | "anki" | "highyield" | "images";
   line: string;
   foe: string;
   sprite?: string;
@@ -147,6 +148,7 @@ type Battle = {
   committed?: boolean;
   fromId?: string;
   portrait?: string;
+  noCreatures?: boolean;
 };
 
 
@@ -214,7 +216,24 @@ function buildHouse(): World {
     tiles[13][10] = 4;
     tiles[1][10] = 4;
     npcs.push(residenceNpc("awards", "Awards", 4, 3, "Marathon medals, the Navy SEAL trident, and the rest of the awards. The Rutgers diploma is on the far wall."));
-    npcs.push(residenceNpc("television", "Television", 16, 9, "Empire Urology is on. Close it and you are still in the house."));
+    npcs.push(residenceNpc("desk", "Desk", 8, 8, "The desk. Due flashcards are here. Each one you review is $0.50."));
+    npcs.push(residenceNpc("television", "Television", 16, 9, "Empire Urology is on. Leave it open at least 30 minutes, then close it for $10."));
+    npcs.push({
+      ...residenceNpc("house-missed", "Missed set", 6, 10, "The ones you got wrong. Walk up and we will go through them."),
+      mode: "missed",
+      kind: "trainer",
+      ready: true,
+      count: 6,
+      testName: "House: missed",
+    });
+    npcs.push({
+      ...residenceNpc("house-high", "High yield", 14, 10, "High-yield topics for the exam."),
+      mode: "highyield",
+      kind: "trainer",
+      ready: true,
+      count: 8,
+      testName: "House: high yield",
+    });
   } else {
     tiles[4][3] = 8;
     tiles[4][4] = 8;
@@ -246,6 +265,7 @@ function buildYard(): World {
   tiles[13][3] = 2;
   tiles[13][17] = 2;
   tiles[YELLOW_TREE.y][YELLOW_TREE.x] = 2;
+  tiles[YELLOW_TREE_TOP.y][YELLOW_TREE_TOP.x] = 2;
   return {
     tiles,
     start: { x: 10, y: 4 },
@@ -254,10 +274,11 @@ function buildYard(): World {
 }
 
 const YELLOW_TREE = { x: 8, y: 12 };
+const YELLOW_TREE_TOP = { x: 10, y: 1 };
 const VALE_WORD = "teams";
 
 function isYellowTree(x: number, y: number) {
-  return x === YELLOW_TREE.x && y === YELLOW_TREE.y;
+  return (x === YELLOW_TREE.x && y === YELLOW_TREE.y) || (x === YELLOW_TREE_TOP.x && y === YELLOW_TREE_TOP.y);
 }
 
 function valeNpc(
@@ -270,6 +291,7 @@ function valeNpc(
   line: string,
   kind: Npc["kind"],
   sprite: string,
+  mode?: Npc["mode"],
 ): Npc {
   return {
     id,
@@ -280,13 +302,14 @@ function valeNpc(
     face: "down",
     sight: 0,
     done: false,
-    ready: false,
+    ready: Boolean(mode),
     count,
     need: 0.6,
-    adaptive: true,
+    adaptive: mode === "adaptive",
     rematch: true,
     testName: `Ward: ${name}`,
     blueprint,
+    mode,
     line,
     foe: sprite,
     sprite,
@@ -303,11 +326,11 @@ function buildVale(): World {
     tiles,
     start: { x: 10, y: 12 },
     npcs: [
-      valeNpc("elena", "Elena", 4, 5, "core", 0, "Elena: Sit by me. I kept the cushion under the lamp.", "townsman", "lounge:elena"),
-      valeNpc("aria", "Aria", 16, 5, "oncology", 0, "Aria: I poured yours before you came in. Stay a while.", "townsman", "lounge:aria"),
-      valeNpc("maya", "Maya", 4, 9, "peds", 0, "Maya: This is better than standing around. Come sit. The music is low.", "townsman", "lounge:maya"),
-      valeNpc("lina", "Lina", 16, 9, "urogyn", 0, "Lina: Two glasses. One is yours if you want it.", "townsman", "lounge:lina"),
-      valeNpc("misty", "Misty", 10, 4, "all", 0, "Misty: We can just sit. I like when you stay.", "townsman", "lounge:misty"),
+      valeNpc("elena", "Elena", 4, 5, "core", 8, "Elena: The ones you missed. Ready to work through them?", "trainer", "lounge:elena", "missed"),
+      valeNpc("aria", "Aria", 16, 5, "all", 10, "Aria: Adaptive set. I'll pick what you need next.", "trainer", "lounge:aria", "adaptive"),
+      valeNpc("maya", "Maya", 4, 9, "core", 8, "Maya: Your due cards. We can run them here.", "trainer", "lounge:maya", "anki"),
+      valeNpc("lina", "Lina", 16, 9, "all", 8, "Lina: Questions with pictures.", "trainer", "lounge:lina", "images"),
+      valeNpc("misty", "Misty", 10, 4, "all", 12, "Misty: High-yield topics and the questions that matter.", "leader", "lounge:misty", "highyield"),
       valeNpc("cushion", "Cushion", 7, 7, "core", 0, "You sit. The cushion is low, the lamp is warm, and nobody is in a hurry.", "townsman", "lounge:seat"),
       valeNpc("tea", "Tea", 10, 8, "core", 0, "Pomegranate tea, and a small glass of something cold. She slides one over. No rush.", "townsman", "lounge:tea"),
       valeNpc("cushion-2", "Cushion", 13, 7, "core", 0, "You sit on the other side. Close enough to talk, and the table is between you.", "townsman", "lounge:seat"),
@@ -1401,9 +1424,13 @@ export function MonsterQuest({
   const [evo, setEvo] = useState<ReturnType<typeof evolutionMoment>>(null);
   const [bag, setBag] = useState<QuestBag | null>(null);
   const [offer, setOffer] = useState<SpeciesId | null>(null);
+  const [starterOpen, setStarterOpen] = useState(false);
   const [gift, setGift] = useState<string | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const [tvOpen, setTvOpen] = useState(false);
+  const [tvStarted, setTvStarted] = useState(0);
+  const [deskOpen, setDeskOpen] = useState(false);
+  const [deskTick, setDeskTick] = useState(0);
   const [houseFloor, setHouseFloor] = useState<1 | 2>(1);
   const [valeAsk, setValeAsk] = useState(false);
   const [valeWord, setValeWord] = useState("");
@@ -1466,7 +1493,7 @@ export function MonsterQuest({
     setTownMusic(true, "canyon");
   }, [city?.id]);
   valeAskRef.current = valeAsk;
-  pausedRef.current = caseOpen || shopOpen || tvOpen || valeAsk || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || Boolean(bag && !bag.starter) || Boolean(play) || trialOpen || Boolean(gift);
+  pausedRef.current = caseOpen || shopOpen || tvOpen || deskOpen || valeAsk || Boolean(battle) || Boolean(sheet) || Boolean(nurse) || starterOpen || Boolean(play) || trialOpen || Boolean(gift);
 
   const sail = (dir: 1 | -1) => {
     if (!city) return;
@@ -1538,21 +1565,42 @@ export function MonsterQuest({
       setLine(npc.line);
       return;
     }
-    const ready = readyLead();
+    const currentBag = loadBag();
+    const ready = npc.mode ? { current: currentBag, lead: currentBag.party[0] } : readyLead();
     if (!ready) return;
     busyRef.current = true;
     setNotice("");
     await loadCatalog();
     const topicIds = npc.topics?.length ? npc.topics : topicIdsFor(npc.blueprint);
-    let ids = npc.prostate
-      ? [
-          ...drawForQuest(desk.state, ["pca", "pca-adv"], Math.ceil(npc.count / 2), Boolean(npc.rematch)),
-          ...drawForQuest(desk.state, topicIds, npc.count, Boolean(npc.rematch)),
-        ].filter((id, index, all) => all.indexOf(id) === index).slice(0, npc.count)
-      : drawForQuest(desk.state, topicIds, npc.count, Boolean(npc.rematch));
+    let ids: string[] = [];
+    if (npc.mode === "missed") {
+      ids = drawQuestionIds(desk.state, topicIds, "incorrect", npc.count || 8, false);
+    } else if (npc.mode === "adaptive") {
+      ids = drawQuestionIds(desk.state, topicIds, "all", npc.count || 10, true);
+    } else if (npc.mode === "images") {
+      const all = drawQuestionIds(desk.state, topicIds, "all", 400, false);
+      ids = all.filter((id) => {
+        const question = getQuestion(id);
+        const text = question?.stem.join(" ") ?? "";
+        return Boolean(question && (question.image || question.figure || /\b(figure|image|photograph|radiograph|diagram)\b/i.test(text)));
+      }).slice(0, npc.count || 8);
+    } else if (npc.mode === "highyield") {
+      const high = (["oncology", "stones", "core", "basic"] as const).flatMap((bucket) => topicIdsFor(bucket));
+      ids = drawQuestionIds(desk.state, high, "all", npc.count || 12, true);
+    } else if (npc.mode === "anki") {
+      ids = loadCards().filter((card) => card.due <= Date.now()).map((card) => card.sourceQuestionId).filter((id) => Boolean(getQuestion(id))).slice(0, 12);
+      if (!ids.length) ids = drawQuestionIds(desk.state, topicIds, "incorrect", npc.count || 8, true);
+    } else {
+      ids = npc.prostate
+        ? [
+            ...drawForQuest(desk.state, ["pca", "pca-adv"], Math.ceil(npc.count / 2), Boolean(npc.rematch)),
+            ...drawForQuest(desk.state, topicIds, npc.count, Boolean(npc.rematch)),
+          ].filter((id, index, all) => all.indexOf(id) === index).slice(0, npc.count)
+        : drawForQuest(desk.state, topicIds, npc.count, Boolean(npc.rematch));
+    }
     if (!ids.length) {
       busyRef.current = false;
-      setNotice("No unused questions left in that set. On Build, open Used and hit Recycle used.");
+      setNotice(npc.mode === "missed" ? "No missed questions left in that set." : "No questions left in that set.");
       return;
     }
     const testId = desk.createTest({
@@ -1572,13 +1620,15 @@ export function MonsterQuest({
     const partner = partnerFor(city?.id ?? "stones", npc.kind === "leader" ? npc.name : npc.id, npc.kind);
     const foeMax = foeHealth(npc.kind, ids.length, cityIndex);
     const prime = takePrime();
-    setLine(npc.kind === "leader" ? `${npc.name} sends out ${partner.name}. Knock it out. A wrong answer and ${partner.move} hits you.` : npc.line);
+    setLine(npc.mode ? npc.line : npc.kind === "leader" ? `${npc.name} sends out ${partner.name}. Knock it out. A wrong answer and ${partner.move} hits you.` : npc.line);
+    const youNow = ready?.lead && ready.lead.hp > 0 ? ready.lead.hp : 20;
+    const youMaxNow = ready?.lead ? maxHp(ready.lead, ready.current) : 20;
     setBattle({
       testId,
       ids,
       index: 0,
-      you: ready.lead.hp,
-      youMax: maxHp(ready.lead, ready.current),
+      you: youNow,
+      youMax: Math.max(youNow, youMaxNow),
       foeHp: foeMax,
       foeMax,
       right: 0,
@@ -1602,6 +1652,7 @@ export function MonsterQuest({
       committed: false,
       fromId: npc.id,
       portrait: npc.sprite,
+      noCreatures: Boolean(npc.mode),
     });
   };
 
@@ -1677,8 +1728,14 @@ export function MonsterQuest({
       return;
     }
     if (npc.id === "television") {
+      setTvStarted(Date.now());
       setTvOpen(true);
-      setLine("Empire Urology is on. Close it and you are still in the house.");
+      setLine("Empire Urology is on. Leave it open at least 30 minutes, then close it for $10.");
+      return;
+    }
+    if (npc.id === "desk") {
+      setDeskOpen(true);
+      setLine("Due cards are open. Each one you review is $0.50.");
       return;
     }
     if (npc.id === "stairs") {
@@ -1687,6 +1744,11 @@ export function MonsterQuest({
       setHouseFloor(next);
       posRef.current = { x: 10, y: 8, scene: "house", cityId: "home" };
       setLine(next === 2 ? "Upstairs. Bed on the left. The balcony is over the pool." : "Downstairs. Medals, the trident, the diploma, the couch, and the television.");
+      return;
+    }
+    if (npc.id === "moka" && !bag?.starter) {
+      setStarterOpen(true);
+      setLine("Professor Moka: These four will not show up in the grass. Pick the one that travels with you.");
       return;
     }
     if (npc.kind === "townsman") {
@@ -2568,11 +2630,65 @@ export function MonsterQuest({
           />
           <button
             type="button"
-            onClick={() => setTvOpen(false)}
+            onClick={() => {
+              const watched = Date.now() - tvStarted > 30 * 60 * 1000;
+              if (watched) {
+                const prior = Number(localStorage.getItem("ise-lecture-bonus") || "0");
+                localStorage.setItem("ise-lecture-bonus", String(prior + 10));
+                window.dispatchEvent(new Event("ise-activity"));
+                setLine("Lecture counted. $10 added.");
+              }
+              setTvOpen(false);
+            }}
             className="min-h-11 border-4 border-black bg-[#fff4a8] text-sm font-bold text-black"
           >
             Back to the house
           </button>
+        </div>
+      ) : null}
+      {deskOpen ? (
+        <div className="absolute inset-0 z-40 flex flex-col bg-[#f8f8d8] text-black">
+          <div className="border-b-4 border-black p-3">
+            <p className="font-bold">Due flashcards</p>
+            <p className="text-xs">$0.50 each when you review them.</p>
+          </div>
+          <div className="flex-1 overflow-auto p-3">
+            {loadCards().filter((card) => card.due <= Date.now()).slice(0, 12).map((card) => (
+              <div key={card.id} className="mb-3 border-4 border-black bg-white p-2">
+                <p className="text-sm">{card.front}</p>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    className="min-h-11 border-4 border-black bg-white px-2 text-sm font-bold"
+                    onClick={() => {
+                      saveCards(loadCards().map((row) => (row.id === card.id ? schedule(row, "again") : row)));
+                      const prior = Number(localStorage.getItem("ise-card-bonus") || "0");
+                      localStorage.setItem("ise-card-bonus", String(prior + 0.5));
+                      window.dispatchEvent(new Event("ise-activity"));
+                      setDeskTick((tick) => tick + 1);
+                    }}
+                  >
+                    Again · $0.50
+                  </button>
+                  <button
+                    type="button"
+                    className="min-h-11 border-4 border-black bg-black px-2 text-sm font-bold text-[#fff4a8]"
+                    onClick={() => {
+                      saveCards(loadCards().map((row) => (row.id === card.id ? schedule(row, "good") : row)));
+                      const prior = Number(localStorage.getItem("ise-card-bonus") || "0");
+                      localStorage.setItem("ise-card-bonus", String(prior + 0.5));
+                      window.dispatchEvent(new Event("ise-activity"));
+                      setDeskTick((tick) => tick + 1);
+                    }}
+                  >
+                    Good · $0.50
+                  </button>
+                </div>
+              </div>
+            ))}
+            {deskTick >= 0 && loadCards().filter((card) => card.due <= Date.now()).length === 0 ? <p className="text-sm">Nothing due right now.</p> : null}
+          </div>
+          <button type="button" onClick={() => setDeskOpen(false)} className="min-h-11 border-4 border-black bg-white text-sm font-bold">Close</button>
         </div>
       ) : null}
       <div className="border-b-4 border-black bg-[#fff4a8] px-3 py-2 text-black">
@@ -2617,8 +2733,8 @@ export function MonsterQuest({
           </h2>
           {scene === "home" ? <p className="text-xs">Your house is on the left. Professor Moka is in the lab. The south road is the trail to Quarry End.</p> : null}
           {scene === "vale" ? <p className="text-xs">Sit on a cushion or take the tea. Talk to whoever is nearest. The south door goes back to the yard.</p> : null}
-          {scene === "house" ? <p className="text-xs">{houseFloor === 1 ? "Click the stairs, the awards, or the television. North door is the pool. South door leaves." : "Click the stairs to go down. The balcony is along the north wall."}</p> : null}
-          {scene === "yard" ? <p className="text-xs">The pool is behind the house. One tree beside it is yellow. Walk into that one. The north door goes back in.</p> : null}
+          {scene === "house" ? <p className="text-xs">{houseFloor === 1 ? "Click the desk for due cards, the television for Empire lectures, or the stairs. North door is the pool." : "Click the stairs to go down. The balcony is along the north wall."}</p> : null}
+          {scene === "yard" ? <p className="text-xs">Two yellow trees. One is by the pool. One is at the top of the yard. Walk into either.</p> : null}
           {scene === "route" && city?.id === "stones" ? <p className="text-xs">South sign goes home. North sign goes to Quarry End. Neither needs a badge.</p> : null}
           {scene === "route" && city?.id === "oncology" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
           {scene === "route" && city?.id === "urogyn" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
@@ -2682,18 +2798,18 @@ export function MonsterQuest({
             </div>
             <div className="flex items-end justify-end gap-1">
               {battle.portrait ? (
-                <img src={battle.portrait} alt="" className="h-36 w-auto object-contain [image-rendering:pixelated]" />
+                <img src={battle.portrait.startsWith("lounge:") ? `/quest/lounge/${battle.portrait.slice(7)}.png` : battle.portrait} alt="" className="h-40 w-auto object-contain [image-rendering:pixelated]" />
               ) : battle.foeKind !== "wild" ? (
                 <DressedActor kind={battle.foeKind === "leader" ? "leader" : battle.foeKind === "rival" ? "rival" : "trainer"} coat={battle.trainerCoat} className="h-28" />
               ) : null}
-              {battle.foeSpecies ? (
+              {!battle.noCreatures && battle.foeSpecies ? (
                 <img src={monSrc(battle.foeSpecies, battle.foeStage ?? 0)} alt="" className="h-20 w-auto bg-transparent object-contain" />
               ) : null}
             </div>
           </div>
           <div className="relative mt-1 grid grid-cols-[8rem_1fr] items-end gap-2">
             <div className="flex flex-col items-center">
-              {lead ? <img src={creatureSrc(lead)} alt="" className="h-16 w-auto bg-transparent object-contain" /> : null}
+              {!battle.noCreatures && lead ? <img src={creatureSrc(lead)} alt="" className="h-16 w-auto bg-transparent object-contain" /> : null}
               <PixelActor kind="player" className="h-24" />
               <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
             </div>
@@ -2927,7 +3043,7 @@ export function MonsterQuest({
           </ul>
         </div>
       ) : null}
-      {bag && !bag.starter ? (
+      {bag && !bag.starter && starterOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3 sm:items-center">
           <div className="w-full max-w-lg border-4 border-black bg-[#f8f8d8] p-3 text-black">
             <div className="flex gap-3">
@@ -2940,7 +3056,7 @@ export function MonsterQuest({
             </div>
             {offer ? (
               <div className="mt-3 flex gap-2">
-                <button type="button" onClick={() => { setBag(pickStarter(offer)); setOffer(null); }} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">I'll take {lines[offer].names[0]}</button>
+                <button type="button" onClick={() => { setBag(pickStarter(offer)); setOffer(null); setStarterOpen(false); }} className="min-h-11 border-4 border-black bg-black px-3 text-sm font-bold text-[#fff4a8]">I'll take {lines[offer].names[0]}</button>
                 <button type="button" onClick={() => setOffer(null)} className="min-h-11 border-4 border-black bg-white px-3 text-sm font-bold">Let me look again</button>
               </div>
             ) : (
