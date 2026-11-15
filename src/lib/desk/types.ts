@@ -88,4 +88,6 @@ export type DeskState = {
   focus: Partial<Record<BlueprintId, Focus>>;
   /** Questions put back into the unused pile. Selection ignores older answers. */
   fresh?: Record<string, boolean>;
+  /** User flagged these as missing the image the stem needs. Plans skip them. */
+  noImage?: Record<string, boolean>;
 };
