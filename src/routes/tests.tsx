@@ -11,7 +11,14 @@ export const Route = createFileRoute("/tests")({
 function TestsPage() {
   const desk = useDesk();
   const [filter, setFilter] = useState<"all" | "open" | "done">("all");
-  const tests = [...desk.state.tests].reverse().filter((test) => filter === "all" || test.status === filter);
+  const tests = [...desk.state.tests]
+    .filter((test) => filter === "all" || test.status === filter)
+    .sort((a, b) => {
+      if (a.status !== b.status) return a.status === "open" ? -1 : 1;
+      const aTime = a.finishedAt ?? a.createdAt;
+      const bTime = b.finishedAt ?? b.createdAt;
+      return bTime - aTime;
+    });
 
   return (
     <Shell>
