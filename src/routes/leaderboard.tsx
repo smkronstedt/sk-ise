@@ -59,6 +59,7 @@ function Board({ board, label, leaders }: { board: keyof PeriodScores; label: st
                 <p className="text-sm text-[#8a6418]">
                   {titleFor(index, score)}
                   {leader.champion ? " · Champion" : ""}
+                  {leader.done > 0 ? ` · ${leader.done} done · ${leader.right} right · ${leader.wrong} wrong` : ""}
                 </p>
                 {leader.bio ? <p className="truncate text-sm text-[#1d3557]/80">{leader.bio}</p> : null}
               </div>

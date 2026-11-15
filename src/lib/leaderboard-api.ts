@@ -6,6 +6,13 @@ import { centralToday } from "@/lib/desk/periods";
 import { periodTotals, withBankScore, type PeriodScores } from "@/lib/desk/periods";
 import type { TestBlock } from "@/lib/desk/types";
 
+export type StudyCounts = {
+  done: number;
+  right: number;
+  wrong: number;
+  finished: number;
+};
+
 export type Leader = {
   name: string;
   image: string;
@@ -14,6 +21,10 @@ export type Leader = {
   bio: string;
   badges: string[];
   champion: boolean;
+  done: number;
+  right: number;
+  wrong: number;
+  finished: number;
 };
 
 function testsOf(desk: unknown): TestBlock[] {
@@ -66,10 +77,44 @@ function withFinishedTests(days: Record<string, { questions?: number; correct?: 
   return out;
 }
 
+function bankAnswers(bank: unknown): Record<string, { correct?: boolean }> {
+  try {
+    const value = typeof bank === "string" ? JSON.parse(bank) : bank;
+    const answers = (value as { answers?: Record<string, { correct?: boolean }> } | null)?.answers;
+    return answers && typeof answers === "object" ? answers : {};
+  } catch {
+    return {};
+  }
+}
+
+export function studyCounts(desk: unknown, bank: unknown): StudyCounts {
+  const tests = testsOf(desk);
+  const seen = new Map<string, boolean>();
+  for (const [id, row] of Object.entries(bankAnswers(bank))) {
+    seen.set(id, Boolean(row?.correct));
+  }
+  for (const test of tests) {
+    for (const [id, answer] of Object.entries(test.answers ?? {})) {
+      if (!answer?.submitted || answer.choice == null || seen.has(id)) continue;
+      const question = getQuestion(id);
+      seen.set(id, Boolean(question && answer.choice === question.answer));
+    }
+  }
+  let right = 0;
+  for (const ok of seen.values()) if (ok) right += 1;
+  const done = seen.size;
+  return {
+    done,
+    right,
+    wrong: done - right,
+    finished: tests.filter((test) => test.status === "done").length,
+  };
+}
+
 export const listLeaders = createServerFn({ method: "GET" }).handler(async (): Promise<{ leaders: Leader[] }> => {
   const sql = await getSql();
-  const rows = await sql<{ name: string | null; image: string | null; score: number | null; bio: string | null; desk: unknown; cards: unknown }>`
-    select u.name, u.image, coalesce(p.score, 0) as score, coalesce(pr.bio, '') as bio, p.desk as desk, p.cards as cards
+  const rows = await sql<{ name: string | null; image: string | null; score: number | null; bio: string | null; desk: unknown; cards: unknown; bank: unknown }>`
+    select u.name, u.image, coalesce(p.score, 0) as score, coalesce(pr.bio, '') as bio, p.desk as desk, p.cards as cards, p.bank as bank
     from "user" u
     left join user_progress p on p.user_id = u.id
     left join user_profile pr on pr.user_id = u.id
@@ -82,6 +127,7 @@ export const listLeaders = createServerFn({ method: "GET" }).handler(async (): P
       const activity = withFinishedTests(activityOf(row.cards), tests);
       const bankScore = Number(row.score ?? 0);
       const periods = withBankScore(periodTotals(activity), activity, bankScore);
+      const counts = studyCounts(row.desk, row.bank);
       return {
         name: row.name?.trim() || "Resident",
         image: row.image ?? "",
@@ -90,6 +136,7 @@ export const listLeaders = createServerFn({ method: "GET" }).handler(async (): P
         bio: row.bio ?? "",
         badges: badgeElements(tests),
         champion: isChampion(tests),
+        ...counts,
       };
     }),
   };

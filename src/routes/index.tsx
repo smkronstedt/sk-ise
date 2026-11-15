@@ -1,1 +1,791 @@
-CONTENT_FROM_FILE_WILL_BE_FULL
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { DayPlan } from "@/components/desk/day-plan";
+import { SKHYPlan } from "@/components/desk/sk-hy-plan";
+import { HeatMap } from "@/components/desk/heat-map";
+import { MonsterQuest } from "@/components/desk/monster-quest";
+import { PrizeLadder } from "@/components/desk/prizes";
+import { Operations } from "@/components/desk/operations";
+import { Shell } from "@/components/desk/shell";
+import { HoustonTrail } from "@/components/desk/houston-trail";
+import { InserviceCard } from "@/components/desk/inservice-card";
+import { isAdminEmail } from "@/lib/admin-email";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { bucketStats, drawQuestionIds, scoreTest, uniqueCorrectCount } from "@/lib/desk/adapt";
+import { ensureLifetime } from "@/lib/desk/activity";
+import { blueprintBankCounts, getQuestion, loadCatalog } from "@/lib/desk/catalog";
+import { listLeaders, type Leader } from "@/lib/leaderboard-api";
+import { BANK_TOTAL, countBankCorrect, loadBankProgress } from "@/lib/desk/original-bank";
+import { questions } from "@/lib/desk/questions";
+import { useDesk } from "@/lib/desk/provider";
+import { careerRank, oldCareerRank } from "@/lib/desk/ranks";
+import { RankMark } from "@/components/desk/rank-mark";
+import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
+import { topics } from "@/lib/desk/topics";
+import { CATCH_EVERY, DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
+import { benchCreature, bringAlong, creatureSrc, enrollGuide, loadBag, nameOf, walkWith, type QuestBag } from "@/lib/desk/quest-bag";
+import { MODE_EVENT, loadMode, type DeskMode } from "@/lib/desk/modes";
+import { Badge } from "@/components/desk/badge";
+import { RpgMode } from "@/components/desk/game-modes";
+import { cities, routeStops } from "@/lib/desk/route";
+
+export const Route = createFileRoute("/")({
+  component: Home,
+});
+
+const focusChoices: { id: Focus; label: string }[] = [
+  { id: "boost", label: "Boost" },
+  { id: "hold", label: "Hold" },
+  { id: "ease", label: "Ease" },
+];
+
+const fieldCreatures = topics.map((t, i) => ({
+  id: t.id,
+  name: t.short,
+  number: i + 1,
+  type: t.blueprintId,
+}));
+
+function leagueCleared(state: DeskState) {
+  return state.tests.some((test) => {
+    if (test.status !== "done" || test.name !== "Championship") return false;
+    const score = scoreTest(state, test.id);
+    return score.total > 0 && score.correct / score.total >= 0.8;
+  });
+}
+
+function completedBattleTopics(state: DeskState): Set<string> {
+  const done = new Set<string>();
+  for (const test of state.tests) {
+    if (test.status !== "done") continue;
+    if (!test.name.startsWith("Battle:")) continue;
+    const topicShort = test.name.replace("Battle: ", "");
+    const topic = topics.find((t) => t.short === topicShort);
+    if (topic) done.add(topic.id);
+  }
+  return done;
+}
+
+
+function studyCounts(state: DeskState) {
+  const seen = new Map<string, boolean>();
+  for (const [id, row] of Object.entries(loadBankProgress().answers)) {
+    seen.set(id, Boolean(row?.correct));
+  }
+  for (const test of state.tests) {
+    for (const [id, answer] of Object.entries(test.answers ?? {})) {
+      if (!answer?.submitted || answer.choice == null || seen.has(id)) continue;
+      const question = getQuestion(id);
+      seen.set(id, Boolean(question && answer.choice === question.answer));
+    }
+  }
+  let right = 0;
+  for (const ok of seen.values()) if (ok) right += 1;
+  const done = seen.size;
+  const finished = state.tests.filter((test) => test.status === "done").length;
+  return { done, right, wrong: done - right, finished, open: state.tests.length - finished };
+}
+
+function deskStanding(score: number, leaders: Leader[] | null) {
+  if (!leaders) return "Checking accounts on this desk.";
+  const scores = leaders.some((row) => row.score === score) ? leaders.map((row) => row.score) : [...leaders.map((row) => row.score), score];
+  if (scores.length < 2) return "You are the only account on this desk, so there is no peer percentile here yet.";
+  const below = scores.filter((value) => value < score).length;
+  const place = scores.filter((value) => value > score).length + 1;
+  const percentile = Math.round((below / (scores.length - 1)) * 100);
+  return `${place} of ${scores.length} on this desk, ${percentile}th percentile here.`;
+}
+
+function Home() {
+  const desk = useDesk();
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<DeskMode>("classic");
+  const [notice, setNotice] = useState("");
+  const [rankTab, setRankTab] = useState<"now" | "old">("now");
+  const stats = bucketStats(desk.state);
+  const ranked = [...stats].sort((a, b) => b.suggested - a.suggested);
+  const top = ranked[0];
+  const attempted = stats.reduce((sum, row) => sum + row.attempted, 0);
+  const correct = stats.reduce((sum, row) => sum + row.correct, 0);
+  const openTests = [...desk.state.tests].reverse();
+  const pct = attempted ? Math.round((correct / attempted) * 100) : 0;
+  const mastered = stats.filter((s) => s.attempted > 5 && s.correct / s.attempted >= 0.7).length;
+  const battleDone = completedBattleTopics(desk.state);
+  const badges = routeStops(desk.state.tests).filter((stop) => stop.kind === "gym" && stop.done).length;
+  const champion = leagueCleared(desk.state);
+
+  useEffect(() => {
+    const sync = () => setMode(loadMode());
+    sync();
+    window.addEventListener(MODE_EVENT, sync);
+    return () => window.removeEventListener(MODE_EVENT, sync);
+  }, []);
+
+  const openUnused = async (input: {
+    name: string;
+    adaptive: boolean;
+    topicIds: string[];
+    count: number;
+  }) => {
+    setNotice("");
+    await loadCatalog();
+    const ids = drawQuestionIds(desk.state, input.topicIds, "unused", input.count, input.adaptive);
+    if (!ids.length) {
+      setNotice("No unused questions left in that set. On Build, open Used and hit Recycle used.");
+      return;
+    }
+    const id = desk.createTest({
+      name: input.name,
+      mode: "tutor",
+      adaptive: input.adaptive,
+      topicIds: input.topicIds,
+      pool: "unused",
+      count: ids.length,
+      questionIds: ids,
+    });
+    if (id) void navigate({ to: "/test/$id", params: { id } });
+  };
+
+  const startAdaptive = () => {
+    void openUnused({
+      adaptive: true,
+      topicIds: topics.map((topic) => topic.id),
+      count: 15,
+      name: "2025 plan",
+    });
+  };
+
+  const startTopicBattle = (topicId: string) => {
+    void openUnused({
+      adaptive: false,
+      topicIds: [topicId],
+      count: 5,
+      name: `Battle: ${topics.find((t) => t.id === topicId)?.short ?? topicId}`,
+    });
+  };
+
+  const startRoute = (name: string, blueprintId: BlueprintId, count: number, gym: boolean) => {
+    void openUnused({
+      name,
+      adaptive: gym,
+      topicIds: topics.filter((topic) => topic.blueprintId === blueprintId).map((topic) => topic.id),
+      count,
+    });
+  };
+
+  const startChampionship = () => {
+    void openUnused({
+      adaptive: true,
+      topicIds: topics.map((topic) => topic.id),
+      count: 20,
+      name: "Championship",
+    });
+  };
+
+  const applyFocus = (focus: Record<BlueprintId, Focus>) => desk.setFocusMap(focus);
+  const [bankCorrect, setBankCorrect] = useState(0);
+  const [leaders, setLeaders] = useState<Leader[] | null>(null);
+  const [pulse, setPulse] = useState(0);
+  const { user, isPending } = useCurrentUserState();
+  const mine = isAdminEmail(user?.primaryEmail);
+  useEffect(() => {
+    setBankCorrect(countBankCorrect());
+    let stop = false;
+    void listLeaders()
+      .then((result) => {
+        if (!stop) setLeaders(result.leaders);
+      })
+      .catch(() => {
+        if (!stop) setLeaders([]);
+      });
+    return () => {
+      stop = true;
+    };
+  }, []);
+  useEffect(() => {
+    let stop = false;
+    const bump = () => setPulse((value) => value + 1);
+    void loadCatalog().finally(() => {
+      if (!stop) bump();
+    });
+    window.addEventListener("ise-activity", bump);
+    window.addEventListener("ise-progress", bump);
+    return () => {
+      stop = true;
+      window.removeEventListener("ise-activity", bump);
+      window.removeEventListener("ise-progress", bump);
+    };
+  }, []);
+  const experience = ensureLifetime(uniqueCorrectCount(desk.state));
+  void pulse;
+  const experienceTotal = BANK_TOTAL + questions.length;
+  const rank = careerRank(experience, experienceTotal, mine);
+  const oldRank = oldCareerRank(experience, experienceTotal, mine);
+  const study = studyCounts(desk.state);
+
+  return (
+    <Shell>
+      <section className="mb-4 rounded border border-line bg-paper px-4 py-3">
+        <p className="text-xs font-semibold tracking-wide text-muted uppercase">Your questions</p>
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            ["Done", study.done],
+            ["Right", study.right],
+            ["Wrong", study.wrong],
+            ["Tests finished", study.finished],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded border border-line bg-white px-3 py-2">
+              <p className="text-xs font-semibold tracking-wide text-muted uppercase">{label}</p>
+              <p className="font-serif text-2xl tracking-tight">{value}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-sm text-muted">
+          {study.done === 0
+            ? "No scored questions yet."
+            : `${study.right} right out of ${study.done} done${study.done ? ` (${Math.round((study.right / study.done) * 100)}%)` : ""}. ${study.wrong} wrong. ${study.open} test${study.open === 1 ? "" : "s"} still open.`}
+        </p>
+        {leaders && leaders.some((row) => row.done > 0) ? (
+          <ul className="mt-3 divide-y divide-line">
+            {leaders.filter((row) => row.done > 0).map((row) => (
+              <li key={row.name} className="flex items-baseline justify-between gap-3 py-2 text-sm">
+                <span className="truncate font-semibold">{row.name}</span>
+                <span className="shrink-0 text-muted">{row.done} done · {row.right} right · {row.wrong} wrong · {row.finished} tests</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
+
+
+      <div className="mb-4 rounded border border-line bg-paper px-4 py-3">
+        <p className="text-xs font-semibold tracking-wide text-muted uppercase">Rank {rank.index + 1} of {rank.gates.length}</p>
+        <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <RankMark title={rank.title} on />
+              <h1 className="font-serif text-2xl tracking-tight">{rank.title}</h1>
+            </div>
+            <div className="mt-1 max-w-xl text-sm text-muted">
+              <p>{deskStanding(experience, leaders)}</p>
+            </div>
+          </div>
+          <p className="text-sm text-muted">
+            {experience}/{experienceTotal} correct
+            <span className="mx-2 text-faint">·</span>
+            Bank {bankCorrect}/{BANK_TOTAL}
+            <span className="mx-2 text-faint">·</span>
+            Trainer {correct}/{questions.length}
+            <span className="mx-2 text-faint">·</span>
+            <span className="font-semibold text-ink">${experience}</span>
+          </p>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded bg-chip">
+          <div className="h-full bg-navy" style={{ width: `${Math.round(rank.into * 100)}%` }} />
+        </div>
+        <p className="mt-2 text-sm text-muted">
+          {rank.next ? `${rank.left} more correct to ${rank.next}.` : `Top rank: ${rank.title}.`}
+        </p>
+        <div className="mt-3 flex gap-2">
+          <button type="button" onClick={() => setRankTab("now")} className={`min-h-11 rounded px-3 text-sm font-semibold ${rankTab === "now" ? "bg-navy text-white" : "border border-line bg-white"}`}>Rank</button>
+          <button type="button" onClick={() => setRankTab("old")} className={`min-h-11 rounded px-3 text-sm font-semibold ${rankTab === "old" ? "bg-navy text-white" : "border border-line bg-white"}`}>Old ranks</button>
+        </div>
+        {rankTab === "old" ? (
+          <ol className="mt-3 grid gap-2 sm:grid-cols-2">
+            {oldRank.gates.map((gate, index) => {
+              const previous = index === 0 ? 0 : oldRank.gates[index - 1].at;
+              const state = index < oldRank.index ? "Earned" : index === oldRank.index ? "Now" : "Ahead";
+              return (
+                <li key={gate.title} className={`flex items-center gap-2 rounded border px-2 py-2 ${state === "Ahead" ? "border-line text-muted" : "border-[#c9a15b] bg-white"}`}>
+                  <RankMark title={gate.title} on={state !== "Ahead"} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-ink">{gate.title}</p>
+                    <p className="text-xs">{state} · {gate.at} correct · {index === 0 ? "start" : `+${gate.at - previous} from the last rank`}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        ) : null}
+      </div>
+
+      <DayPlan
+        stats={stats}
+        onStart={(blueprintId) => {
+          const topicIds = topics.filter((topic) => topic.blueprintId === blueprintId).map((topic) => topic.id);
+          void openUnused({
+            adaptive: true,
+            topicIds: topicIds.length ? topicIds : topics.map((topic) => topic.id),
+            count: 10,
+            name: "Today's plan",
+          });
+        }}
+      />
+
+      <SKHYPlan
+        onStart={(input) => {
+          void openUnused(input);
+        }}
+      />
+
+      <PrizeLadder />
+
+      <HeatMap />
+
+      {notice ? <p className="mb-3 rounded border border-line bg-paper px-4 py-3 text-sm">{notice}</p> : null}
+
+      {mode === "classic" && (
+        <ClassicView
+          desk={desk}
+          stats={stats}
+          top={top}
+          attempted={attempted}
+          correct={correct}
+          openTests={openTests}
+          startAdaptive={startAdaptive}
+          applyFocus={applyFocus}
+          mine={mine}
+          sessionPending={isPending}
+          signedIn={Boolean(user)}
+        />
+      )}
+      {mode === "base" && <HomeBase pct={pct} mastered={mastered} dueCards={0} startAdaptive={startAdaptive} />}
+      {mode === "trail" && <HoustonTrail />}
+      {mode === "encounter" && <Encounter pct={pct} top={top} startAdaptive={startAdaptive} />}
+      {mode === "notes" && (
+        <FieldNotes
+          battleDone={battleDone}
+          startTopicBattle={startTopicBattle}
+          startRoute={startRoute}
+          startChampionship={startChampionship}
+          badges={badges}
+          champion={champion}
+        />
+      )}
+      {mode === "rpg" && <RpgMode battleDone={battleDone} startTopicBattle={startTopicBattle} />}
+      {mode === "ops" && <Operations correct={experience} total={experienceTotal} />}
+    </Shell>
+  );
+}
+
+function ClassicView({
+  desk,
+  stats,
+  top,
+  attempted,
+  correct,
+  openTests,
+  startAdaptive,
+  applyFocus,
+  mine,
+  sessionPending,
+  signedIn,
+}: {
+  desk: ReturnType<typeof useDesk>;
+  stats: ReturnType<typeof bucketStats>;
+  top: ReturnType<typeof bucketStats>[0] | undefined;
+  attempted: number;
+  correct: number;
+  openTests: ReturnType<typeof useDesk>["state"]["tests"];
+  startAdaptive: () => void;
+  applyFocus: (focus: Record<BlueprintId, Focus>) => void;
+  mine: boolean;
+  sessionPending: boolean;
+  signedIn: boolean;
+}) {
+  return (
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.8fr)]">
+      <section className="rounded border border-line bg-paper">
+        <div className="border-b border-line px-4 py-4">
+          <p className="text-sm font-semibold tracking-wide text-muted uppercase">Where the exam spends its questions</p>
+          <h1 className="font-serif text-3xl tracking-tight">Focus before you sit down</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted">
+            Shares are the ABU in-service outline. They add to 100 and move a little year to year. Suggested time starts as that outline, then shifts toward buckets you miss. Boost a row you are weak on. Ease one you already own.
+          </p>
+        </div>
+        <div className="divide-y divide-line">
+          {stats.map((row) => {
+            const inBank = blueprintBankCounts()[row.id as BlueprintId];
+            return (
+            <div key={row.id} className="px-4 py-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-base font-semibold">{row.title}</h2>
+                <p className="text-sm">
+                  <span className="font-semibold">{row.percent}%</span>
+                  <span className="text-muted"> of the exam</span>
+                  <span className="mx-2 text-faint">·</span>
+                  <span className="font-semibold">{Math.round(row.suggested)}%</span>
+                  <span className="text-muted"> of your time</span>
+                </p>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded bg-chip">
+                <div className="h-full bg-navy" style={{ width: `${row.percent * 4}%` }} />
+              </div>
+              <p className="mt-2 text-sm text-muted">{row.detail}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <p className="text-sm">
+                  {row.attempted === 0
+                    ? `None answered${inBank ? ` (${inBank} questions in the bank)` : ""}`
+                    : `${row.correct}/${row.attempted} last answers correct${inBank ? ` (${inBank} questions in the bank)` : ""}`}
+                </p>
+                <div className="ml-auto flex gap-1">
+                  {focusChoices.map((choice) => (
+                    <button
+                      key={choice.id}
+                      type="button"
+                      onClick={() => desk.setFocus(row.id as BlueprintId, choice.id)}
+                      className={`min-h-11 rounded border px-3 text-sm font-semibold ${
+                        row.focus === choice.id
+                          ? "border-navy bg-navy text-white"
+                          : "border-line bg-paper text-ink"
+                      }`}
+                    >
+                      {choice.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <aside className="flex flex-col gap-4">
+        <section className="rounded border border-amber-500 bg-amber-50 p-4">
+          <p className="text-xs font-semibold tracking-wide text-amber-800 uppercase">Prize and log</p>
+          <h2 className="font-serif text-2xl text-amber-950">SASP year purse</h2>
+          <p className="mt-1 text-sm text-amber-950">Finish a 150-question year for $1,000. The calendar counts questions and cards by day.</p>
+          <Link to="/log" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-navy">
+            Open the log
+          </Link>
+        </section>
+        <InserviceCard mine={mine} pending={sessionPending} signedIn={signedIn} onApply={applyFocus} />
+
+        <section className="rounded border border-line bg-paper p-4">
+          <p className="text-sm font-semibold tracking-wide text-muted uppercase">Next block</p>
+          <h2 className="font-serif text-2xl tracking-tight">
+            {top ? `Start with ${top.short}` : "Adaptive block"}
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {attempted === 0
+              ? "You have no scored items yet, so the block follows the exam weights."
+              : `You are ${Math.round((correct / attempted) * 100)}% on last answers. The block leans into misses and into whatever you boosted.`}
+          </p>
+          <button
+            type="button"
+            onClick={startAdaptive}
+            className="mt-3 min-h-11 w-full rounded bg-blue px-4 text-base font-semibold text-white"
+          >
+            Start adaptive tutor block
+          </button>
+          <Link
+            to="/create"
+            className="mt-2 flex min-h-11 items-center justify-center rounded border border-line px-4 text-sm font-semibold"
+          >
+            Build a custom block
+          </Link>
+          <Link
+            to="/guidelines"
+            className="mt-2 flex min-h-11 items-center justify-center rounded border border-line px-4 text-sm font-semibold"
+          >
+            Guideline statements
+          </Link>
+          <p className="mt-3 text-sm text-muted">
+            {questions.length} original items across {topics.length} guidelines. SASP booklets stay in your Drive and are not scored here.
+          </p>
+        </section>
+
+        <section className="rounded border border-line bg-paper p-4">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-semibold">Saved tests</h2>
+            <Link to="/tests" className="text-sm font-semibold text-blue">
+              All tests
+            </Link>
+          </div>
+          {openTests.length === 0 ? (
+            <p className="mt-2 text-sm text-muted">None yet. An adaptive block or a custom build is saved here as soon as you start it.</p>
+          ) : (
+            <ul className="mt-2 divide-y divide-line">
+              {openTests.slice(0, 5).map((test) => {
+                const score = scoreTest(desk.state, test.id);
+                return (
+                  <li key={test.id} className="flex items-center gap-2 py-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{test.name}</p>
+                      <p className="text-sm text-muted">
+                        {test.status === "done" ? "Finished" : "In progress"} · {score.correct}/{score.answered} correct · {score.total} items
+                      </p>
+                    </div>
+                    <Link
+                      to="/test/$id"
+                      params={{ id: test.id }}
+                      className="min-h-11 rounded border border-line px-3 py-2 text-sm font-semibold"
+                    >
+                      {test.status === "done" ? "Review" : "Resume"}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </aside>
+    </div>
+  );
+}
+
+function HomeBase({
+  pct,
+  mastered,
+  dueCards,
+  startAdaptive,
+}: {
+  pct: number;
+  mastered: number;
+  dueCards: number;
+  startAdaptive: () => void;
+}) {
+  const rank = pct >= 80 ? "Chief" : pct >= 65 ? "Senior" : pct >= 50 ? "Junior" : "Intern";
+  return (
+    <section className="rounded border border-line bg-paper overflow-hidden">
+      <div className="bg-gradient-to-b from-slate-100 to-white px-6 py-8">
+        <h1 className="font-serif text-3xl tracking-tight">Call Room</h1>
+        <p className="mt-1 text-sm text-muted">Your desk updates as you study.</p>
+        <div className="mt-6 flex flex-wrap gap-4">
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-4xl font-bold text-green-600">{pct}%</div>
+            <div className="text-sm text-muted">Correct</div>
+          </div>
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-4xl font-bold text-blue-600">{mastered}</div>
+            <div className="text-sm text-muted">Topics mastered</div>
+          </div>
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-4xl font-bold text-amber-600">{dueCards}</div>
+            <div className="text-sm text-muted">Cards due</div>
+          </div>
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-navy">{rank}</div>
+            <div className="text-sm text-muted">Rank</div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={startAdaptive}
+          className="mt-6 min-h-11 rounded bg-blue px-5 text-sm font-semibold text-white"
+        >
+          Start adaptive block
+        </button>
+      </div>
+      <div className="h-40 bg-gradient-to-b from-blue-50 to-slate-100 flex items-end justify-center pb-4">
+        <div className="text-sm text-muted">Desk scene — charts light up as topics are mastered</div>
+      </div>
+    </section>
+  );
+}
+
+function Encounter({
+  pct,
+  top,
+  startAdaptive,
+}: {
+  pct: number;
+  top: ReturnType<typeof bucketStats>[0] | undefined;
+  startAdaptive: () => void;
+}) {
+  return (
+    <section className="rounded border border-line bg-paper p-6">
+      <p className="text-xs font-semibold tracking-wide text-muted uppercase">Not a map</p>
+      <h1 className="font-serif text-3xl tracking-tight">Case encounter</h1>
+      <p className="mt-1 max-w-xl text-sm text-muted">
+        One weak bucket at a time. This is not a world to walk. It puts you against the outline area you are missing, then starts a block.
+      </p>
+      <div className="mt-6 flex items-center justify-between rounded-lg border border-line bg-slate-50 p-5">
+        <div className="text-center">
+          <div className="text-lg font-semibold">You</div>
+          <div className="mt-1 text-3xl font-bold text-blue-600">{pct}%</div>
+          <div className="text-sm text-muted">overall</div>
+        </div>
+        <div className="text-3xl text-muted">vs</div>
+        <div className="text-center">
+          <div className="text-lg font-semibold">{top?.short ?? "Next case"}</div>
+          <div className="mt-1 text-sm text-muted">Suggested focus</div>
+          <div className="mt-1 text-xs text-muted">{top ? `${top.percent}% of exam` : ""}</div>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={startAdaptive}
+        className="mt-5 min-h-11 w-full rounded bg-navy px-5 text-sm font-semibold text-white"
+      >
+        Start encounter
+      </button>
+    </section>
+  );
+}
+
+
+function OwnedRail({ bag, note, onAct }: { bag: QuestBag | null; note: string; onAct: (note: string) => void }) {
+  if (!bag) return null;
+  const full = bag.party.length >= 6;
+  return (
+    <aside className="rounded border border-field-ink/15 bg-white p-3 lg:sticky lg:top-4">
+      <h2 className="font-serif text-xl">With you</h2>
+      <p className="text-xs text-field-ink/70">{bag.party.length}/6 on the quest. The first one walks and fights.</p>
+      <ul className="mt-2 flex flex-col gap-2">
+        {bag.party.map((creature, index) => (
+          <li key={creature.id} className="flex items-center gap-2 border-b border-field-ink/10 pb-2">
+            <img src={creatureSrc(creature)} alt="" className="h-10 w-10 object-contain" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{index === 0 ? "Walking · " : `${index + 1}. `}{creature.dex ? `#${String(creature.dex).padStart(3, "0")} ` : ""}{nameOf(creature)}</p>
+            </div>
+            {index > 0 ? (
+              <button type="button" onClick={() => onAct(walkWith(creature.id))} className="min-h-11 rounded border border-field-ink px-2 text-xs font-semibold">Walk</button>
+            ) : null}
+            <button type="button" onClick={() => onAct(benchCreature(creature.id))} className="min-h-11 rounded border border-field-ink px-2 text-xs font-semibold">Bench</button>
+          </li>
+        ))}
+      </ul>
+      <h2 className="mt-4 font-serif text-xl">Caught</h2>
+      <p className="text-xs text-field-ink/70">Everyone you own who is not on the quest.</p>
+      <ul className="mt-2 flex max-h-[32rem] flex-col gap-2 overflow-auto">
+        {bag.box.length === 0 ? <li className="text-sm text-field-ink/70">None waiting.</li> : null}
+        {bag.box.map((creature) => (
+          <li key={creature.id} className="flex items-center gap-2">
+            <img src={creatureSrc(creature)} alt="" className="h-8 w-8 object-contain" />
+            <p className="min-w-0 flex-1 truncate text-sm">{creature.dex ? `#${String(creature.dex).padStart(3, "0")} ` : ""}{nameOf(creature)}</p>
+            <button type="button" disabled={full} onClick={() => onAct(bringAlong(creature.id))} className="min-h-11 rounded bg-field-stamp px-2 text-xs font-semibold text-white disabled:opacity-40">Bring</button>
+          </li>
+        ))}
+      </ul>
+      {note ? <p className="mt-3 text-sm">{note}</p> : null}
+    </aside>
+  );
+}
+
+function FieldNotes({
+  battleDone,
+  startTopicBattle,
+  startRoute,
+  startChampionship,
+  badges,
+  champion,
+}: {
+  battleDone: Set<string>;
+  startTopicBattle: (topicId: string) => void;
+  startRoute: (name: string, blueprintId: BlueprintId, count: number, gym: boolean) => void;
+  startChampionship: () => void;
+  badges: number;
+  champion: boolean;
+}) {
+  const desk = useDesk();
+  const [view, setView] = useState<"gyms" | "collection">("gyms");
+  const [caught, setCaught] = useState<number[]>([]);
+  const [rare, setRare] = useState<number[]>([]);
+  const [fresh, setFresh] = useState<Creature[]>([]);
+  const [toward, setToward] = useState(0);
+  const [picked, setPicked] = useState("stones");
+  const [bag, setBag] = useState<QuestBag | null>(null);
+  const [note, setNote] = useState("");
+  const have = new Set(caught);
+  const rareSet = new Set(rare);
+
+  useEffect(() => {
+    const result = syncCatches(desk.state.tests);
+    setCaught(result.caught);
+    setRare(result.rare);
+    setFresh(result.fresh);
+    setToward(result.toward);
+    setBag(enrollGuide());
+  }, [desk.state.tests]);
+
+  return (
+    <section className="overflow-hidden rounded border border-field-ink bg-field text-field-ink">
+      <div className="border-b border-field-ink/15 px-6 py-6">
+        <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
+        <h1 className="font-serif text-3xl tracking-tight">Monster Quest</h1>
+        <p className="mt-1 text-sm">
+          One creature for every {CATCH_EVERY} different questions you get right. The guide is numbered like a dex: the next number is the evolution. Six can come with you. One of those six walks and fights. {have.size}/151 caught.
+        </p>
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setView("gyms")}
+            className={`min-h-11 rounded px-3 text-sm font-semibold ${
+              view === "gyms" ? "bg-field-stamp text-white" : "border border-field-ink/20 bg-field"
+            }`}
+          >
+            Map
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("collection")}
+            className={`min-h-11 rounded px-3 text-sm font-semibold ${
+              view === "collection" ? "bg-field-stamp text-white" : "border border-field-ink/20 bg-field"
+            }`}
+          >
+            Guide
+          </button>
+        </div>
+      </div>
+
+      {view === "gyms" && fresh.length > 0 && (
+        <div className="mx-4 mt-4 rounded border border-field-fern bg-white p-3 text-sm">
+          Just caught: {fresh.map((creature) => `#${String(creature.number).padStart(3, "0")} ${creature.name}`).join(", ")}
+        </div>
+      )}
+
+      {view === "gyms" && (
+        <MonsterQuest
+          stops={routeStops(desk.state.tests)}
+          picked={picked}
+          onPick={setPicked}
+          badges={badges}
+          champion={champion}
+          startRoute={startRoute}
+          startChampionship={startChampionship}
+        />
+      )}
+
+      {view === "collection" && (
+        <div className="grid items-start gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <ol className="overflow-hidden rounded border border-field-ink/15 bg-white">
+            {DEX.map((creature) => {
+              const isCaught = have.has(creature.number);
+              const next = creature.into ? DEX[creature.into - 1] : undefined;
+              return (
+                <li
+                  key={creature.number}
+                  className={`flex items-center gap-3 border-b border-field-ink/10 px-3 py-2 ${creature.stage > 0 ? "pl-8" : ""} ${isCaught ? "" : "opacity-60"}`}
+                >
+                  <span className="w-10 shrink-0 font-mono text-xs">#{String(creature.number).padStart(3, "0")}</span>
+                  {isCaught ? (
+                    <img src={portraitFor(creature.number, rareSet.has(creature.number))} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-field-ink/10" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{creature.name}</p>
+                    <p className="text-xs text-field-ink/70">
+                      {next ? `Evolves into #${String(next.number).padStart(3, "0")} ${next.name}` : "Final form"}
+                      {isCaught ? " · Caught" : ""}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+          <OwnedRail
+            bag={bag}
+            note={note}
+            onAct={(note) => {
+              setNote(note);
+              setBag(loadBag());
+            }}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
