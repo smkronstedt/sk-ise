@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { Badge } from "@/components/desk/badge";
 import { TownTrial } from "@/components/desk/town-trial";
 import { addCard, loadCards, saveCards, schedule } from "@/lib/cards";
-import { drawQuestionIds } from "@/lib/desk/adapt";
+import { drawQuestionIds, selectionStatus } from "@/lib/desk/adapt";
 import { noteRow } from "@/lib/desk/honors";
 import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
@@ -414,19 +414,20 @@ function topicIdsFor(blueprint: BlueprintId | "all") {
   return topics.filter((topic) => topic.blueprintId === blueprint).map((topic) => topic.id);
 }
 
-function drawForQuest(state: DeskState, topicIds: string[], count: number, rematch: boolean) {
-  const seen = new Set<string>();
-  if (!rematch) {
-    for (const test of state.tests) {
-      if (!/^(Route|Gym|Rival|Wild): /.test(test.name)) continue;
-      for (const [id, answer] of Object.entries(test.answers)) {
-        if (answer?.submitted && !state.fresh?.[id]) seen.add(id);
-      }
-    }
+function newOrMissed(state: DeskState, ids: string[], count: number) {
+  const unused: string[] = [];
+  const missed: string[] = [];
+  for (const id of ids) {
+    const status = selectionStatus(state, id);
+    if (status === "unused") unused.push(id);
+    else if (status === "incorrect") missed.push(id);
   }
+  return [...unused, ...missed].slice(0, count);
+}
+
+function drawForQuest(state: DeskState, topicIds: string[], count: number, _rematch: boolean) {
   const all = drawQuestionIds(state, topicIds, "all", 2000, false);
-  const fresh = all.filter((id) => !seen.has(id));
-  return (fresh.length && !rematch ? fresh : all).slice(0, count);
+  return newOrMissed(state, all, count);
 }
 
 function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestBlock[]): World {
@@ -1598,9 +1599,12 @@ export function MonsterQuest({
           ].filter((id, index, all) => all.indexOf(id) === index).slice(0, npc.count)
         : drawForQuest(desk.state, topicIds, npc.count, Boolean(npc.rematch));
     }
+    if (ids.length && npc.mode) {
+      ids = newOrMissed(desk.state, ids, npc.count || ids.length);
+    }
     if (!ids.length) {
       busyRef.current = false;
-      setNotice(npc.mode === "missed" ? "No missed questions left in that set." : "No questions left in that set.");
+      setNotice(npc.mode === "missed" ? "No missed questions left in that set." : "No new or missed questions left in that set.");
       return;
     }
     const testId = desk.createTest({
@@ -1665,7 +1669,7 @@ export function MonsterQuest({
     const ids = drawForQuest(desk.state, topicIdsFor(city.id), 3, false);
     if (!ids.length) {
       busyRef.current = false;
-      setLine("The grass is quiet. Recycle used questions from Build.");
+      setLine("The grass is quiet. Nothing new or missed is left in this town.");
       return;
     }
     const testId = desk.createTest({
