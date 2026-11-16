@@ -28,7 +28,7 @@ export const cities: City[] = [
       { name: "Cole Quarry", count: 6, label: "Surgical stones", topics: ["stones-surg"] },
       { name: "Ida Stone", count: 6, label: "Medical stones", topics: ["stones-med"] },
     ],
-    gymCount: 8,
+    gymCount: 10,
     gymTopics: ["stones-med", "stones-surg"],
   },
   {
@@ -49,7 +49,7 @@ export const cities: City[] = [
       { name: "Glans Gate", count: 5, label: "Penile", topics: ["penile"] },
       { name: "Conduit Yard", count: 6, label: "Diversion", topics: ["diversion"] },
     ],
-    gymCount: 16,
+    gymCount: 15,
     gymTopics: ["pca", "pca-adv", "renal", "adrenal", "nmibc", "mibc", "diversion", "testis", "penile", "utuc", "mh"],
   },
   {
@@ -80,13 +80,13 @@ export const cities: City[] = [
       { name: "Film Ethics", count: 6, label: "Imaging and ethics", topics: ["imaging"] },
       { name: "Half Point", count: 5, label: "Transplant and statistics", topics: ["basic", "imaging"] },
     ],
-    gymCount: 10,
+    gymCount: 12,
     gymTopics: ["trauma", "stricture", "imaging", "basic"],
   },
-  { id: "andrology", element: "Electric", city: "Spark Yard", leader: "Ives Harlan", subject: "Andrology", hall: "/field/gym-electric.jpg", trainers: [{ name: "Joss Kern", count: 6 }, { name: "Ada Volt", count: 6 }, { name: "Kit Arc", count: 6 }, { name: "Lumen Peck", count: 6 }], gymCount: 8 },
-  { id: "peds", element: "Grass", city: "Greenward", leader: "Lina Grove", subject: "Peds", hall: "/field/gym-grass.jpg", trainers: [{ name: "Pip Sorel", count: 6 }, { name: "June Hart", count: 6 }, { name: "Otto Leaf", count: 6 }, { name: "Bramble Nye", count: 6 }], gymCount: 8 },
-  { id: "basic", element: "Poison", city: "Vial Hollow", leader: "Vesper Quill", subject: "Physiology", hall: "/field/gym-poison.jpg", trainers: [{ name: "Rem Quin", count: 6 }, { name: "Sable Orth", count: 6 }, { name: "Vial Penn", count: 6 }, { name: "Moss Kerr", count: 6 }], gymCount: 8 },
-  { id: "obstruction", element: "Ground", city: "Claymarch", leader: "Holt Barrow", subject: "Obstruction", hall: "/field/gym-ground.jpg", trainers: [{ name: "Gus Pell", count: 6 }, { name: "Rory Dunn", count: 6 }, { name: "Clay Mott", count: 6 }, { name: "Fern Barrow", count: 6 }], gymCount: 8 },
+  { id: "andrology", element: "Electric", city: "Spark Yard", leader: "Ives Harlan", subject: "Andrology", hall: "/field/gym-electric.jpg", trainers: [{ name: "Joss Kern", count: 6 }, { name: "Ada Volt", count: 6 }, { name: "Kit Arc", count: 6 }, { name: "Lumen Peck", count: 6 }], gymCount: 10 },
+  { id: "peds", element: "Grass", city: "Greenward", leader: "Lina Grove", subject: "Peds", hall: "/field/gym-grass.jpg", trainers: [{ name: "Pip Sorel", count: 6 }, { name: "June Hart", count: 6 }, { name: "Otto Leaf", count: 6 }, { name: "Bramble Nye", count: 6 }], gymCount: 10 },
+  { id: "basic", element: "Poison", city: "Vial Hollow", leader: "Vesper Quill", subject: "Physiology", hall: "/field/gym-poison.jpg", trainers: [{ name: "Rem Quin", count: 6 }, { name: "Sable Orth", count: 6 }, { name: "Vial Penn", count: 6 }, { name: "Moss Kerr", count: 6 }], gymCount: 10 },
+  { id: "obstruction", element: "Ground", city: "Claymarch", leader: "Holt Barrow", subject: "Obstruction", hall: "/field/gym-ground.jpg", trainers: [{ name: "Gus Pell", count: 6 }, { name: "Rory Dunn", count: 6 }, { name: "Clay Mott", count: 6 }, { name: "Fern Barrow", count: 6 }], gymCount: 10 },
 ];
 
 function ratio(test: TestBlock) {

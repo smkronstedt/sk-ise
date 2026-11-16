@@ -489,13 +489,13 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       line: !trainersBeaten
         ? "Beat the trainers in town first."
         : city.id === "stones"
-          ? "Dr. Nicolette. Medical and surgical stones. 8 questions. Need 60%."
+          ? "Dr. Nicolette. Medical and surgical stones. 10 questions. Need 60%."
           : city.id === "oncology"
-            ? "Señor Guilherme mixes the harbor. Prostate weighs extra. 16 questions. Knock Drake out."
+            ? "Señor Guilherme mixes the harbor. Prostate weighs extra. 15 questions. Need 60%."
             : city.id === "urogyn"
               ? "Warden Calder. Urodynamics, incontinence, prolapse, and diversion. 12 questions. Need 60%."
               : city.id === "core"
-                ? "Nima Sol. Office, trauma, imaging, plus a short transplant and statistics set. 10 questions. Need 60%."
+                ? "Nima Sol. Office, trauma, imaging, plus a short transplant and statistics set. 12 questions. Need 60%."
                 : `${city.subject}. ${city.gymCount} questions. Need 60%.`,
       topics: city.gymTopics,
       prostate: city.id === "oncology",
@@ -822,7 +822,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       sight: 1,
       done: gymDone ? false : trainerDone(trainer.name),
       ready: true,
-      count: trainer.count,
+      count: Math.max(5, trainer.count),
       need: 0.6,
       adaptive: false,
       testName: `Route: ${trainer.name}`,
@@ -1949,17 +1949,17 @@ export function MonsterQuest({
     const last = battle.index + 1 >= battle.ids.length;
     let prize = "";
     let fainted = false;
-    const knocked = foeHp <= 0 && hp > 0;
-    const wonFight = knocked && battle.foeKind !== "wild";
-    const wildDown = knocked && battle.foeKind === "wild";
-    if (wonFight || wildDown) {
-      const amount = wonFight ? 16 + right * 2 : 10;
+    const wildDown = foeHp <= 0 && hp > 0 && battle.foeKind === "wild";
+    const need = battle.need || 0.6;
+    const passed = battle.ids.length > 0 && right / battle.ids.length >= need;
+    if (wildDown) {
+      const amount = 10;
       prize = payExp(current, amount);
       youMax = maxHp(lead, current);
       hp = Math.min(youMax, lead.hp);
       lead.hp = hp;
     }
-    if (hp <= 0 && !knocked) {
+    if (hp <= 0 && !wildDown) {
       const bench = current.party.slice(1).find((creature) => creature.hp > 0);
       if (bench) {
         current.party = [bench, ...current.party.filter((creature) => creature.id !== bench.id)];
@@ -1971,9 +1971,13 @@ export function MonsterQuest({
     saveBag(current);
     setBag(loadBag());
     let over: string | null = null;
+    const wonFight = last && !fainted && battle.foeKind !== "wild" && passed;
     if (wonFight) {
+      prize = payExp(current, 16 + right * 2);
+      saveBag(current);
+      setBag(loadBag());
       seal(true);
-      over = prize ? `You won. ${battle.foeName} fainted. ${prize}` : `You won. ${battle.foeName} fainted.`;
+      over = `You won. ${right}/${battle.ids.length} (${Math.round((right / battle.ids.length) * 100)}%). ${prize}`;
     } else if (wildDown) {
       seal(false);
       over = prize ? `It fainted. ${prize} Throw a ball while it still has HP.` : "It fainted. Throw a ball while it still has HP.";
@@ -1981,13 +1985,8 @@ export function MonsterQuest({
       seal(false);
       over = "You fainted. Their attack landed.";
     } else if (last && battle.foeKind !== "wild") {
-      if (!prize) {
-        prize = payExp(current, 8);
-        saveBag(current);
-        setBag(loadBag());
-      }
       seal(false);
-      over = prize ? `${battle.foeName} is still standing. ${prize}` : `${battle.foeName} is still standing.`;
+      over = `${battle.foeName} is still standing. ${right}/${battle.ids.length}. Need ${Math.round(need * 100)}%.`;
     } else if (last) {
       seal(false);
       over = "It got away.";
