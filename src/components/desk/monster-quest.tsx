@@ -2823,7 +2823,7 @@ export function MonsterQuest({
           </div>
           <div className="relative mt-1 grid grid-cols-[8rem_1fr] items-end gap-2">
             <div className="flex flex-col items-center">
-              {!battle.noCreatures && lead ? <img src={creatureSrc(lead)} alt="" className="h-16 w-auto bg-transparent object-contain" /> : null}
+              {!battle.noCreatures && lead ? <img src={creatureSrc(lead)} alt="" className={`${nameOf(lead) === "Kraken" ? "h-52" : "h-16"} w-auto bg-transparent object-contain`} /> : null}
               <PixelActor kind="player" className="h-24" />
               {gymHallSrc ? null : <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />}
             </div>
