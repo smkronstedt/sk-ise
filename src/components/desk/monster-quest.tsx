@@ -1489,6 +1489,7 @@ export function MonsterQuest({
   const savedIndex = hold ? cities.findIndex((item) => item.id === hold) : 0;
   const city = cities[savedIndex >= 0 ? savedIndex : 0];
   cityRef.current = city;
+  const gymFight = Boolean(battle && scene === "gym" && battle.foeKind === "leader" && city?.hall);
   useEffect(() => {
     if (!musicOn()) return;
     setTownMusic(true, "canyon");
@@ -2789,9 +2790,16 @@ export function MonsterQuest({
       </div>
       {battle ? (
         <div>
-        <div className="relative bg-[#7ec8e3] px-3 pt-3 pb-2 text-black">
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-[#5eae45]" />
-          <div className="absolute inset-x-0 bottom-0 h-8 bg-[#498a36]" />
+        <div
+          className={`relative px-3 pt-3 pb-2 text-black ${gymFight ? "min-h-64" : "bg-[#7ec8e3]"}`}
+          style={gymFight ? { backgroundImage: `url(${city.hall})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        >
+          {gymFight ? <div className="absolute inset-0 bg-black/20" /> : (
+            <>
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-[#5eae45]" />
+              <div className="absolute inset-x-0 bottom-0 h-8 bg-[#498a36]" />
+            </>
+          )}
           <div className="relative grid grid-cols-[1fr_auto] items-end gap-2">
             <div className="mb-10 border-4 border-black bg-[#f8f8d8] p-2">
               <p className="text-xs font-bold uppercase">{battle.foeKind === "wild" ? battle.foeName : `${battle.trainerLabel} · ${battle.foeName}`} · {battle.foeType}</p>
@@ -2815,7 +2823,7 @@ export function MonsterQuest({
             <div className="flex flex-col items-center">
               {!battle.noCreatures && lead ? <img src={creatureSrc(lead)} alt="" className="h-16 w-auto bg-transparent object-contain" /> : null}
               <PixelActor kind="player" className="h-24" />
-              <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />
+              {gymFight ? null : <div className="h-3 w-16 rounded-[100%] bg-[#2f6a32]" />}
             </div>
             <div className="border-4 border-black bg-[#f8f8d8] p-2">
               <p className="text-xs font-bold uppercase">{lead ? `${nameOf(lead)} · Lv ${levelOf(lead.exp)}` : "You"}</p>
