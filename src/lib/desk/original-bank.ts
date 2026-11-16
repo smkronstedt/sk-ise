@@ -17,6 +17,7 @@ export type BankProgress = {
   answers: Record<string, BankAnswer>;
   marks: Record<string, boolean>;
   notes: Record<string, string>;
+  missingImages: Record<string, boolean>;
 };
 
 const KEY = "callroom-original-bank-v1";
@@ -29,7 +30,7 @@ export const BANK_TOTAL = UQB_TOTAL + SASP_TOTAL;
 export const letters = ["A", "B", "C", "D", "E"] as const;
 
 export function emptyBankProgress(): BankProgress {
-  return { answers: {}, marks: {}, notes: {} };
+  return { answers: {}, marks: {}, notes: {}, missingImages: {} };
 }
 
 export function countBankCorrect(): number {
@@ -45,6 +46,7 @@ export function loadBankProgress(): BankProgress {
       answers: parsed.answers ?? {},
       marks: parsed.marks ?? {},
       notes: parsed.notes ?? {},
+      missingImages: parsed.missingImages ?? {},
     };
   } catch {
     return emptyBankProgress();
