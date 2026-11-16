@@ -2835,7 +2835,7 @@ export function MonsterQuest({
             <p className="text-xs font-bold uppercase">{battle.title}</p>
             {question && !battle.over ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
             {question?.image && !battle.over ? (
-              <img src={question.image} alt="Question figure" className="mt-2 max-h-56 w-full bg-white object-contain" />
+              <img src={question.image} alt="Question figure" className="mt-2 max-h-[28rem] w-full bg-white object-contain" />
             ) : null}
             {question?.figure && !battle.over ? <Figure id={question.figure} /> : null}
             {question && pictureMissing(question) && !battle.reveal && !battle.over ? (
