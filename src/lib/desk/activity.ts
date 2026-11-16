@@ -23,20 +23,36 @@ export function dayKey(date = new Date()) {
   return centralToday(date);
 }
 
-/** If this phone's calendar day is not Central, today's log still counts today. */
-export function alignActivityClock(days: Record<string, DayLog>) {
-  const central = centralToday();
-  const local = deviceDay();
-  if (local === central || !days[local]) return days;
-  const from = days[local];
-  const have = days[central] ?? { questions: 0, cards: 0 };
+function shiftKey(key: string, days: number) {
+  const [year, month, day] = key.split("-").map(Number);
+  const date = new Date(Date.UTC(year, (month || 1) - 1, day || 1));
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function foldDay(days: Record<string, DayLog>, fromKey: string, intoKey: string) {
+  const from = days[fromKey];
+  if (!from || fromKey === intoKey) return days;
+  const have = days[intoKey] ?? { questions: 0, cards: 0 };
   const next: Record<string, DayLog> = { ...days };
-  next[central] = {
+  next[intoKey] = {
     questions: Math.max(have.questions ?? 0, from.questions ?? 0),
     cards: Math.max(have.cards ?? 0, from.cards ?? 0),
     correct: Math.max(have.correct ?? 0, from.correct ?? 0),
   };
-  delete next[local];
+  delete next[fromKey];
+  return next;
+}
+
+/** If this phone's calendar day is not Central, today's log still counts today. */
+export function alignActivityClock(days: Record<string, DayLog>) {
+  const central = centralToday();
+  const local = deviceDay();
+  let next = days;
+  if (local !== central && next[local]) next = foldDay(next, local, central);
+  for (const key of Object.keys(next)) {
+    if (key === shiftKey(central, 1) || key === shiftKey(central, 2)) next = foldDay(next, key, central);
+  }
   return next;
 }
 
@@ -104,17 +120,31 @@ export function showUpPay(days: Record<string, DayLog>) {
   return Object.values(days).filter((row) => (row.questions ?? 0) + (row.cards ?? 0) > 0).length * DAY_PAY;
 }
 
+/** Days that count for the streak. A question, a card, or a correct answer is enough. One empty day between two study days is the clock, not a miss. */
+export function activeDayKeys(days: Record<string, DayLog>) {
+  const today = centralToday();
+  const keys = new Set<string>();
+  for (const [key, row] of Object.entries(days)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) continue;
+    if ((row?.questions ?? 0) + (row?.cards ?? 0) + (row?.correct ?? 0) <= 0) continue;
+    keys.add(key > today ? today : key);
+  }
+  const sorted = [...keys].filter((key) => key <= today).sort();
+  for (let i = 1; i < sorted.length; i += 1) {
+    const missed = shiftKey(sorted[i - 1], 1);
+    if (shiftKey(missed, 1) === sorted[i]) keys.add(missed);
+  }
+  return keys;
+}
+
 export function studyStreak(days: Record<string, DayLog>) {
-  const has = (date: Date) => {
-    const row = days[dayKey(date)];
-    return (row?.questions ?? 0) + (row?.cards ?? 0) > 0;
-  };
-  const cursor = new Date();
-  if (!has(cursor)) cursor.setDate(cursor.getDate() - 1);
+  const keys = activeDayKeys(days);
+  let cursor = centralToday();
+  if (!keys.has(cursor)) cursor = shiftKey(cursor, -1);
   let count = 0;
-  while (has(cursor)) {
+  while (keys.has(cursor)) {
     count += 1;
-    cursor.setDate(cursor.getDate() - 1);
+    cursor = shiftKey(cursor, -1);
   }
   return count;
 }
@@ -203,6 +233,7 @@ export function prizeStatus(days = typeof window === "undefined" ? {} : loadActi
     todayCards: days[todayKey]?.cards ?? 0,
     todayMissions: missionPay(days[todayKey]),
     purse: daily * DAILY_PRIZE + weekly * WEEK_PRIZE + monthly * MONTH_PRIZE + yearly * YEAR_PRIZE + missions,
+    streak: studyStreak(days),
   };
 }
 

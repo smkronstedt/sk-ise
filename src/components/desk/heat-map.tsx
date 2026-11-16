@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { dayKey, loadActivity, type DayLog } from "@/lib/desk/activity";
+import { activeDayKeys, dayKey, loadActivity, studyStreak, type DayLog } from "@/lib/desk/activity";
 
 const levels = ["#2d333b", "#0e4429", "#006d32", "#26a641", "#39d353"];
 
@@ -22,14 +22,11 @@ function shift(date: Date, days: number) {
   return next;
 }
 
-function streakEnding(days: Record<string, DayLog>, from: Date) {
-  let cursor = new Date(from);
-  let count = 0;
-  while (total(days[dayKey(cursor)]) > 0) {
-    count += 1;
-    cursor = shift(cursor, -1);
-  }
-  return count;
+function nextKey(key: string) {
+  const [year, month, day] = key.split("-").map(Number);
+  const date = new Date(Date.UTC(year, (month || 1) - 1, day || 1));
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
 }
 
 export function HeatMap() {
@@ -54,12 +51,14 @@ export function HeatMap() {
   }
 
   const todayKey = dayKey(today);
-  const studiedToday = total(days[todayKey]) > 0;
-  const current = studiedToday ? streakEnding(days, today) : streakEnding(days, shift(today, -1));
+  const active = activeDayKeys(days);
+  const current = studyStreak(days);
   let longest = 0;
   let run = 0;
-  for (let cursor = new Date(start); cursor <= end; cursor = shift(cursor, 1)) {
-    if (total(days[dayKey(cursor)]) > 0) {
+  const endKey = dayKey(end);
+  const startKey = dayKey(start);
+  for (let cursor = startKey; cursor <= endKey; cursor = nextKey(cursor)) {
+    if (active.has(cursor)) {
       run += 1;
       longest = Math.max(longest, run);
     } else {
@@ -117,9 +116,9 @@ export function HeatMap() {
                 <div key={index} className="flex flex-col gap-[3px]">
                   {week.map((date) => {
                     const key = dayKey(date);
-                    const future = date > today;
+                    const future = key > todayKey;
                     const row = days[key];
-                    const count = total(row);
+                    const count = active.has(key) ? Math.max(total(row), 1) : 0;
                     const color = future ? "transparent" : levels[levelFor(count)];
                     return (
                       <button
