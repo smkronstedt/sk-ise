@@ -22,7 +22,7 @@ import { careerRank, oldCareerRank } from "@/lib/desk/ranks";
 import { RankMark } from "@/components/desk/rank-mark";
 import type { BlueprintId, Focus, DeskState } from "@/lib/desk/types";
 import { topics } from "@/lib/desk/topics";
-import { CATCH_EVERY, DEX, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
+import { CATCH_EVERY, DEX, loadField, portraitFor, syncCatches, type Creature } from "@/lib/desk/field-dex";
 import { benchCreature, bringAlong, creatureSrc, enrollGuide, loadBag, nameOf, walkWith, type QuestBag } from "@/lib/desk/quest-bag";
 import { MODE_EVENT, loadMode, type DeskMode } from "@/lib/desk/modes";
 import { Badge } from "@/components/desk/badge";
@@ -681,22 +681,18 @@ function FieldNotes({
 }) {
   const desk = useDesk();
   const [view, setView] = useState<"gyms" | "collection">("gyms");
-  const [caught, setCaught] = useState<number[]>([]);
-  const [rare, setRare] = useState<number[]>([]);
   const [fresh, setFresh] = useState<Creature[]>([]);
-  const [toward, setToward] = useState(0);
   const [picked, setPicked] = useState("stones");
   const [bag, setBag] = useState<QuestBag | null>(null);
   const [note, setNote] = useState("");
-  const have = new Set(caught);
-  const rareSet = new Set(rare);
+  const field = loadField();
+  const have = new Set(field.caught);
+  const seen = new Set(field.seen);
+  const rareSet = new Set(field.rare);
 
   useEffect(() => {
     const result = syncCatches(desk.state.tests);
-    setCaught(result.caught);
-    setRare(result.rare);
     setFresh(result.fresh);
-    setToward(result.toward);
     setBag(enrollGuide());
   }, [desk.state.tests]);
 
@@ -706,7 +702,7 @@ function FieldNotes({
         <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
         <h1 className="font-serif text-3xl tracking-tight">Monster Quest</h1>
         <p className="mt-1 text-sm">
-          One creature for every {CATCH_EVERY} different questions you get right. The guide is numbered like a dex: the next number is the evolution. Six can come with you. One of those six walks and fights. {have.size}/151 caught.
+          One creature for every {CATCH_EVERY} different questions you get right. The guide is numbered like a dex: the next number is the evolution. Six can come with you. One of those six walks and fights. {have.size}/151 caught{seen.size > have.size ? ` · ${[...seen].filter((number) => !have.has(number)).length} seen` : ""}.
         </p>
         <div className="mt-4 flex gap-2">
           <button
@@ -753,23 +749,28 @@ function FieldNotes({
           <ol className="overflow-hidden rounded border border-field-ink/15 bg-white">
             {DEX.map((creature) => {
               const isCaught = have.has(creature.number);
+              const isSeen = !isCaught && seen.has(creature.number);
               const next = creature.into ? DEX[creature.into - 1] : undefined;
               return (
                 <li
                   key={creature.number}
-                  className={`flex items-center gap-3 border-b border-field-ink/10 px-3 py-2 ${creature.stage > 0 ? "pl-8" : ""} ${isCaught ? "" : "opacity-60"}`}
+                  className={`flex items-center gap-3 border-b border-field-ink/10 px-3 py-2 ${creature.stage > 0 ? "pl-8" : ""} ${isCaught || isSeen ? "" : "opacity-60"}`}
                 >
                   <span className="w-10 shrink-0 font-mono text-xs">#{String(creature.number).padStart(3, "0")}</span>
-                  {isCaught ? (
-                    <img src={portraitFor(creature.number, rareSet.has(creature.number))} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                  {isCaught || isSeen ? (
+                    <img
+                      src={portraitFor(creature.number, rareSet.has(creature.number))}
+                      alt=""
+                      className={isCaught ? "h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-field-ink" : "h-10 w-10 shrink-0 rounded-full object-cover opacity-40 grayscale"}
+                    />
                   ) : (
                     <div className="h-10 w-10 shrink-0 rounded-full bg-field-ink/10" />
                   )}
                   <div className="min-w-0">
-                    <p className="truncate font-semibold">{creature.name}</p>
+                    <p className="truncate font-semibold">{isCaught || isSeen ? creature.name : "???"}</p>
                     <p className="text-xs text-field-ink/70">
                       {next ? `Evolves into #${String(next.number).padStart(3, "0")} ${next.name}` : "Final form"}
-                      {isCaught ? " · Caught" : ""}
+                      {isCaught ? " · Caught" : isSeen ? " · Seen" : ""}
                     </p>
                   </div>
                 </li>

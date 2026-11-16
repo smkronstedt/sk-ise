@@ -61,7 +61,7 @@ export const CATCH_EVERY = Math.max(8, Math.floor((UQB_TOTAL + questions.length)
 const KEY = "callroom-field-caught-v2";
 const LEAD = "callroom-field-lead";
 
-type Save = { caught: number[]; rare: number[] };
+type Save = { caught: number[]; rare: number[]; seen: number[] };
 
 export function loadField() {
   return load();
@@ -83,12 +83,26 @@ export function chooseLead(number: number) {
 function load(): Save {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { caught: [], rare: [] };
+    if (!raw) return { caught: [], rare: [], seen: [] };
     const parsed = JSON.parse(raw) as Save;
-    return { caught: parsed.caught ?? [], rare: parsed.rare ?? [] };
+    return { caught: parsed.caught ?? [], rare: parsed.rare ?? [], seen: parsed.seen ?? [] };
   } catch {
-    return { caught: [], rare: [] };
+    return { caught: [], rare: [], seen: [] };
   }
+}
+
+/** A creature you met but have not caught yet. Caught entries stay full color. */
+export function sightOne(gym: string) {
+  const save = load();
+  const caught = new Set(save.caught);
+  const seen = new Set(save.seen);
+  const next = DEX.find((creature) => creature.gym === gym && !caught.has(creature.number) && !seen.has(creature.number));
+  if (!next) return save.seen;
+  seen.add(next.number);
+  const list = [...seen].sort((a, b) => a - b);
+  localStorage.setItem(KEY, JSON.stringify({ ...save, seen: list }));
+  touchProgress();
+  return list;
 }
 
 function gymFor(topicId: string): Gym {
@@ -150,7 +164,8 @@ export function syncCatches(tests: TestBlock[]): {
     if (sameTopic) rare.push(pick.number);
   }
   const fresh = caught.filter((number) => !had.has(number)).map((number) => DEX[number - 1]);
-  localStorage.setItem(KEY, JSON.stringify({ caught, rare }));
+  const seen = [...new Set([...(previous.seen ?? []), ...caught])].sort((a, b) => a - b);
+  localStorage.setItem(KEY, JSON.stringify({ caught, rare, seen }));
   touchProgress();
   return { caught, rare, fresh, correct: ids.length, toward: ids.length % CATCH_EVERY };
 }

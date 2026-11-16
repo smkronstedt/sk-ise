@@ -20,7 +20,7 @@ const EXTRA = [DAILY, "callroom-activity-v1", "callroom-field-caught-v2", "callr
 const SEED = "callroom-correct-seed-v1";
 
 type Side = {
-  field?: { caught?: number[]; rare?: number[] } | null;
+  field?: { caught?: number[]; rare?: number[]; seen?: number[] } | null;
   lead?: number | null;
   trials?: string[] | null;
   row?: number;
@@ -274,6 +274,7 @@ function mergeOps(local: OpsShape | null, remote: OpsShape | null): OpsShape | n
 function mergeSide(local: Side = {}, remote: Side = {}): Side {
   const caught = [...new Set([...(local.field?.caught ?? []), ...(remote.field?.caught ?? [])])].sort((a, b) => a - b);
   const rare = [...new Set([...(local.field?.rare ?? []), ...(remote.field?.rare ?? [])])].sort((a, b) => a - b);
+  const seen = [...new Set([...(local.field?.seen ?? []), ...(remote.field?.seen ?? [])])].sort((a, b) => a - b);
   const trials = [...new Set([...(local.trials ?? []), ...(remote.trials ?? [])])];
   const notes = new Map<string, { topicId?: string; xp?: number; level?: number; stage?: number }>();
   for (const row of [...(remote.notes ?? []), ...(local.notes ?? [])]) {
@@ -282,7 +283,7 @@ function mergeSide(local: Side = {}, remote: Side = {}): Side {
     if (!have || (row.xp ?? 0) > (have.xp ?? 0)) notes.set(row.topicId, row);
   }
   return {
-    field: { caught, rare },
+    field: { caught, rare, seen },
     lead: local.lead || remote.lead || null,
     trials,
     row: Math.max(local.row || 0, remote.row || 0),

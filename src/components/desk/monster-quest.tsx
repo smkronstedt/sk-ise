@@ -9,7 +9,7 @@ import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { rememberAnswer } from "@/lib/desk/original-bank";
 import { useDesk } from "@/lib/desk/provider";
 import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
-import { DEX, loadField, portraitFor } from "@/lib/desk/field-dex";
+import { DEX, loadField, portraitFor, sightOne } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, DeskState, Question, TestBlock } from "@/lib/desk/types";
 import { drawActor, drawCreature, drawGround, drawProp, DressedActor, lookFor, PixelActor, TILE } from "@/components/desk/quest-art";
@@ -1575,6 +1575,7 @@ export function MonsterQuest({
     busyRef.current = true;
     setNotice("");
     await loadCatalog();
+    if (city?.id) sightOne(city.id);
     const topicIds = npc.topics?.length ? npc.topics : topicIdsFor(npc.blueprint);
     let ids: string[] = [];
     if (npc.mode === "missed") {
@@ -1669,6 +1670,7 @@ export function MonsterQuest({
     if (!ready) return;
     busyRef.current = true;
     await loadCatalog();
+    sightOne(city.id);
     const ids = drawForQuest(desk.state, topicIdsFor(city.id), 3, false);
     if (!ids.length) {
       busyRef.current = false;
@@ -3269,14 +3271,23 @@ function FieldSheet({
           <div className="max-h-[28rem] overflow-auto border-4 border-black bg-white">
             {DEX.map((creature) => {
               const owned = field.caught.includes(creature.number);
+              const spotted = !owned && field.seen.includes(creature.number);
               const next = creature.into ? DEX[creature.into - 1] : undefined;
               return (
                 <div key={creature.number} className={`flex items-center gap-2 border-b border-black/10 px-2 py-1 ${creature.stage > 0 ? "pl-6" : ""}`}>
                   <span className="w-8 font-mono text-[10px]">#{String(creature.number).padStart(3, "0")}</span>
-                  {owned ? <img src={portraitFor(creature.number, field.rare.includes(creature.number))} alt="" className="h-8 w-8 rounded-full object-cover" /> : <div className="h-8 w-8 rounded-full bg-black/10" />}
+                  {owned || spotted ? (
+                    <img
+                      src={portraitFor(creature.number, field.rare.includes(creature.number))}
+                      alt=""
+                      className={owned ? "h-9 w-9 rounded-full object-cover ring-2 ring-black" : "h-8 w-8 rounded-full object-cover opacity-40 grayscale"}
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-black/10" />
+                  )}
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-bold">{creature.name}</p>
-                    <p className="truncate text-[10px]">{next ? `Next #${String(next.number).padStart(3, "0")} ${next.name}` : "Final form"}{owned ? " · Caught" : ""}</p>
+                    <p className="truncate text-xs font-bold">{owned || spotted ? creature.name : "???"}</p>
+                    <p className="truncate text-[10px]">{next ? `Next #${String(next.number).padStart(3, "0")} ${next.name}` : "Final form"}{owned ? " · Caught" : spotted ? " · Seen" : ""}</p>
                   </div>
                 </div>
               );
