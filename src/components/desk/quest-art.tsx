@@ -249,13 +249,15 @@ export function drawCreature(ctx: CanvasRenderingContext2D, tx: number, ty: numb
     img.src = file;
     art[key] = img;
   }
-  const bob = step > 0 && Math.floor(step * 8) % 2 ? 2 : 0;
-  // Player is TILE * 1.85. Base forms ~20% smaller. Evolved forms grow closer to player size.
-  const height = evolved ? TILE * 1.75 : TILE * 1.48;
-  const width = height * 0.85;
+  const bob = step > 0 && Math.floor(step * (file.includes("kraken") ? 4 : 8)) % 2 ? (file.includes("kraken") ? 6 : 2) : 0;
+  const kraken = file.includes("kraken");
+  // Player is TILE * 1.85. Kraken walks like Blastoise: taller than the trainer, wide shell.
+  const height = kraken ? TILE * 3.15 : evolved ? TILE * 1.75 : TILE * 1.48;
+  const width = height * (kraken ? 1.08 : 0.85);
+  const sway = kraken && step > 0 ? (Math.floor(step * 4) % 2 ? 4 : -4) : 0;
   const baseX = tx * TILE;
   const baseY = ty * TILE;
-  const x = baseX + (TILE - width) / 2;
+  const x = baseX + (TILE - width) / 2 + sway;
   const y = baseY + TILE - height + 2 - bob;
   const img = art[key].complete && art[key].naturalWidth > 0 ? art[key] : null;
   ctx.save();

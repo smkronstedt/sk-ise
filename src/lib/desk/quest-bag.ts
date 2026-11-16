@@ -275,6 +275,10 @@ export const moveBook: MoveDef[] = [
   { id: "worldroot", name: "Worldroot", kind: "Grass", power: 22, pp: 5, level: 28, species: "pip" },
   { id: "skyfire", name: "Skyfire", kind: "Fire", power: 22, pp: 5, level: 28, species: "coal" },
   { id: "depth", name: "Depth Charge", kind: "Water", power: 22, pp: 5, level: 28, species: "dew" },
+  { id: "withdraw", name: "Withdraw", kind: "Water", power: 0, pp: 20, level: 16, species: "dew" },
+  { id: "bite", name: "Bite", kind: "Dark", power: 12, pp: 15, level: 18, species: "dew" },
+  { id: "skull", name: "Skull Bash", kind: "Normal", power: 18, pp: 8, level: 24, species: "dew" },
+  { id: "hydro", name: "Hydro Pump", kind: "Water", power: 26, pp: 5, level: 28, species: "dew" },
   { id: "stormcall", name: "Stormcall", kind: "Electric", power: 22, pp: 5, level: 28, species: "spark" },
 ];
 
@@ -383,6 +387,20 @@ function starterBag(): QuestBag {
   };
 }
 
+function kitKraken(bag: QuestBag) {
+  const want = ["withdraw", "bite", "skull", "hydro"];
+  let changed = false;
+  for (const creature of [...bag.party, ...bag.box]) {
+    if (creature.species !== "dew" || levelOf(creature.exp) < 28) continue;
+    const have = creature.moves?.map((slot) => slot.id) ?? [];
+    if (want.every((id) => have.includes(id)) && have.length === want.length) continue;
+    creature.moves = want.map((id) => ({ id, pp: moveDef(id)?.pp ?? 5 }));
+    creature.pending = undefined;
+    changed = true;
+  }
+  return changed;
+}
+
 function clamp(bag: QuestBag): QuestBag {
   for (const creature of [...bag.party, ...bag.box]) creature.hp = Math.max(0, Math.min(creature.hp, maxHp(creature, bag)));
   return bag;
@@ -420,7 +438,8 @@ export function loadBag(): QuestBag {
       },
       candies: parsed.candies ?? 0,
     });
-    if (legacyVitamins) saveBag(bag);
+    const kitted = kitKraken(bag);
+    if (legacyVitamins || kitted) saveBag(bag);
     return bag;
   } catch {
     return starterBag();
