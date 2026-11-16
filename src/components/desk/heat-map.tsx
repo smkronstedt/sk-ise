@@ -67,11 +67,11 @@ export function HeatMap() {
   }
   let questions = 0;
   let cards = 0;
-  let active = 0;
+  let activeDays = 0;
   for (const row of Object.values(days)) {
     questions += row.questions || 0;
     cards += row.cards || 0;
-    if (total(row) > 0) active += 1;
+    if (total(row) > 0) activeDays += 1;
   }
   const selected = days[picked];
 
@@ -85,7 +85,7 @@ export function HeatMap() {
         <div className="flex flex-wrap gap-4 text-sm">
           <p><span className="font-semibold text-white">{current}</span> day streak</p>
           <p><span className="font-semibold text-white">{longest}</span> best</p>
-          <p><span className="font-semibold text-white">{active}</span> days</p>
+          <p><span className="font-semibold text-white">{activeDays}</span> days</p>
           <p><span className="font-semibold text-white">{questions}</span> q · <span className="font-semibold text-white">{cards}</span> cards</p>
         </div>
       </div>
