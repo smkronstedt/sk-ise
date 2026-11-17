@@ -35,6 +35,9 @@ export const bankTopicsFor: Record<string, string[]> = {
   crypt: ["Pediatrics"],
   vur: ["Pediatrics"],
   "peds-mass": ["Pediatrics"],
+  phys: ["Transplant/Renal Physiology"],
+  anatomy: ["Anatomy/Embryology"],
+  meds: ["Pharmacology"],
 };
 
 const slugBlueprint: Record<string, BlueprintId> = {};

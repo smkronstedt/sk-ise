@@ -8,7 +8,7 @@ import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { rememberAnswer } from "@/lib/desk/original-bank";
 import { useDesk } from "@/lib/desk/provider";
-import { cities, isChampion, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
+import { cities, isChampion, nextCity, rivalBeaten, rivalTestName, type City, type Stop } from "@/lib/desk/route";
 import { DEX, loadField, portraitFor, sightOne } from "@/lib/desk/field-dex";
 import { topics } from "@/lib/desk/topics";
 import type { BlueprintId, DeskState, Question, TestBlock } from "@/lib/desk/types";
@@ -414,6 +414,11 @@ function topicIdsFor(blueprint: BlueprintId | "all") {
   return topics.filter((topic) => topic.blueprintId === blueprint).map((topic) => topic.id);
 }
 
+function studyTopics(city: City) {
+  const picked = [...new Set([...(city.gymTopics ?? []), ...city.trainers.flatMap((trainer) => trainer.topics ?? [])])];
+  return picked.length ? picked : topicIdsFor(city.blueprint);
+}
+
 function newOrMissed(state: DeskState, ids: string[], count: number) {
   const unused: string[] = [];
   const missed: string[] = [];
@@ -485,7 +490,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       need: 0.6,
       adaptive: true,
       testName: `Gym: ${city.element}`,
-      blueprint: city.id,
+      blueprint: city.blueprint,
       line: !trainersBeaten
         ? "Beat the trainers in town first."
         : city.id === "stones"
@@ -498,7 +503,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
                 ? "Nima Sol. Office, trauma, imaging, plus a short transplant and statistics set. 12 questions. Need 60%."
                 : `${city.subject}. ${city.gymCount} questions. Need 60%.`,
       topics: city.gymTopics,
-      prostate: city.id === "oncology",
+      prostate: Boolean(city.prostate),
       foe: "/field/towns/trainer.jpg?v=2",
     });
     return { tiles, npcs, start: { x: 6, y: 8 } };
@@ -706,7 +711,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
         need: 1,
         adaptive: false,
         testName: "",
-        blueprint: city.id,
+        blueprint: city.blueprint,
         line: nurse.line,
         foe: nurse.sprite,
         sprite: nurse.sprite,
@@ -781,14 +786,14 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
     tiles[14][14] = 3;
     tiles[15][10] = 5;
     tiles[16][10] = 5;
-    if (townIndex < cities.length - 1) {
+    if (nextCity(city.id, 1)) {
       tiles[15][18] = 5;
       tiles[16][18] = 5;
     }
     tiles[15][2] = 5;
     tiles[16][2] = 5;
     for (let x = 3; x <= 9; x++) tiles[15][x] = 1;
-    if (townIndex < cities.length - 1) {
+    if (nextCity(city.id, 1)) {
       for (let x = 11; x <= 17; x++) tiles[15][x] = 1;
     }
   }
@@ -826,7 +831,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       need: 0.6,
       adaptive: false,
       testName: `Route: ${trainer.name}`,
-      blueprint: city.id,
+      blueprint: city.blueprint,
       topics: trainer.topics,
       rematch: gymDone,
       line: gymDone
@@ -849,19 +854,47 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
     need: 1,
     adaptive: false,
     testName: "",
-    blueprint: city.id,
+    blueprint: city.blueprint,
     line: city.id === "urogyn"
       ? "Blackwater Hold. Water on every side. The gym is the stone door north. West is the shop, east is the Center. The dock signs leave the island."
       : city.id === "stones"
         ? "Quarry End. Stone questions, and Dr. Nicolette keeps the rock gym. The south road is the trail home. After the badge, the east boat goes to Onco Harbor."
         : city.id === "oncology"
-          ? "Onco Harbor. This town comes after Quarry End. The bottom-left road goes back to the rock gym, the trail, and home. The east dock is the peninsula."
-          : city.id === "core"
-            ? "The Commons. Office, trauma, imaging, and a short transplant and statistics set. The gym leader mixes them."
-            : `${city.city}. The gym is north, the mart is west, and the Center is east. Trainers stay in their yards. ${townIndex === 0 ? "The bottom-left road goes home." : "The bottom-left road goes back."} The middle of the bottom road is the route.`,
+          ? "Onco Harbor. The east dock is the peninsula. The ferryman on the south road takes you to Cinder Ward: more oncology, then pediatrics, men's health, and physiology and meds. No badge for that boat."
+          : city.id === "cinder"
+            ? "Cinder Ward. More oncology than the harbor. West returns to Onco Harbor. East is pediatrics, then men's health, then physiology and meds."
+            : city.id === "willow"
+              ? "Willow Ward. Pediatric questions. West is more oncology. East is men's health and infertility."
+              : city.id === "andro"
+                ? "Andro Court. Infertility on the left yards, sexual health on the right. East is physiology and medications."
+                : city.id === "serum"
+                  ? "Serum Hall. Physiology on one side, medications on the other. West goes back to men's health."
+                  : city.id === "core"
+                    ? "The Commons. Office, trauma, imaging, and a short transplant and statistics set. The gym leader mixes them."
+                    : `${city.city}. The gym is north, the mart is west, and the Center is east. Trainers stay in their yards. ${townIndex === 0 ? "The bottom-left road goes home." : "The bottom-left road goes back."} The middle of the bottom road is the route.`,
     foe: "/field/towns/walker.jpg?v=2",
   });
-  if (!rivalDone) {
+  if (city.id === "oncology") {
+    npcs.push({
+      id: "ferry-onco",
+      kind: "townsman",
+      name: "Ferryman",
+      x: 8,
+      y: 13,
+      face: "down",
+      sight: 0,
+      done: false,
+      ready: false,
+      count: 0,
+      need: 1,
+      adaptive: false,
+      testName: "",
+      blueprint: "oncology",
+      line: "The ferry to Cinder Ward. More oncology, then a pediatric town, men's health and infertility, then physiology and meds.",
+      foe: "/field/towns/walker.jpg?v=2",
+    });
+  }
+  if (!rivalDone && !city.side) {
     npcs.push({
       id: `rival-${city.id}`,
       kind: "rival",
@@ -876,7 +909,7 @@ function buildWorld(scene: Scene, city: City | null, stops: Stop[], tests: TestB
       need: 0.6,
       adaptive: true,
       testName: rivalTestName(city),
-      blueprint: city.id,
+      blueprint: city.blueprint,
       line: gymDone ? "The road stays shut until you take the harder set." : "The gym is still standing. Come back after the badge.",
       foe: "/field/towns/walker.jpg?v=2",
     });
@@ -993,6 +1026,10 @@ const LEADER_COAT: Record<string, string> = {
   basic: "l:292",
   obstruction: "l:22",
   vale: "l:50",
+  cinder: "l:4",
+  willow: "l:128",
+  andro: "l:50",
+  serum: "l:292",
 };
 
 const TRAINER_COATS: Record<string, string[]> = {
@@ -1004,6 +1041,10 @@ const TRAINER_COATS: Record<string, string[]> = {
   peds: ["t:128:50:110", "t:140:200:30", "t:90:130:25", "t:210:120:140"],
   basic: ["t:292:270:300", "t:-1:292:-1", "t:280:120:260", "t:320:40:290"],
   obstruction: ["t:22:35:18", "t:30:-1:25", "t:15:45:10", "t:200:25:22"],
+  cinder: ["t:0:-1:0", "t:4:210:8", "t:25:4:18", "t:180:20:10"],
+  willow: ["t:128:50:110", "t:140:200:30", "t:90:130:25", "t:210:120:140"],
+  andro: ["t:-1:50:-1", "t:50:210:45", "t:200:48:30", "t:0:52:20"],
+  serum: ["t:292:270:300", "t:-1:292:-1", "t:280:120:260", "t:320:40:290"],
 };
 
 function coatFor(kind: string, cityId: string, name: string) {
@@ -1501,13 +1542,13 @@ export function MonsterQuest({
 
   const sail = (dir: 1 | -1) => {
     if (!city) return;
-    const index = cities.findIndex((item) => item.id === city.id);
-    const next = cities[index + dir];
+    const next = nextCity(city.id, dir);
     if (!next) {
       setLine(dir > 0 ? "Open water. No further world yet." : "This is the first shore.");
       return;
     }
-    if (dir > 0 && !gymBeaten(city.id)) {
+    const free = city.side || next.side;
+    if (dir > 0 && !free && !gymBeaten(city.id)) {
       setLine("The way on stays shut until you beat the gym leader. The road back is open.");
       return;
     }
@@ -1575,7 +1616,7 @@ export function MonsterQuest({
     busyRef.current = true;
     setNotice("");
     await loadCatalog();
-    if (city?.id) sightOne(city.id);
+    if (city?.id) sightOne(city.blueprint);
     const topicIds = npc.topics?.length ? npc.topics : topicIdsFor(npc.blueprint);
     let ids: string[] = [];
     if (npc.mode === "missed") {
@@ -1670,8 +1711,8 @@ export function MonsterQuest({
     if (!ready) return;
     busyRef.current = true;
     await loadCatalog();
-    sightOne(city.id);
-    const ids = drawForQuest(desk.state, topicIdsFor(city.id), 3, false);
+    sightOne(city.blueprint);
+    const ids = drawForQuest(desk.state, studyTopics(city), 3, false);
     if (!ids.length) {
       busyRef.current = false;
       setLine("The grass is quiet. Nothing new or missed is left in this town.");
@@ -1681,7 +1722,7 @@ export function MonsterQuest({
       name: `Wild: ${city.city}`,
       mode: "tutor",
       adaptive: false,
-      topicIds: topicIdsFor(city.id),
+      topicIds: studyTopics(city),
       pool: "unused",
       count: ids.length,
       questionIds: ids,
@@ -1726,6 +1767,14 @@ export function MonsterQuest({
     if (npc.id.startsWith("joy")) {
       setNurse(npc.id);
       setLine(npc.line);
+      return;
+    }
+    if (npc.id === "ferry-onco") {
+      localStorage.setItem("callroom-quest-city", "cinder");
+      setHold("cinder");
+      posRef.current = { x: 10, y: 14, scene: "town", cityId: "cinder" };
+      setScene("town");
+      setLine("Cinder Ward. More oncology. East is pediatrics, then men's health and infertility, then physiology and meds. West boat returns here.");
       return;
     }
     if (npc.id === "side-glow") {
@@ -1869,7 +1918,7 @@ export function MonsterQuest({
         setLine("Back in town. No badge needed to come back.");
         return;
       }
-      if (!city || !gymBeaten(city.id)) {
+      if (!city || (!city.side && !gymBeaten(city.id))) {
         setLine("That sign goes to the next town. It stays shut until the gym badge. South goes back.");
         return;
       }

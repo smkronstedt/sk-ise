@@ -476,6 +476,10 @@ export const GYM_ACE: Record<string, Partner> = {
   peds: { species: "pip", stage: 2, name: "Arbor", move: "Vine Whip" },
   basic: { species: "wick", stage: 2, name: "Pyre", move: "Blaze" },
   obstruction: { species: "pebble", stage: 2, name: "Crag", move: "Ground Crack" },
+  cinder: { species: "coal", stage: 3, name: "Drake", move: "Crownfire" },
+  willow: { species: "pip", stage: 2, name: "Arbor", move: "Vine Whip" },
+  andro: { species: "spark", stage: 3, name: "Tempest", move: "Stormcall" },
+  serum: { species: "wick", stage: 2, name: "Pyre", move: "Blaze" },
 };
 
 export const GYM_GIFT: Record<string, Partner[]> = {
@@ -519,6 +523,26 @@ export const GYM_GIFT: Record<string, Partner[]> = {
     { species: "drop", stage: 2, name: "Tide", move: "Surge" },
     { species: "coal", stage: 1, name: "Blaze", move: "Cinder" },
   ],
+  cinder: [
+    { species: "coal", stage: 3, name: "Drake", move: "Crownfire" },
+    { species: "wick", stage: 2, name: "Pyre", move: "Blaze" },
+    { species: "sprout", stage: 2, name: "Canopy", move: "Bloom Burst" },
+  ],
+  willow: [
+    { species: "pip", stage: 2, name: "Arbor", move: "Vine Whip" },
+    { species: "sprout", stage: 2, name: "Canopy", move: "Bloom Burst" },
+    { species: "dew", stage: 1, name: "Coral", move: "Bubble" },
+  ],
+  andro: [
+    { species: "spark", stage: 3, name: "Tempest", move: "Stormcall" },
+    { species: "coal", stage: 2, name: "Inferno", move: "Blaze" },
+    { species: "wick", stage: 2, name: "Pyre", move: "Flare" },
+  ],
+  serum: [
+    { species: "wick", stage: 2, name: "Pyre", move: "Blaze" },
+    { species: "drop", stage: 2, name: "Tide", move: "Surge" },
+    { species: "sprout", stage: 2, name: "Canopy", move: "Bloom Burst" },
+  ],
 };
 
 const TRAINER_POOL: Record<string, SpeciesId[]> = {
@@ -530,6 +554,10 @@ const TRAINER_POOL: Record<string, SpeciesId[]> = {
   peds: ["pip", "sprout"],
   basic: ["wick", "sprout"],
   obstruction: ["pebble", "drop"],
+  cinder: ["wick", "coal"],
+  willow: ["pip", "sprout"],
+  andro: ["spark", "wick"],
+  serum: ["wick", "drop"],
 };
 
 function nameHash(name: string) {
