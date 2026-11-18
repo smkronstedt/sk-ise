@@ -1047,6 +1047,54 @@ const TRAINER_COATS: Record<string, string[]> = {
   serum: ["t:292:270:300", "t:-1:292:-1", "t:280:120:260", "t:320:40:290"],
 };
 
+const SIGN_NAME: Record<string, string> = {
+  stones: "QUARRY",
+  oncology: "ONCO",
+  urogyn: "WATER",
+  core: "CORE",
+  andrology: "SPARK",
+  peds: "GREEN",
+  basic: "VIAL",
+  obstruction: "CLAY",
+  cinder: "CINDER",
+  willow: "WILLOW",
+  andro: "MENS",
+  serum: "MEDS",
+};
+
+function signName(id?: string | null) {
+  if (!id) return "";
+  return SIGN_NAME[id] ?? "";
+}
+
+function exitLabel(scene: string, tile: number, x: number, y: number, city: City | null) {
+  if (scene === "vale" && tile === 5) return "LAWN";
+  if (scene === "house" && tile === 4) return y <= 2 ? "YARD" : "OUT";
+  if (scene === "yard" && tile === 4) return "HOUSE";
+  if (scene === "town" || scene === "home") {
+    if (tile === 7) return "MART";
+    if (tile === 9) return "CENTER";
+    if (tile === 4 && scene === "home") return "HOUSE";
+    if (tile === 4) return "GYM";
+    if (tile === 5 && scene === "home") return "QUARRY";
+    if (tile !== 5 || !city) return tile === 5 ? "ROAD" : "";
+    const next = signName(nextCity(city.id, 1)?.id);
+    const prev = city.id === "stones" ? "HOME" : signName(nextCity(city.id, -1)?.id) || "BACK";
+    if (x <= 3) return prev;
+    if (x >= 16) return next || (city.id === "stones" ? "ONCO" : "END");
+    if (city.id === "stones") return "HOME";
+    if (city.id === "oncology" || city.id === "urogyn") return next || "TRAIL";
+    return "ROUTE";
+  }
+  if (scene === "route" && tile === 5) {
+    if (!city) return "";
+    if (city.id === "stones") return y <= 2 ? "QUARRY" : "HOME";
+    if (y <= 2) return signName(nextCity(city.id, 1)?.id) || "END";
+    return signName(city.id) || "BACK";
+  }
+  return "";
+}
+
 function coatFor(kind: string, cityId: string, name: string) {
   if (kind === "rival") return "";
   if (kind === "leader") return LEADER_COAT[cityId] ?? "l:4";
@@ -2482,55 +2530,15 @@ export function MonsterQuest({
             const building = scene === "gym" || ((scene === "town" || scene === "home") && tile === 8);
             drawProp(ctx, tile, x, y, building, scene === "gym" ? undefined : place);
             if (scene === "yard" && isYellowTree(x, y)) paintYellowTree(ctx, x, y);
-            const label =
-              scene === "vale" && tile === 5
-                ? "LAWN"
-                : scene === "house" && tile === 4
-                ? y <= 2
-                  ? "YARD"
-                  : "OUT"
-                : scene === "yard" && tile === 4
-                  ? "HOUSE"
-                  : scene === "town" || scene === "home"
-                ? tile === 7
-                  ? "MART"
-                  : tile === 9
-                    ? "CENTER"
-                    : tile === 4 && scene === "home"
-                      ? "HOUSE"
-                      : tile === 4
-                        ? "GYM"
-                        : tile === 5 && scene === "home"
-                          ? "ROAD"
-                          : tile === 5 && x <= 3
-                            ? cityRef.current?.id === "stones"
-                              ? "HOME"
-                              : "BACK"
-                            : tile === 5 && x >= 16
-                              ? cityRef.current?.id === "stones"
-                                ? "BOAT"
-                                : cityRef.current && ["oncology", "urogyn"].includes(cityRef.current.id)
-                                  ? "TRAIL"
-                                  : "BOAT"
-                              : tile === 5
-                                ? cityRef.current && ["stones", "oncology", "urogyn"].includes(cityRef.current.id)
-                                  ? "TRAIL"
-                                  : "ROUTE"
-                                : ""
-                : scene === "route" && tile === 5
-                  ? cityRef.current?.id === "stones"
-                    ? y <= 2
-                      ? "QUARRY"
-                      : "HOME"
-                    : y <= 2
-                      ? "ONWARD"
-                      : "BACK"
-                  : "";
+            const label = exitLabel(scene, tile, x, y, cityRef.current);
             if (label) {
-              ctx.fillStyle = "#1a1208";
               ctx.font = "bold 8px sans-serif";
               ctx.textAlign = "center";
-              ctx.fillText(label, x * TILE + TILE / 2, y * TILE + 14);
+              const width = Math.min(TILE - 2, ctx.measureText(label).width + 6);
+              ctx.fillStyle = "rgba(255,248,220,0.92)";
+              ctx.fillRect(x * TILE + (TILE - width) / 2, y * TILE + 4, width, 12);
+              ctx.fillStyle = "#1a1208";
+              ctx.fillText(label, x * TILE + TILE / 2, y * TILE + 13);
             }
           }
         }
@@ -2788,19 +2796,29 @@ export function MonsterQuest({
                         ? `${city.city} · ${city.element}`
                         : "Championship"}
           </h2>
-          {scene === "home" ? <p className="text-xs">Your house is on the left. Professor Moka is in the lab. The south road is the trail to Quarry End.</p> : null}
+          {scene === "home" ? <p className="text-xs">Your house is on the left. Professor Moka is in the lab. The south sign reads Quarry.</p> : null}
           {scene === "vale" ? <p className="text-xs">Sit on a cushion or take the tea. Talk to whoever is nearest. The south door goes back to the yard.</p> : null}
           {scene === "house" ? <p className="text-xs">{houseFloor === 1 ? "Click the desk for due cards, the television for Empire lectures, or the stairs. North door is the pool." : "Click the stairs to go down. The balcony is along the north wall."}</p> : null}
           {scene === "yard" ? <p className="text-xs">Two yellow trees. One is by the pool. One is at the top of the yard. Walk into either.</p> : null}
-          {scene === "route" && city?.id === "stones" ? <p className="text-xs">South sign goes home. North sign goes to Quarry End. Neither needs a badge.</p> : null}
-          {scene === "route" && city?.id === "oncology" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
-          {scene === "route" && city?.id === "urogyn" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
-          {scene === "route" && city && city.id !== "stones" && city.id !== "oncology" && city.id !== "urogyn" ? <p className="text-xs">South sign goes back. The north sign needs the gym badge before the next town.</p> : null}
-          {scene === "town" && city?.id === "urogyn" ? <p className="text-xs">West dock goes back. East dock needs the badge before the next town.</p> : null}
-          {scene === "town" && city?.id === "stones" ? <p className="text-xs">South road is the trail home. The east road needs the rock badge before Onco Harbor.</p> : null}
-          {scene === "town" && city?.id === "oncology" ? <p className="text-xs">Bottom-left goes back to Quarry End. The far sign needs the badge before the next town.</p> : null}
-          {city && scene === "town" && city.id !== "urogyn" && city.id !== "stones" && city.id !== "oncology" ? (
-            <p className="text-xs">Bottom-left goes back. The east road needs the gym badge before the next town.</p>
+          {scene === "route" && city ? (
+            <p className="text-xs">
+              {city.id === "stones"
+                ? "South sign: Home. North sign: Quarry End."
+                : `South sign: ${city.city}. North sign: ${nextCity(city.id, 1)?.city ?? "the end"}.${city.side ? "" : " North needs the gym badge."}`}
+            </p>
+          ) : null}
+          {scene === "town" && city?.id === "stones" ? <p className="text-xs">South signs: Home. East sign: Onco Harbor, after the rock badge.</p> : null}
+          {scene === "town" && city?.id === "oncology" ? <p className="text-xs">Bottom-left: Quarry End. Trail signs: Blackwater Hold, after the fire badge. Ferryman: Cinder Ward.</p> : null}
+          {scene === "town" && city?.id === "urogyn" ? <p className="text-xs">West sign: Onco Harbor. East sign: The Commons, after the water badge.</p> : null}
+          {scene === "town" && city?.side ? (
+            <p className="text-xs">
+              West sign: {nextCity(city.id, -1)?.city}. East sign: {nextCity(city.id, 1)?.city ?? "end of this chain"}. No badge on these boats.
+            </p>
+          ) : null}
+          {city && scene === "town" && !city.side && city.id !== "stones" && city.id !== "oncology" && city.id !== "urogyn" ? (
+            <p className="text-xs">
+              Bottom-left: {nextCity(city.id, -1)?.city ?? "back"}. East sign: {nextCity(city.id, 1)?.city ?? "the end"}, after the gym badge.
+            </p>
           ) : null}
         </div>
         <div className="flex gap-2">
