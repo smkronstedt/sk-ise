@@ -1717,7 +1717,13 @@ export function MonsterQuest({
     const partner = partnerFor(city?.id ?? "stones", npc.kind === "leader" ? npc.name : npc.id, npc.kind);
     const foeMax = foeHealth(npc.kind, ids.length, cityIndex);
     const prime = takePrime();
-    setLine(npc.mode ? npc.line : npc.kind === "leader" ? `${npc.name} sends out ${partner.name}. Knock it out. A wrong answer and ${partner.move} hits you.` : npc.line);
+    setLine(
+      npc.mode
+        ? `${npc.line} ${ids.length} question${ids.length === 1 ? "" : "s"}.`
+        : npc.kind === "leader"
+          ? `${npc.name} sends out ${partner.name}. Knock it out. A wrong answer and ${partner.move} hits you.`
+          : npc.line,
+    );
     const youNow = ready?.lead && ready.lead.hp > 0 ? ready.lead.hp : 20;
     const youMaxNow = ready?.lead ? maxHp(ready.lead, ready.current) : 20;
     setBattle({
@@ -2872,6 +2878,9 @@ export function MonsterQuest({
           <div className="relative grid grid-cols-[1fr_auto] items-end gap-2">
             <div className="mb-10 border-4 border-black bg-[#f8f8d8] p-2">
               <p className="text-xs font-bold uppercase">{battle.foeKind === "wild" ? battle.foeName : `${battle.trainerLabel} · ${battle.foeName}`} · {battle.foeType}</p>
+              {battle.portrait?.startsWith("lounge:") && battle.ids.length ? (
+                <p className="text-sm font-bold">Question {Math.min(battle.index + 1, battle.ids.length)} of {battle.ids.length}</p>
+              ) : null}
               <div className="mt-1 h-3 border-2 border-black bg-white">
                 <div className="h-full bg-[#3a7a28]" style={{ width: `${Math.max(0, (battle.foeHp / battle.foeMax) * 100)}%` }} />
               </div>
@@ -2910,6 +2919,9 @@ export function MonsterQuest({
         </div>
           <div className="mt-3 border-4 border-double border-black bg-[#f8f8d8] p-3">
             <p className="text-xs font-bold uppercase">{battle.title}</p>
+            {battle.portrait?.startsWith("lounge:") && battle.ids.length && !battle.over ? (
+              <p className="mt-1 text-sm font-bold">Question {Math.min(battle.index + 1, battle.ids.length)} of {battle.ids.length}</p>
+            ) : null}
             {question && !battle.over ? <p className="mt-2 text-sm leading-relaxed">{question.stem.join(" ")}</p> : null}
             {question?.image && !battle.over ? (
               <img src={question.image} alt="Question figure" className="mt-2 max-h-[28rem] w-full bg-white object-contain" />
