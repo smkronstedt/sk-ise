@@ -3214,6 +3214,9 @@ export function MonsterQuest({
         <FieldSheet
           sheet={sheet}
           bag={bag}
+          hereId={scene === "home" || scene === "house" || scene === "yard" || scene === "vale" ? "home" : city?.id ?? "home"}
+          scene={scene}
+          stops={stops}
           onSheet={setSheet}
           onBadges={() => {
             setSheet(null);
@@ -3250,9 +3253,93 @@ export function MonsterQuest({
   );
 }
 
+function DexMap({ hereId, scene, stops }: { hereId: string; scene: string; stops: Stop[] }) {
+  const gymDone = (id: string) => stops.some((stop) => stop.kind === "gym" && stop.city.id === id && stop.done);
+  const main = cities.filter((item) => !item.side);
+  const side = cities.filter((item) => item.side);
+  const atHome = hereId === "home";
+  const hereCity = cities.find((item) => item.id === hereId) ?? null;
+  const ahead = atHome ? main[0] : nextCity(hereId, 1);
+  const onTrail = scene === "route";
+  const needGym = Boolean(hereCity && !onTrail && !atHome && !gymDone(hereCity.id));
+  const goal = needGym ? hereCity : ahead;
+  const note = atHome
+    ? "You are home. South sign: Quarry End."
+    : onTrail
+      ? `On the trail out of ${hereCity?.city ?? "town"}. North sign: ${ahead?.city ?? "the end"}${hereCity?.side ? "." : ahead && !gymDone(hereId) ? ". That sign wants the gym badge." : "."}`
+      : needGym
+        ? `You are in ${hereCity?.city}. Next stop is the ${hereCity?.element} gym, ${hereCity?.leader}.`
+        : ahead
+          ? `You are in ${hereCity?.city}. Next town: ${ahead.city} · ${ahead.subject}.`
+          : `You are in ${hereCity?.city ?? "town"}. This road ends here.`;
+  const ferry = hereId === "oncology" && !needGym ? " The ferryman also goes to Cinder Ward. No badge." : "";
+  const col = 78;
+  const xOf = (index: number) => 40 + index * col;
+  const width = xOf(main.length) + 24;
+  const spot = (id: string) => {
+    if (id === "home") return { x: xOf(0), y: 36 };
+    const mainIndex = main.findIndex((item) => item.id === id);
+    if (mainIndex >= 0) return { x: xOf(mainIndex + 1), y: 36 };
+    const sideIndex = side.findIndex((item) => item.id === id);
+    const onco = main.findIndex((item) => item.id === "oncology");
+    return { x: xOf(onco + 1 + sideIndex), y: 118 };
+  };
+  const chain: { id: string; name: string; subject: string }[] = [
+    { id: "home", name: "Home", subject: "Start" },
+    ...main.map((item) => ({ id: item.id, name: item.city, subject: item.subject })),
+  ];
+  const locked = (id: string) => {
+    const index = main.findIndex((item) => item.id === id);
+    if (index <= 0) return false;
+    return !gymDone(main[index - 1].id);
+  };
+  const drawNode = (id: string, name: string, subject: string) => {
+    const { x, y } = spot(id);
+    const current = id === hereId && !onTrail;
+    const going = goal?.id === id && !current;
+    const done = id !== "home" && gymDone(id);
+    const shut = locked(id);
+    return (
+      <g key={id}>
+        <circle cx={x} cy={y} r={current ? 11 : 8} fill={done ? "#1f7a3a" : shut ? "#d9d3c7" : "#fff8dc"} stroke={current ? "#e6b000" : going ? "#c45c4a" : "#1a1208"} strokeWidth={current || going ? 3 : 2} />
+        {current ? <text x={x} y={y + 3} textAnchor="middle" fontSize="8" fontWeight="700" fill="#1a1208">YOU</text> : null}
+        {going ? <text x={x} y={y - 14} textAnchor="middle" fontSize="8" fontWeight="700" fill="#c45c4a">NEXT</text> : null}
+        <text x={x} y={y + 22} textAnchor="middle" fontSize="8" fontWeight="700" fill="#1a1208">{name.split(" ")[0]}</text>
+        <text x={x} y={y + 32} textAnchor="middle" fontSize="7" fill="#5c564c">{subject.split(" ")[0]}</text>
+      </g>
+    );
+  };
+  const link = (from: string, to: string, y: number) => {
+    const a = spot(from);
+    const b = spot(to);
+    return <line key={`${from}-${to}`} x1={a.x + 12} y1={y} x2={b.x - 12} y2={y} stroke="#1a1208" strokeWidth="2" />;
+  };
+  return (
+    <div className="border-4 border-black bg-[#e7f0d8] p-2">
+      <p className="text-xs font-bold">Map</p>
+      <p className="text-[11px]">{note}{ferry}</p>
+      <div className="mt-1 overflow-x-auto">
+        <svg viewBox={`0 0 ${width} 160`} className="h-40 min-w-[40rem]" role="img" aria-label="Town map">
+          {chain.slice(0, -1).map((item, index) => link(item.id, chain[index + 1].id, 36))}
+          {side.slice(0, -1).map((item, index) => link(item.id, side[index + 1].id, 118))}
+          <line x1={spot("oncology").x} y1={48} x2={spot("cinder").x} y2={106} stroke="#1a1208" strokeWidth="2" strokeDasharray="3 3" />
+          {onTrail && hereCity && ahead ? (
+            <circle cx={(spot(hereId).x + spot(ahead.id).x) / 2} cy={hereCity.side ? 118 : 36} r="5" fill="#e6b000" stroke="#1a1208" strokeWidth="2" />
+          ) : null}
+          {chain.map((item) => drawNode(item.id, item.name, item.subject))}
+          {side.map((item) => drawNode(item.id, item.city, item.subject))}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 function FieldSheet({
   sheet,
   bag,
+  hereId,
+  scene,
+  stops,
   onSheet,
   onBadges,
   onChange,
@@ -3260,6 +3347,9 @@ function FieldSheet({
 }: {
   sheet: "party" | "dex";
   bag: QuestBag | null;
+  hereId: string;
+  scene: string;
+  stops: Stop[];
   onSheet: (sheet: "party" | "dex" | null) => void;
   onBadges: () => void;
   onChange: () => void;
@@ -3334,7 +3424,9 @@ function FieldSheet({
       ) : null}
       {sheet === "dex" ? (
         <div className="mt-3 grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_16rem]">
-          <div className="max-h-[28rem] overflow-auto border-4 border-black bg-white">
+          <div>
+            <DexMap hereId={hereId} scene={scene} stops={stops} />
+            <div className="mt-3 max-h-[28rem] overflow-auto border-4 border-black bg-white">
             {DEX.map((creature) => {
               const owned = field.caught.includes(creature.number);
               const spotted = !owned && field.seen.includes(creature.number);
@@ -3358,6 +3450,7 @@ function FieldSheet({
                 </div>
               );
             })}
+          </div>
           </div>
           {bag ? (
             <div className="border-4 border-black bg-white p-2">
