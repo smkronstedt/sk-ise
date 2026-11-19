@@ -20,3 +20,15 @@ export const bankFigures: Record<string, string> = {
   "SASP2023-074": "/bank/figures/uds-boo-guarding.jpg",
   "UQB-1005": "/anatomy/testis-arteries.svg",
 };
+
+/** Teaching plates shown with the explanation, not with the stem. */
+export const answerFigures: Record<string, { src: string; caption: string }> = {
+  "SASP2026-007": {
+    src: "/bank/figures/vvf-peritoneal.svg",
+    caption: "A high fistula sits at the vaginal apex. The Martius flap from the labia stops short. Peritoneum from the cul-de-sac reaches it through the vaginal incision.",
+  },
+  "SASP2026-008": {
+    src: "/bank/figures/sartorius-flap.svg",
+    caption: "The sartorius origin is taken off the anterior superior iliac spine and sewn to the inguinal ligament, so the muscle covers the femoral vessels. Gracilis is too medial.",
+  },
+};

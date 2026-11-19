@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 640">
+  <rect width="980" height="640" fill="#ffffff"/>
+  <text x="490" y="36" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#1b3a4b">High vesicovaginal fistula</text>
+  <text x="490" y="60" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#5c6b7a">Sagittal schematic. Anterior is left. Peritoneum reaches the apex. The Martius flap does not.</text>
+  <text x="48" y="100" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#1b3a4b" font-weight="700">ANTERIOR</text>
+  <text x="932" y="100" text-anchor="end" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#1b3a4b" font-weight="700">POSTERIOR</text>
+  <path d="M78 140 C58 240 64 380 82 520" fill="none" stroke="#c4b49a" stroke-width="16" stroke-linecap="round"/>
+  <text x="36" y="250" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#7a6a52">pubis</text>
+  <ellipse cx="210" cy="240" rx="88" ry="70" fill="#d7ebf7" stroke="#1b3a4b" stroke-width="2"/>
+  <text x="210" y="246" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="16" fill="#1b3a4b" font-weight="700">Bladder</text>
+  <path d="M250 330 L292 318 L300 530 L236 530 Z" fill="#f6e6d4" stroke="#1b3a4b" stroke-width="2"/>
+  <text x="268" y="450" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="15" fill="#1b3a4b" font-weight="700">Vagina</text>
+  <ellipse cx="360" cy="175" rx="72" ry="52" fill="#f7cfc8" stroke="#1b3a4b" stroke-width="2"/>
+  <text x="360" y="180" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="16" fill="#1b3a4b" font-weight="700">Uterus</text>
+  <ellipse cx="700" cy="390" rx="42" ry="100" fill="#f3d7c4" stroke="#1b3a4b" stroke-width="2"/>
+  <text x="700" y="394" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="15" fill="#1b3a4b" font-weight="700">Rectum</text>
+  <circle cx="286" cy="318" r="8" fill="#1b3a4b"/>
+  <line x1="294" y1="310" x2="450" y2="148" stroke="#1b3a4b" stroke-width="1.4"/>
+  <text x="458" y="144" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#1b3a4b" font-weight="700">High fistula</text>
+  <path d="M400 270 C370 286 330 302 294 314" fill="none" stroke="#5c4d91" stroke-width="14" stroke-linecap="round"/>
+  <text x="620" y="200" font-family="ui-sans-serif, sans-serif" font-size="15" fill="#5c4d91" font-weight="700">Peritoneal flap</text>
+  <text x="620" y="220" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#5c4d91">From the cul-de-sac,</text>
+  <text x="620" y="238" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#5c4d91">through the vaginal incision,</text>
+  <text x="620" y="256" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#5c4d91">onto the apex.</text>
+  <path d="M120 560 C170 520 210 470 236 400" fill="none" stroke="#c4a35a" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="236" cy="400" r="5" fill="#8a6a22"/>
+  <text x="40" y="600" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#8a6a22" font-weight="700">Martius flap stops here. Too short for a high fistula.</text>
+  <text x="620" y="560" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#5c6b7a">Omentum and gracilis also reach,</text>
+  <text x="620" y="578" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#5c6b7a">but each needs another incision.</text>
+</svg>

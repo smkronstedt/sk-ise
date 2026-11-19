@@ -4,7 +4,7 @@ import { Shell } from "@/components/desk/shell";
 import { AnatomyFigure } from "@/components/desk/anatomy-figure";
 import { isNlutdTopic, NlutdChart } from "@/components/desk/nlutd-chart";
 import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
-import { isPopqText, PopqFigure } from "@/components/desk/popq-figure";
+import { AnswerExtra } from "@/components/desk/answer-extra";
 import { addCard, loadCards } from "@/lib/cards";
 import { orderForSasp, selectionStatus } from "@/lib/desk/adapt";
 import { bankFigures } from "@/lib/desk/bank-figures";
@@ -214,7 +214,7 @@ function BankPage() {
           <p className="text-sm font-semibold tracking-wide text-muted uppercase">Original items</p>
           <h1 className="font-serif text-3xl tracking-tight">Question bank</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted">
-            {items.length} items. The SASP years from your spreadsheet are in here, separate from the older board set. 2024 was not in the file. 2025 has 14 questions, and 2026 has the first 8.
+            {items.length} items. The SASP years from your spreadsheet are in here, separate from the older board set. 2024 was not in the file. 2025 has 14 questions, and 2026 has the first 9.
             {ready ? ` ${correct}/${answered || 0} correct so far.` : ""}
           </p>
         </div>
@@ -489,6 +489,10 @@ function Practice({
             {saved?.correct ? "Correct" : "Incorrect"}. Answer {item.answer}. {optionText(item, item.answer)}
           </p>
           <p className="mt-3 leading-relaxed">{item.rationale}</p>
+          <AnswerExtra
+            id={item.id}
+            text={[item.question, item.rationale, item.learning_point, ...item.key_facts].join(" ")}
+          />
           {isNlutdTopic(item.topic) ? <NlutdChart /> : null}
           {isDsdText(
             [item.question, item.rationale, item.learning_point, ...item.key_facts, ...Object.values(item.options)].join(" "),
