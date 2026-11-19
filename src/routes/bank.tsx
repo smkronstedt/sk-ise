@@ -214,7 +214,7 @@ function BankPage() {
           <p className="text-sm font-semibold tracking-wide text-muted uppercase">Original items</p>
           <h1 className="font-serif text-3xl tracking-tight">Question bank</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted">
-            {items.length} items. The SASP years from your spreadsheet are in here, separate from the older board set. 2024 was not in the file. 2025 has 14 questions, and 2026 has the first 11.
+            {items.length} items. The SASP years from your spreadsheet are in here, separate from the older board set. 2024 was not in the file. 2025 has 14 questions, and 2026 has the first 12.
             {ready ? ` ${correct}/${answered || 0} correct so far.` : ""}
           </p>
         </div>
