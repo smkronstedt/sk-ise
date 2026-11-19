@@ -32,4 +32,8 @@ export const answerFigures: Record<string, { src: string; caption: string }> = {
     src: "/bank/figures/sartorius-flap.svg",
     caption: "The sartorius origin is taken off the anterior superior iliac spine and sewn to the inguinal ligament, so the muscle covers the femoral vessels. Gracilis is too medial.",
   },
+  "SASP2026-011": {
+    src: "/bank/figures/kidney-posterior.svg",
+    caption: "Quadratus lumborum lies on the posterior surface. The diaphragm does too, but only at the upper pole. Psoas is medial. Transversus is anterolateral.",
+  },
 };

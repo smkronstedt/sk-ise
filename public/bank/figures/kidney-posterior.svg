@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 640">
+  <rect width="980" height="640" fill="#ffffff"/>
+  <text x="490" y="36" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#1b3a4b">What touches the back of the kidney</text>
+  <text x="490" y="60" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#5c6b7a">Axial schematic. Anterior is up. Posterior is down.</text>
+  <text x="300" y="100" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#1b3a4b" font-weight="700">ANTERIOR</text>
+  <text x="300" y="560" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#1b3a4b" font-weight="700">POSTERIOR</text>
+  <ellipse cx="300" cy="300" rx="210" ry="175" fill="#f7f4ef" stroke="#d9d0c4" stroke-width="2"/>
+  <circle cx="168" cy="400" r="32" fill="#efe6d6" stroke="#1b3a4b" stroke-width="2"/>
+  <text x="168" y="404" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="12" fill="#1b3a4b">spine</text>
+  <ellipse cx="230" cy="330" rx="36" ry="48" fill="#f3d2b0" stroke="#1b3a4b" stroke-width="2"/>
+  <text x="230" y="334" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="12" fill="#1b3a4b">psoas</text>
+  <ellipse cx="330" cy="280" rx="72" ry="50" fill="#d7ebf7" stroke="#1b3a4b" stroke-width="2.5"/>
+  <text x="330" y="284" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="15" fill="#1b3a4b" font-weight="700">Kidney</text>
+  <ellipse cx="336" cy="348" rx="68" ry="24" fill="#e7b8b8" stroke="#8a3030" stroke-width="2"/>
+  <text x="336" y="352" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="11" fill="#8a3030">quadratus</text>
+  <path d="M400 230 C450 250 470 300 450 340" fill="none" stroke="#8a8a8a" stroke-width="8" stroke-linecap="round"/>
+  <text x="470" y="250" font-family="ui-sans-serif, sans-serif" font-size="12" fill="#5c6b7a">transversus</text>
+  <path d="M250 470 C330 500 420 490 470 450" fill="none" stroke="#b9c3cc" stroke-width="10" stroke-linecap="round" stroke-dasharray="7 6"/>
+  <text x="250" y="500" font-family="ui-sans-serif, sans-serif" font-size="12" fill="#5c6b7a">latissimus and paraspinous, farther back</text>
+  <text x="560" y="130" font-family="ui-sans-serif, sans-serif" font-size="16" fill="#8a3030" font-weight="700">Posterior, and touching</text>
+  <text x="560" y="154" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#1b3a4b">Quadratus lumborum</text>
+  <text x="560" y="176" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#1b3a4b">Diaphragm, upper pole only</text>
+  <text x="560" y="220" font-family="ui-sans-serif, sans-serif" font-size="16" fill="#1b3a4b" font-weight="700">Nearby, but not the posterior surface</text>
+  <text x="560" y="246" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#5c6b7a">Psoas is medial.</text>
+  <text x="560" y="268" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#5c6b7a">Transversus is anterolateral.</text>
+  <text x="560" y="290" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#5c6b7a">Latissimus and paraspinous are</text>
+  <text x="560" y="310" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#5c6b7a">behind, but not against the kidney.</text>
+  <text x="560" y="332" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#5c6b7a">Intercostals are superior.</text>
+  <text x="560" y="354" font-family="ui-sans-serif, sans-serif" font-size="14" fill="#5c6b7a">The 12th rib crosses the upper pole.</text>
+  <rect x="560" y="390" width="380" height="180" rx="8" fill="#f7f4ef" stroke="#d9d0c4"/>
+  <text x="750" y="416" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="13" fill="#1b3a4b" font-weight="700">Upper pole, from behind</text>
+  <path d="M640 530 C700 470 820 470 880 530" fill="#d7ebf7" stroke="#1b3a4b" stroke-width="2"/>
+  <path d="M630 520 C700 450 830 450 900 520" fill="none" stroke="#6d8f62" stroke-width="8" stroke-linecap="round"/>
+  <text x="750" y="500" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="12" fill="#1b3a4b">kidney</text>
+  <text x="750" y="548" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="12" fill="#3d5c34">diaphragm behind the upper pole</text>
+</svg>
