@@ -97,12 +97,6 @@ export function bucketStats(state: DeskState): BucketStat[] {
   return rows.map((row) => ({ ...row, suggested: (row.suggested / sum) * 100 }));
 }
 
-function statusWeight(result: "unused" | "correct" | "incorrect", marked: boolean): number {
-  let weight = result === "incorrect" ? 1.4 : result === "unused" ? 3.2 : 0.2;
-  if (marked) weight += 0.45;
-  return weight;
-}
-
 export function eligibleQuestions(state: DeskState, topicIds: string[], pool: Pool): Question[] {
   const allowed = new Set(topicIds);
   return questions.filter((question) => {
@@ -123,45 +117,10 @@ export function pickQuestionIds(
   topicIds: string[],
   pool: Pool,
   count: number,
-  adaptive: boolean,
+  _adaptive: boolean,
 ): string[] {
   const poolQuestions = eligibleQuestions(state, topicIds, pool);
-  if (!adaptive) {
-    const shuffled = [...poolQuestions];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled.slice(0, count).map((question) => question.id);
-  }
-  const stats = bucketStats(state);
-  const share = Object.fromEntries(stats.map((row) => [row.id, row.suggested])) as Record<
-    BlueprintId,
-    number
-  >;
-  const weighted = poolQuestions.map((question) => {
-    const bucket = topicById[question.topicId]?.blueprintId ?? "core";
-    const result = latestResult(state, question.id);
-    return {
-      id: question.id,
-      weight: Math.max(0.05, share[bucket] ?? 1) * statusWeight(result, Boolean(state.marks[question.id])),
-    };
-  });
-  const picked: string[] = [];
-  const rest = [...weighted];
-  while (picked.length < count && rest.length) {
-    const sum = rest.reduce((total, item) => total + item.weight, 0);
-    let roll = Math.random() * sum;
-    let index = 0;
-    for (; index < rest.length; index++) {
-      roll -= rest[index].weight;
-      if (roll <= 0) break;
-    }
-    if (index >= rest.length) index = rest.length - 1;
-    picked.push(rest[index].id);
-    rest.splice(index, 1);
-  }
-  return picked;
+  return orderForSasp(state, poolQuestions).slice(0, count).map((question) => question.id);
 }
 
 export function scoreTest(state: DeskState, id: string) {
@@ -201,18 +160,7 @@ export function pickFrom(
   count: number,
 ): string[] {
   const poolQuestions = filterPool(state, list, topicIds, pool);
-  return shuffle(poolQuestions)
-    .slice(0, count)
-    .map((question) => question.id);
-}
-
-function shuffle<T>(list: T[]): T[] {
-  const copy = [...list];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
+  return orderForSasp(state, poolQuestions).slice(0, count).map((question) => question.id);
 }
 
 function matchesPool(state: DeskState, id: string, pool: Pool) {

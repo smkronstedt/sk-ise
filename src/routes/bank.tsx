@@ -6,7 +6,7 @@ import { isNlutdTopic, NlutdChart } from "@/components/desk/nlutd-chart";
 import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
 import { isPopqText, PopqFigure } from "@/components/desk/popq-figure";
 import { addCard, loadCards } from "@/lib/cards";
-import { selectionStatus } from "@/lib/desk/adapt";
+import { orderForSasp, selectionStatus } from "@/lib/desk/adapt";
 import { bankFigures } from "@/lib/desk/bank-figures";
 import { loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
@@ -112,7 +112,7 @@ function BankPage() {
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return (items ?? []).filter((item) => {
+    const rows = (items ?? []).filter((item) => {
       if (setName === "uqb" && (item.id.startsWith("SASP") || item.id.startsWith("SIEGAL"))) return false;
       if (setName === "sasp" && !item.id.startsWith("SASP")) return false;
       if (setName === "siegal" && !item.id.startsWith("SIEGAL")) return false;
@@ -128,6 +128,7 @@ function BankPage() {
       const blob = `${item.question} ${item.learning_point} ${item.source_ref} ${item.topic}`.toLowerCase();
       return blob.includes(needle);
     });
+    return orderForSasp(desk.state, rows);
   }, [items, progress.answers, progress.marks, query, status, topic, setName, hardOnly, desk.state, catalogReady]);
 
   const shown = useMemo(() => {

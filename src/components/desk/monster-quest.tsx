@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { Badge } from "@/components/desk/badge";
 import { TownTrial } from "@/components/desk/town-trial";
 import { addCard, loadCards, saveCards, schedule } from "@/lib/cards";
-import { drawQuestionIds, selectionStatus } from "@/lib/desk/adapt";
+import { drawQuestionIds, orderForSasp, selectionStatus } from "@/lib/desk/adapt";
 import { noteRow } from "@/lib/desk/honors";
 import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
@@ -1670,19 +1670,23 @@ export function MonsterQuest({
     if (npc.mode === "missed") {
       ids = drawQuestionIds(desk.state, topicIds, "incorrect", npc.count || 8, false);
     } else if (npc.mode === "adaptive") {
-      ids = drawQuestionIds(desk.state, topicIds, "all", npc.count || 10, true);
+      ids = drawForQuest(desk.state, topicIds, npc.count || 10, false);
     } else if (npc.mode === "images") {
-      const all = drawQuestionIds(desk.state, topicIds, "all", 400, false);
+      const all = drawQuestionIds(desk.state, topicIds, "all", 8000, false);
       ids = all.filter((id) => {
         const question = getQuestion(id);
         const text = question?.stem.join(" ") ?? "";
         return Boolean(question && (question.image || question.figure || /\b(figure|image|photograph|radiograph|diagram)\b/i.test(text)));
-      }).slice(0, npc.count || 8);
+      });
     } else if (npc.mode === "highyield") {
       const high = (["oncology", "stones", "core", "basic"] as const).flatMap((bucket) => topicIdsFor(bucket));
-      ids = drawQuestionIds(desk.state, high, "all", npc.count || 12, true);
+      ids = drawForQuest(desk.state, high, npc.count || 12, false);
     } else if (npc.mode === "anki") {
-      ids = loadCards().filter((card) => card.due <= Date.now()).map((card) => card.sourceQuestionId).filter((id) => Boolean(getQuestion(id))).slice(0, 12);
+      const due = loadCards()
+        .filter((card) => card.due <= Date.now())
+        .map((card) => card.sourceQuestionId)
+        .filter((id) => Boolean(getQuestion(id)));
+      ids = orderForSasp(desk.state, due.map((id) => ({ id }))).map((item) => item.id);
       if (!ids.length) ids = drawQuestionIds(desk.state, topicIds, "incorrect", npc.count || 8, true);
     } else {
       ids = npc.prostate

@@ -157,8 +157,8 @@ function CreatePage() {
         <p className="mt-2 text-sm text-muted">
           {mode === "timed"
             ? "Timed blocks hide explanations until you end. Ninety seconds are budgeted per item."
-            : "Tutor shows the explanation as soon as you submit an item."}
-          {adaptive ? " Adaptive draws more from heavy, weak buckets." : " Off means a plain shuffle."}
+            : "Tutor shows the explanation as soon as you submit an item."}{" "}
+          Unanswered original SASP items come first, newest year first.
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
