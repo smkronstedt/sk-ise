@@ -214,7 +214,7 @@ function BankPage() {
           <p className="text-sm font-semibold tracking-wide text-muted uppercase">Original items</p>
           <h1 className="font-serif text-3xl tracking-tight">Question bank</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted">
-            {items.length} items. The SASP years from your spreadsheet are in here, separate from the older board set. 2024 was not in the file, and 2025 has 14 questions.
+            {items.length} items. The SASP years from your spreadsheet are in here, separate from the older board set. 2024 was not in the file. 2025 has 14 questions, and 2026 is started with question 1.
             {ready ? ` ${correct}/${answered || 0} correct so far.` : ""}
           </p>
         </div>
@@ -246,7 +246,7 @@ function BankPage() {
           <option value="sasp">SASP, all years</option>
           <option value="siegal">Siegal 2026 peds</option>
           <option value="uqb">Older board set</option>
-          {["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2025"].map((year) => (
+          {["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2025", "2026"].map((year) => (
             <option key={year} value={year}>
               SASP {year}
             </option>
