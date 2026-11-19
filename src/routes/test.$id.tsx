@@ -11,7 +11,7 @@ import { useDesk } from "@/lib/desk/provider";
 import { rememberAnswer } from "@/lib/desk/original-bank";
 import { guideLinks } from "@/lib/desk/statements";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
-import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
+import { DsdFigure, isDsdText, isPopqText, PopqFigure } from "@/components/desk/dsd-figure";
 import { AnswerExtra } from "@/components/desk/answer-extra";
 import { topicById } from "@/lib/desk/topics";
 import type { TestBlock } from "@/lib/desk/types";

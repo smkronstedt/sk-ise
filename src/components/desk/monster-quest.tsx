@@ -15,8 +15,7 @@ import type { BlueprintId, DeskState, Question, TestBlock } from "@/lib/desk/typ
 import { drawActor, drawCreature, drawGround, drawProp, DressedActor, lookFor, PixelActor, TILE } from "@/components/desk/quest-art";
 import { NlutdChart } from "@/components/desk/nlutd-chart";
 import { Figure } from "@/components/desk/figure";
-import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
-import { isPopqText, PopqFigure } from "@/components/desk/popq-figure";
+import { DsdFigure, isDsdText, isPopqText, PopqFigure } from "@/components/desk/dsd-figure";
 import { musicOn, setTownMusic } from "@/lib/desk/town-music";
 import { questCash } from "@/lib/desk/purse";
 import {

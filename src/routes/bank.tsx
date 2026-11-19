@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Shell } from "@/components/desk/shell";
 import { AnatomyFigure } from "@/components/desk/anatomy-figure";
 import { isNlutdTopic, NlutdChart } from "@/components/desk/nlutd-chart";
-import { DsdFigure, isDsdText } from "@/components/desk/dsd-figure";
+import { DsdFigure, isDsdText, isPopqText, PopqFigure } from "@/components/desk/dsd-figure";
 import { AnswerExtra } from "@/components/desk/answer-extra";
 import { addCard, loadCards } from "@/lib/cards";
 import { orderForSasp, selectionStatus } from "@/lib/desk/adapt";

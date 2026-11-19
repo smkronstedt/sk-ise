@@ -3,8 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Shell } from '@/components/desk/shell';
 import { AnatomyFigure } from '@/components/desk/anatomy-figure';
 import { isNlutdTopic, NlutdChart } from '@/components/desk/nlutd-chart';
-import { DsdFigure, isDsdText } from '@/components/desk/dsd-figure';
-import { isPopqText, PopqFigure } from '@/components/desk/popq-figure';
+import { DsdFigure, isDsdText, isPopqText, PopqFigure } from '@/components/desk/dsd-figure';
 import {
   loadCards,
   saveCards,
