@@ -15,6 +15,7 @@ import { bucketStats, drawQuestionIds, scoreTest, uniqueCorrectCount } from "@/l
 import { ensureLifetime } from "@/lib/desk/activity";
 import { blueprintBankCounts, getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { listLeaders, type Leader } from "@/lib/leaderboard-api";
+import { syncDeviceProgress } from "@/lib/progress-sync";
 import { BANK_TOTAL, countBankCorrect, loadBankProgress } from "@/lib/desk/original-bank";
 import { questions } from "@/lib/desk/questions";
 import { useDesk } from "@/lib/desk/provider";
@@ -188,20 +189,30 @@ function Home() {
   const [pulse, setPulse] = useState(0);
   const { user, isPending } = useCurrentUserState();
   const mine = isAdminEmail(user?.primaryEmail);
+
+  const refreshLeaders = async () => {
+    if (isPending) return;
+    try {
+      await syncDeviceProgress(user?.id);
+      const result = await listLeaders();
+      setLeaders(result.leaders);
+    } catch {
+      setLeaders([]);
+    }
+  };
+
   useEffect(() => {
     setBankCorrect(countBankCorrect());
-    let stop = false;
-    void listLeaders()
-      .then((result) => {
-        if (!stop) setLeaders(result.leaders);
-      })
-      .catch(() => {
-        if (!stop) setLeaders([]);
-      });
+    void refreshLeaders();
+    const onActivity = () => void refreshLeaders();
+    window.addEventListener("ise-activity", onActivity);
+    window.addEventListener("ise-progress", onActivity);
     return () => {
-      stop = true;
+      window.removeEventListener("ise-activity", onActivity);
+      window.removeEventListener("ise-progress", onActivity);
     };
-  }, []);
+  }, [isPending, user?.id]);
+
   useEffect(() => {
     let stop = false;
     const bump = () => setPulse((value) => value + 1);
@@ -226,7 +237,10 @@ function Home() {
   return (
     <Shell>
       <section className="mb-4 rounded border border-line bg-paper px-4 py-3">
-        <p className="text-xs font-semibold tracking-wide text-muted uppercase">Your questions</p>
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="text-xs font-semibold tracking-wide text-muted uppercase">Your questions</p>
+          <Link to="/leaderboard" className="text-xs font-semibold text-navy">Full leaderboard →</Link>
+        </div>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
             ["Done", study.done],
@@ -245,13 +259,13 @@ function Home() {
             ? "No scored questions yet."
             : `${study.right} right out of ${study.done} done${study.done ? ` (${Math.round((study.right / study.done) * 100)}%)` : ""}. ${study.wrong} wrong. ${study.open} test${study.open === 1 ? "" : "s"} still open.`}
         </p>
-        {leaders && leaders.some((row) => row.done > 0) ? (
+        {leaders && leaders.some((row) => row.done > 0 || (row.periods?.today ?? 0) > 0) ? (
           <ul className="mt-3 divide-y divide-line">
-            {leaders.filter((row) => row.done > 0).map((row) => (
+            {leaders.filter((row) => row.done > 0 || (row.periods?.today ?? 0) > 0).map((row) => (
               <li key={row.name} className="flex items-baseline justify-between gap-3 py-2 text-sm">
                 <span className="truncate font-semibold">{row.name}</span>
                 <span className="shrink-0 text-muted">
-                  Today {row.periods?.today ?? 0} · Week {row.periods?.week ?? 0} · {row.done} done · {row.right} right · {row.wrong} wrong · {row.finished} tests
+                  Today {row.periods?.today ?? 0} · Week {row.periods?.week ?? 0} · Month {row.periods?.month ?? 0} · {row.done} done · {row.right} right
                 </span>
               </li>
             ))}
