@@ -36,4 +36,8 @@ export const answerFigures: Record<string, { src: string; caption: string }> = {
     src: "/bank/figures/kidney-posterior.svg",
     caption: "Quadratus lumborum lies on the posterior surface. The diaphragm does too, but only at the upper pole. Psoas is medial. Transversus is anterolateral.",
   },
+  "SASP2026-017": {
+    src: "/bank/figures/mainz-reach.svg",
+    caption: "The Mainz pouch lives on the ileocolic artery. Divide the right colic to drop the mesentery to the urethra. The marginal artery keeps the cecum alive. Confirm the edge bleeds before you close.",
+  },
 };
