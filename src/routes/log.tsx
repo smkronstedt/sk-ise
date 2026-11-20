@@ -91,7 +91,7 @@ function LogPage() {
             <p className="text-xs font-semibold tracking-wide text-amber-800 uppercase">SASP practice tests</p>
             <h2 className="font-serif text-3xl text-amber-950">${purse.toLocaleString()}</h2>
             <p className="mt-1 text-sm text-amber-950">
-              Finish a SASP year from the spreadsheet and the purse adds ${YEAR_PURSE.toLocaleString()}. 2016 through 2023 are 150 questions. 2025 has 14. 2026 has 15 so far. There is no 2024 in the file. Finishing every year adds another ${CABINET_PURSE.toLocaleString()}.
+              Finish a SASP year from the spreadsheet and the purse adds ${YEAR_PURSE.toLocaleString()}. 2016 through 2023 are 150 questions. 2025 has 14. 2026 has 16 so far. There is no 2024 in the file. Finishing every year adds another ${CABINET_PURSE.toLocaleString()}.
             </p>
             <ul className="mt-4 flex flex-col gap-3">
               {exams.map((exam) => (
