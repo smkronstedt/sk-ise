@@ -18,13 +18,6 @@ export const bankFigures: Record<string, string> = {
   "SASP2022-119": "/bank/figures/uds-desd.jpg",
   "SASP2023-034": "/bank/figures/uds-boo-guarding.jpg",
   "SASP2023-074": "/bank/figures/uds-boo-guarding.jpg",
-  "SASP2026-010": "/bank/figures/SASP2026-010.jpg",
-  "SASP2026-019": "/bank/figures/SASP2026-019.jpg",
-  "SASP2026-023": "/bank/figures/SASP2026-023.jpg",
-  "SASP2026-031": "/bank/figures/SASP2026-031.jpg",
-  "SASP2026-034": "/bank/figures/SASP2026-034.jpg",
-  "SASP2026-035": "/bank/figures/SASP2026-035.jpg",
-  "SASP2026-058": "/bank/figures/SASP2026-058.jpg",
   "UQB-1005": "/anatomy/testis-arteries.svg",
 };
 
