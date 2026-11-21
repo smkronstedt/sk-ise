@@ -457,4 +457,358 @@ function ClassicView({
                       type="button"
                       onClick={() => desk.setFocus(row.id as BlueprintId, choice.id)}
                       className={`min-h-11 rounded border px-3 text-sm font-semibold ${
-                        row.fo[+15686 bytes at .content[1].resource.text]
+                        row.focus === choice.id
+                          ? "border-navy bg-navy text-white"
+                          : "border-line bg-paper text-ink"
+                      }`}
+                    >
+                      {choice.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <aside className="flex flex-col gap-4">
+        <section className="rounded border border-amber-500 bg-amber-50 p-4">
+          <p className="text-xs font-semibold tracking-wide text-amber-800 uppercase">Prize and log</p>
+          <h2 className="font-serif text-2xl text-amber-950">SASP year purse</h2>
+          <p className="mt-1 text-sm text-amber-950">Finish a 150-question year for $1,000. The calendar counts questions and cards by day.</p>
+          <Link to="/log" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-navy">
+            Open the log
+          </Link>
+        </section>
+        <InserviceCard mine={mine} pending={sessionPending} signedIn={signedIn} onApply={applyFocus} />
+
+        <section className="rounded border border-line bg-paper p-4">
+          <p className="text-sm font-semibold tracking-wide text-muted uppercase">Next block</p>
+          <h2 className="font-serif text-2xl tracking-tight">
+            {top ? `Start with ${top.short}` : "Adaptive block"}
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {attempted === 0
+              ? "You have no scored items yet, so the block follows the exam weights."
+              : `You are ${Math.round((correct / attempted) * 100)}% on last answers. The block leans into misses and into whatever you boosted.`}
+          </p>
+          <button
+            type="button"
+            onClick={startAdaptive}
+            className="mt-3 min-h-11 w-full rounded bg-blue px-4 text-base font-semibold text-white"
+          >
+            Start adaptive tutor block
+          </button>
+          <Link
+            to="/create"
+            className="mt-2 flex min-h-11 items-center justify-center rounded border border-line px-4 text-sm font-semibold"
+          >
+            Build a custom block
+          </Link>
+          <Link
+            to="/guidelines"
+            className="mt-2 flex min-h-11 items-center justify-center rounded border border-line px-4 text-sm font-semibold"
+          >
+            Guideline statements
+          </Link>
+          <p className="mt-3 text-sm text-muted">
+            {questions.length} original items across {topics.length} guidelines. SASP booklets stay in your Drive and are not scored here.
+          </p>
+        </section>
+
+        <section className="rounded border border-line bg-paper p-4">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-semibold">Saved tests</h2>
+            <Link to="/tests" className="text-sm font-semibold text-blue">
+              All tests
+            </Link>
+          </div>
+          {openTests.length === 0 ? (
+            <p className="mt-2 text-sm text-muted">None yet. An adaptive block or a custom build is saved here as soon as you start it.</p>
+          ) : (
+            <ul className="mt-2 divide-y divide-line">
+              {openTests.slice(0, 5).map((test) => {
+                const score = scoreTest(desk.state, test.id);
+                return (
+                  <li key={test.id} className="flex items-center gap-2 py-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{test.name}</p>
+                      <p className="text-sm text-muted">
+                        {test.status === "done" ? "Finished" : "In progress"} · {score.correct}/{score.answered} correct · {score.total} items
+                      </p>
+                    </div>
+                    <Link
+                      to="/test/$id"
+                      params={{ id: test.id }}
+                      className="min-h-11 rounded border border-line px-3 py-2 text-sm font-semibold"
+                    >
+                      {test.status === "done" ? "Review" : "Resume"}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </aside>
+    </div>
+  );
+}
+
+function HomeBase({
+  pct,
+  mastered,
+  dueCards,
+  startAdaptive,
+}: {
+  pct: number;
+  mastered: number;
+  dueCards: number;
+  startAdaptive: () => void;
+}) {
+  const rank = pct >= 80 ? "Chief" : pct >= 65 ? "Senior" : pct >= 50 ? "Junior" : "Intern";
+  return (
+    <section className="rounded border border-line bg-paper overflow-hidden">
+      <div className="bg-gradient-to-b from-slate-100 to-white px-6 py-8">
+        <h1 className="font-serif text-3xl tracking-tight">Call Room</h1>
+        <p className="mt-1 text-sm text-muted">Your desk updates as you study.</p>
+        <div className="mt-6 flex flex-wrap gap-4">
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-4xl font-bold text-green-600">{pct}%</div>
+            <div className="text-sm text-muted">Correct</div>
+          </div>
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-4xl font-bold text-blue-600">{mastered}</div>
+            <div className="text-sm text-muted">Topics mastered</div>
+          </div>
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-4xl font-bold text-amber-600">{dueCards}</div>
+            <div className="text-sm text-muted">Cards due</div>
+          </div>
+          <div className="rounded-lg border border-line bg-white px-5 py-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-navy">{rank}</div>
+            <div className="text-sm text-muted">Rank</div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={startAdaptive}
+          className="mt-6 min-h-11 rounded bg-blue px-5 text-sm font-semibold text-white"
+        >
+          Start adaptive block
+        </button>
+      </div>
+      <div className="h-40 bg-gradient-to-b from-blue-50 to-slate-100 flex items-end justify-center pb-4">
+        <div className="text-sm text-muted">Desk scene — charts light up as topics are mastered</div>
+      </div>
+    </section>
+  );
+}
+
+function Encounter({
+  pct,
+  top,
+  startAdaptive,
+}: {
+  pct: number;
+  top: ReturnType<typeof bucketStats>[0] | undefined;
+  startAdaptive: () => void;
+}) {
+  return (
+    <section className="rounded border border-line bg-paper p-6">
+      <p className="text-xs font-semibold tracking-wide text-muted uppercase">Not a map</p>
+      <h1 className="font-serif text-3xl tracking-tight">Case encounter</h1>
+      <p className="mt-1 max-w-xl text-sm text-muted">
+        One weak bucket at a time. This is not a world to walk. It puts you against the outline area you are missing, then starts a block.
+      </p>
+      <div className="mt-6 flex items-center justify-between rounded-lg border border-line bg-slate-50 p-5">
+        <div className="text-center">
+          <div className="text-lg font-semibold">You</div>
+          <div className="mt-1 text-3xl font-bold text-blue-600">{pct}%</div>
+          <div className="text-sm text-muted">overall</div>
+        </div>
+        <div className="text-3xl text-muted">vs</div>
+        <div className="text-center">
+          <div className="text-lg font-semibold">{top?.short ?? "Next case"}</div>
+          <div className="mt-1 text-sm text-muted">Suggested focus</div>
+          <div className="mt-1 text-xs text-muted">{top ? `${top.percent}% of exam` : ""}</div>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={startAdaptive}
+        className="mt-5 min-h-11 w-full rounded bg-navy px-5 text-sm font-semibold text-white"
+      >
+        Start encounter
+      </button>
+    </section>
+  );
+}
+
+
+function OwnedRail({ bag, note, onAct }: { bag: QuestBag | null; note: string; onAct: (note: string) => void }) {
+  if (!bag) return null;
+  const full = bag.party.length >= 6;
+  return (
+    <aside className="rounded border border-field-ink/15 bg-white p-3 lg:sticky lg:top-4">
+      <h2 className="font-serif text-xl">With you</h2>
+      <p className="text-xs text-field-ink/70">{bag.party.length}/6 on the quest. The first one walks and fights.</p>
+      <ul className="mt-2 flex flex-col gap-2">
+        {bag.party.map((creature, index) => (
+          <li key={creature.id} className="flex items-center gap-2 border-b border-field-ink/10 pb-2">
+            <img src={creatureSrc(creature)} alt="" className="h-10 w-10 object-contain" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{index === 0 ? "Walking · " : `${index + 1}. `}{creature.dex ? `#${String(creature.dex).padStart(3, "0")} ` : ""}{nameOf(creature)}</p>
+            </div>
+            {index > 0 ? (
+              <button type="button" onClick={() => onAct(walkWith(creature.id))} className="min-h-11 rounded border border-field-ink px-2 text-xs font-semibold">Walk</button>
+            ) : null}
+            <button type="button" onClick={() => onAct(benchCreature(creature.id))} className="min-h-11 rounded border border-field-ink px-2 text-xs font-semibold">Bench</button>
+          </li>
+        ))}
+      </ul>
+      <h2 className="mt-4 font-serif text-xl">Caught</h2>
+      <p className="text-xs text-field-ink/70">Everyone you own who is not on the quest.</p>
+      <ul className="mt-2 flex max-h-[32rem] flex-col gap-2 overflow-auto">
+        {bag.box.length === 0 ? <li className="text-sm text-field-ink/70">None waiting.</li> : null}
+        {bag.box.map((creature) => (
+          <li key={creature.id} className="flex items-center gap-2">
+            <img src={creatureSrc(creature)} alt="" className="h-8 w-8 object-contain" />
+            <p className="min-w-0 flex-1 truncate text-sm">{creature.dex ? `#${String(creature.dex).padStart(3, "0")} ` : ""}{nameOf(creature)}</p>
+            <button type="button" disabled={full} onClick={() => onAct(bringAlong(creature.id))} className="min-h-11 rounded bg-field-stamp px-2 text-xs font-semibold text-white disabled:opacity-40">Bring</button>
+          </li>
+        ))}
+      </ul>
+      {note ? <p className="mt-3 text-sm">{note}</p> : null}
+    </aside>
+  );
+}
+
+function FieldNotes({
+  battleDone,
+  startTopicBattle,
+  startRoute,
+  startChampionship,
+  badges,
+  champion,
+}: {
+  battleDone: Set<string>;
+  startTopicBattle: (topicId: string) => void;
+  startRoute: (name: string, blueprintId: BlueprintId, count: number, gym: boolean) => void;
+  startChampionship: () => void;
+  badges: number;
+  champion: boolean;
+}) {
+  const desk = useDesk();
+  const [view, setView] = useState<"gyms" | "collection">("gyms");
+  const [fresh, setFresh] = useState<Creature[]>([]);
+  const [picked, setPicked] = useState("stones");
+  const [bag, setBag] = useState<QuestBag | null>(null);
+  const [note, setNote] = useState("");
+  const field = loadField();
+  const have = new Set(field.caught);
+  const seen = new Set(field.seen);
+  const rareSet = new Set(field.rare);
+
+  useEffect(() => {
+    const result = syncCatches(desk.state.tests);
+    setFresh(result.fresh);
+    setBag(enrollGuide());
+  }, [desk.state.tests]);
+
+  return (
+    <section className="overflow-hidden rounded border border-field-ink bg-field text-field-ink">
+      <div className="border-b border-field-ink/15 px-6 py-6">
+        <p className="text-xs font-semibold tracking-wide text-field-stamp uppercase">Field guide</p>
+        <h1 className="font-serif text-3xl tracking-tight">Monster Quest</h1>
+        <p className="mt-1 text-sm">
+          One creature for every {CATCH_EVERY} different questions you get right. The guide is numbered like a dex: the next number is the evolution. Six can come with you. One of those six walks and fights. {have.size}/151 caught{seen.size > have.size ? ` · ${[...seen].filter((number) => !have.has(number)).length} seen` : ""}.
+        </p>
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setView("gyms")}
+            className={`min-h-11 rounded px-3 text-sm font-semibold ${
+              view === "gyms" ? "bg-field-stamp text-white" : "border border-field-ink/20 bg-field"
+            }`}
+          >
+            Map
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("collection")}
+            className={`min-h-11 rounded px-3 text-sm font-semibold ${
+              view === "collection" ? "bg-field-stamp text-white" : "border border-field-ink/20 bg-field"
+            }`}
+          >
+            Guide
+          </button>
+        </div>
+      </div>
+
+      {view === "gyms" && fresh.length > 0 && (
+        <div className="mx-4 mt-4 rounded border border-field-fern bg-white p-3 text-sm">
+          Just caught: {fresh.map((creature) => `#${String(creature.number).padStart(3, "0")} ${creature.name}`).join(", ")}
+        </div>
+      )}
+
+      {view === "gyms" && (
+        <MonsterQuest
+          stops={routeStops(desk.state.tests)}
+          picked={picked}
+          onPick={setPicked}
+          badges={badges}
+          champion={champion}
+          startRoute={startRoute}
+          startChampionship={startChampionship}
+        />
+      )}
+
+      {view === "collection" && (
+        <div className="grid items-start gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <ol className="overflow-hidden rounded border border-field-ink/15 bg-white">
+            {DEX.map((creature) => {
+              const isCaught = have.has(creature.number);
+              const isSeen = !isCaught && seen.has(creature.number);
+              const next = creature.into ? DEX[creature.into - 1] : undefined;
+              return (
+                <li
+                  key={creature.number}
+                  className={`flex items-center gap-3 border-b border-field-ink/10 px-3 py-2 ${creature.stage > 0 ? "pl-8" : ""} ${isCaught || isSeen ? "" : "opacity-60"}`}
+                >
+                  <span className="w-10 shrink-0 font-mono text-xs">#{String(creature.number).padStart(3, "0")}</span>
+                  {isCaught || isSeen ? (
+                    <img
+                      src={portraitFor(creature.number, rareSet.has(creature.number))}
+                      alt=""
+                      className={isCaught ? "h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-field-ink" : "h-10 w-10 shrink-0 rounded-full object-cover opacity-40 grayscale"}
+                    />
+                  ) : (
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-field-ink/10" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{isCaught || isSeen ? creature.name : "???"}</p>
+                    <p className="text-xs text-field-ink/70">
+                      {next ? `Evolves into #${String(next.number).padStart(3, "0")} ${next.name}` : "Final form"}
+                      {isCaught ? " · Caught" : isSeen ? " · Seen" : ""}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+          <OwnedRail
+            bag={bag}
+            note={note}
+            onAct={(note) => {
+              setNote(note);
+              setBag(loadBag());
+            }}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
