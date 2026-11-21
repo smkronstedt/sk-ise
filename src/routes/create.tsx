@@ -22,6 +22,8 @@ const pools: { id: Pool; label: string }[] = [
   { id: "marked", label: "Marked" },
 ];
 
+const YEARS = ["all", "2026", "2025", "2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016"];
+
 function CreatePage() {
   const desk = useDesk();
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ function CreatePage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [hardOnly, setHardOnly] = useState(false);
+  const [year, setYear] = useState("all");
 
   useEffect(() => {
     void loadCatalog().then(() => {
@@ -48,7 +51,12 @@ function CreatePage() {
   const trainerCount = new Map<string, number>();
   for (const question of questions) trainerCount.set(question.topicId, (trainerCount.get(question.topicId) ?? 0) + 1);
 
-  const bankPool = hardOnly ? bankList().filter((question) => question.hard) : bankList();
+  const yearFilter = (question: { id: string }) => {
+    if (year === "all") return true;
+    return question.id.startsWith(`SASP${year}`);
+  };
+
+  const bankPool = (hardOnly ? bankList().filter((question) => question.hard) : bankList()).filter(yearFilter);
   const available =
     source === "bank"
       ? filterPool(desk.state, bankPool, picked, pool).length
@@ -192,14 +200,28 @@ function CreatePage() {
             Recycle used
           </button>
         </div>
+
         {source === "bank" ? (
-          <button
-            type="button"
-            onClick={() => setHardOnly((on) => !on)}
-            className={`mt-3 min-h-11 rounded border px-3 text-sm font-semibold ${hardOnly ? "border-navy bg-navy text-white" : "border-line bg-paper"}`}
-          >
-            Hard set only
-          </button>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold">Year</span>
+            {YEARS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setYear(value)}
+                className={`min-h-11 rounded border px-3 text-sm font-semibold ${year === value ? "border-navy bg-navy text-white" : "border-line bg-paper"}`}
+              >
+                {value === "all" ? "All years" : value}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setHardOnly((on) => !on)}
+              className={`min-h-11 rounded border px-3 text-sm font-semibold ${hardOnly ? "border-navy bg-navy text-white" : "border-line bg-paper"}`}
+            >
+              Hard set only
+            </button>
+          </div>
         ) : null}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
