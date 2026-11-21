@@ -179,23 +179,26 @@ function LeaderboardPage() {
   const [leaders, setLeaders] = useState<Leader[] | null>(null);
   const [error, setError] = useState("");
   const [board, setBoard] = useState<keyof PeriodScores | "challenges" | "badges">("today");
+  const [refreshing, setRefreshing] = useState(false);
   const { user, isPending } = useCurrentUserState();
 
-  useEffect(() => {
+  const load = async () => {
     if (isPending) return;
-    let stop = false;
-    void (async () => {
+    setRefreshing(true);
+    setError("");
+    try {
       await syncDeviceProgress(user?.id);
-      try {
-        const result = await listLeaders();
-        if (!stop) setLeaders(result.leaders);
-      } catch {
-        if (!stop) setError("The mountain is quiet. Try again in a moment.");
-      }
-    })();
-    return () => {
-      stop = true;
-    };
+      const result = await listLeaders();
+      setLeaders(result.leaders);
+    } catch {
+      setError("The mountain is quiet. Try again in a moment.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
   }, [isPending, user?.id]);
 
   const jump = (id: keyof PeriodScores | "challenges" | "badges") => {
@@ -208,10 +211,22 @@ function LeaderboardPage() {
       <section className="overflow-hidden rounded border border-[#c9a15b] bg-[#e7f3ff]">
         <img src="/olympus.jpg" alt="" className="h-56 w-full object-cover" />
         <div className="px-4 py-4">
-          <p className="text-xs font-semibold tracking-wide text-[#8a6418] uppercase">Above the clouds</p>
-          <h1 className="font-serif text-3xl text-[#1d3557]">Leaderboard</h1>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-[#8a6418] uppercase">Above the clouds</p>
+              <h1 className="font-serif text-3xl text-[#1d3557]">Leaderboard</h1>
+            </div>
+            <button
+              type="button"
+              onClick={() => void load()}
+              disabled={refreshing}
+              className="min-h-11 rounded bg-[#1d3557] px-3 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {refreshing ? "Refreshing…" : "Refresh stats"}
+            </button>
+          </div>
           <p className="mt-1 max-w-2xl text-sm text-[#1d3557]">
-            A point is a correct answer. Today, this week, and this month use Central time. The week resets Monday. A bolt means that score is at least one. Nothing expires.
+            A point is a correct answer. Today, this week, and this month use Central time. The week resets Monday. A bolt means that score is at least one. Nothing expires. Hit Refresh to pull the latest synced activity.
           </p>
         </div>
         <div className="sticky top-16 z-10 border-y border-[#c9a15b] bg-[#e7f3ff]/95 px-4 py-3 backdrop-blur">
