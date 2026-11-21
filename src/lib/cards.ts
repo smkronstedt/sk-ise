@@ -118,6 +118,28 @@ export function refreshQuizCards(lookup: (id: string) => any | undefined): Card[
   return next;
 }
 
+export function makeBlankCard(): Card {
+  const card: Card = {
+    id: crypto.randomUUID(),
+    sourceQuestionId: `custom-${crypto.randomUUID()}`,
+    topic: "Mine",
+    front: "",
+    back: "",
+    due: Date.now(),
+    interval: 0,
+    ease: 2.5,
+    state: "new",
+    reps: 0,
+    lapses: 0,
+    source: "manual",
+    custom: true,
+  };
+  const cards = loadCards();
+  cards.unshift(card);
+  saveCards(cards);
+  return card;
+}
+
 export function addCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto') {
   const cards = loadCards();
   if (cards.some((c) => c.sourceQuestionId === q.id && c.source !== 'full')) return;

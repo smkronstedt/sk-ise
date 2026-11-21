@@ -14,6 +14,7 @@ import {
   updateCard,
   removeCard,
   refreshQuizCards,
+  makeBlankCard,
   type Card,
 } from '@/lib/cards';
 import { getQuestion, loadCatalog } from '@/lib/desk/catalog';
@@ -55,7 +56,7 @@ function CardsPage() {
     };
   }, []);
 
-  const due = cards.filter((c) => c.due <= Date.now() && c.source !== 'full');
+  const due = cards.filter((c) => c.due <= Date.now() && c.source !== "full" && c.front.trim());
 
   const startReview = (list: Card[]) => {
     setCurrent(list[0] ?? null);
@@ -69,7 +70,7 @@ function CardsPage() {
     setCards(updated);
     saveCards(updated);
     logActivity('cards');
-    const remaining = updated.filter((c) => c.due <= Date.now() && c.source !== 'full');
+    const remaining = updated.filter((c) => c.due <= Date.now() && c.source !== "full" && c.front.trim());
     setCurrent(remaining[0] ?? null);
     setRevealed(false);
   };
@@ -127,10 +128,18 @@ function CardsPage() {
   });
   const picked = mine.find((card) => card.id === selected) ?? null;
 
-  const changeCard = (id: string, patch: Partial<Pick<Card, 'front' | 'back'>>) => {
+  const changeCard = (id: string, patch: Partial<Pick<Card, 'front' | 'back' | 'topic'>>) => {
     const updated = updateCard(id, patch);
     setCards(updated);
     setCurrent((card) => (card && card.id === id ? { ...card, ...patch } : card));
+  };
+
+  const addBlank = () => {
+    const card = makeBlankCard();
+    setCards(loadCards());
+    setSelected(card.id);
+    setCurrent(null);
+    setMode("edit");
   };
 
   return (
@@ -171,6 +180,13 @@ function CardsPage() {
             className="mt-2 px-4 py-2 bg-navy text-white rounded disabled:opacity-50"
           >
             Review due
+          </button>
+          <button
+            type="button"
+            onClick={addBlank}
+            className="ml-2 mt-2 px-4 py-2 rounded border border-navy font-semibold"
+          >
+            New card
           </button>
         </div>
       )}
@@ -216,6 +232,9 @@ function CardsPage() {
               className="min-h-11 w-full rounded border border-line px-3"
             />
             <p className="mt-2 text-sm text-muted">{mine.length} cards you added</p>
+            <button type="button" onClick={addBlank} className="mt-2 min-h-11 rounded border border-navy px-3 text-sm font-semibold">
+              New card
+            </button>
             <ul className="mt-2 max-h-[32rem] overflow-auto rounded border border-line bg-paper">
               {shown.map((card) => (
                 <li key={card.id}>
@@ -225,7 +244,7 @@ function CardsPage() {
                     className={`block w-full px-3 py-2 text-left text-sm ${selected === card.id ? 'bg-navy text-white' : ''}`}
                   >
                     <span className="font-semibold">{card.topic}</span>
-                    <span className="mt-0.5 block truncate">{card.front}</span>
+                    <span className="mt-0.5 block truncate">{card.front || "Empty card"}</span>
                   </button>
                 </li>
               ))}
@@ -234,6 +253,12 @@ function CardsPage() {
           {picked ? (
             <div className="rounded border border-line bg-paper p-4">
               <p className="text-xs font-semibold tracking-wide text-muted uppercase">{picked.topic}</p>
+              <label className="mt-3 block text-sm font-semibold">Topic</label>
+              <input
+                value={picked.topic}
+                onChange={(event) => changeCard(picked.id, { topic: event.target.value })}
+                className="mt-1 min-h-11 w-full rounded border border-line px-3"
+              />
               <label className="mt-3 block text-sm font-semibold">Front</label>
               <textarea
                 value={picked.front}
