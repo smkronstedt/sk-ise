@@ -237,6 +237,21 @@ export function prizeStatus(days = typeof window === "undefined" ? {} : loadActi
   };
 }
 
+export function logQuestions(count: number, correct = 0) {
+  if (count <= 0 && correct <= 0) return;
+  const days = loadActivity();
+  const today = dayKey();
+  const row = days[today] ?? { questions: 0, cards: 0 };
+  row.questions = (row.questions ?? 0) + Math.max(0, count);
+  row.correct = (row.correct ?? 0) + Math.max(0, correct);
+  days[today] = row;
+  if (correct > 0) {
+    const have = localStorage.getItem(LIFE);
+    localStorage.setItem(LIFE, String((have == null ? 0 : Number(have) || 0) + correct));
+  }
+  saveActivity(days);
+}
+
 export function logCorrect() {
   const days = loadActivity();
   const today = dayKey();

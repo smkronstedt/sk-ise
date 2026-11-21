@@ -398,9 +398,8 @@ export function backfillActivity(days: Record<string, DayLog>, tests: CountedTes
     let correct = 0;
     for (const [id, answer] of Object.entries(test.answers ?? {})) {
       if (!answer?.submitted || answer.choice == null) continue;
-      const right = scored(id, answer.choice, bank);
-      if (right == null) continue;
       questions += 1;
+      const right = scored(id, answer.choice, bank);
       if (right) correct += 1;
     }
     const have = buckets.get(key) ?? { questions: 0, correct: 0 };

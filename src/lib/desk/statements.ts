@@ -757,8 +757,8 @@ export const statementQuestions: Question[] = [
     "Newly diagnosed metastatic prostate cancer. No one has asked about a family history, and no germline panel has been sent.",
     ["Genetic testing is only for breast cancer families, so skip it", "Order germline testing", "Test only if he fails chemotherapy", "A tumor biopsy is useless, so skip germline too", "Testing is cosmetic and should not be mentioned"],
     1,
-    "Metastatic prostate cancer is an indication for germline testing, regardless of whether the family history is already famous. The result changes therapy (a PARP inhibitor if a repair gene is altered) and the screening advice you give his relatives. You do not wait for chemotherapy to fail.",
-    ["The indication is the metastatic disease itself.", "Waiting until chemotherapy fails delays a drug and family counseling.", "Somatic testing is also useful, and it does not replace germline testing.", "The result is actionable."],
+    "Metastatic prostate cancer is an indication for germline testing at diagnosis, whether or not the family history is already known. Do not wait for castration resistance or for chemotherapy to fail. The result can qualify him for a PARP inhibitor and changes screening for his relatives. Order somatic testing on the metastatic tumor at the same time, and again in metastatic castration-resistant disease if it was never done or was negative, before a PARP inhibitor, pembrolizumab, or lutetium PSMA. Somatic testing finds tumor-only repair mutations and microsatellite instability. It does not replace germline testing. A negative tumor test does not clear the family, and a germline panel misses mutations that exist only in the tumor. A negative liquid biopsy does not rule a mutation out.",
+    ["The indication is the metastatic disease itself.", "Waiting until chemotherapy fails delays a drug and family counseling.", "Somatic testing is ordered on the metastatic tumor, and again in castration-resistant disease before a PARP inhibitor. It does not replace germline testing.", "The result is actionable."],
   ),
   q(
     "gs-pa-05",

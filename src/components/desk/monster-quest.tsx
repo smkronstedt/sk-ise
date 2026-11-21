@@ -4,7 +4,6 @@ import { TownTrial } from "@/components/desk/town-trial";
 import { addCard, loadCards, saveCards, schedule } from "@/lib/cards";
 import { drawQuestionIds, orderForSasp, selectionStatus } from "@/lib/desk/adapt";
 import { noteRow } from "@/lib/desk/honors";
-import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { rememberAnswer } from "@/lib/desk/original-bank";
 import { useDesk } from "@/lib/desk/provider";
@@ -2010,10 +2009,8 @@ export function MonsterQuest({
       answers: { ...current.answers, [id]: { choice, submitted: true } },
     }));
     rememberAnswer(id, choice, correct);
-    logActivity("questions");
     noteRow(correct);
-    if (correct) logCorrect();
-    else {
+    if (!correct) {
       addCard(
         {
           id: question.id,

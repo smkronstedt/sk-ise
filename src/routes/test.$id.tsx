@@ -4,7 +4,6 @@ import { Figure } from "@/components/desk/figure";
 import { Shell } from "@/components/desk/shell";
 import { scoreTest } from "@/lib/desk/adapt";
 import { AnatomyFigure } from "@/components/desk/anatomy-figure";
-import { logActivity, logCorrect } from "@/lib/desk/activity";
 import { noteRow } from "@/lib/desk/honors";
 import { getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
@@ -128,8 +127,6 @@ function TestPage() {
       },
     }));
     if (answer.choice != null) rememberAnswer(questionId, answer.choice, answer.choice === question.answer);
-    logActivity("questions");
-    if (answer.choice === question.answer) logCorrect();
     noteRow(answer.choice === question.answer);
   };
 

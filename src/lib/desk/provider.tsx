@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { pickQuestionIds } from "./adapt";
+import { logQuestions } from "./activity";
 import { getQuestion } from "./catalog";
 import { topicById } from "./topics";
 import type { BlueprintId, DeskState, Focus, Mode, Pool, TestBlock } from "./types";
@@ -139,7 +140,21 @@ export function DeskProvider({ children }: { children: ReactNode }) {
     },
     patchTest: (id, recipe) =>
       commit((current) => {
-        const tests = current.tests.map((test) => (test.id === id ? recipe(test) : test));
+        let added = 0;
+        let right = 0;
+        const tests = current.tests.map((test) => {
+          if (test.id !== id) return test;
+          const next = recipe(test);
+          for (const [questionId, answer] of Object.entries(next.answers ?? {})) {
+            const prev = test.answers[questionId];
+            if (!answer?.submitted || answer.choice == null || prev?.submitted) continue;
+            added += 1;
+            const question = getQuestion(questionId);
+            if (question && answer.choice === question.answer) right += 1;
+          }
+          return next;
+        });
+        if (added) logQuestions(added, right);
         const test = tests.find((item) => item.id === id);
         const fresh = { ...(current.fresh ?? {}) };
         if (test) {
