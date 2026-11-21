@@ -19,6 +19,7 @@ import {
 import { getQuestion, loadCatalog } from '@/lib/desk/catalog';
 import { StagingReview } from '@/components/desk/staging-review';
 import { isSemenQuestion, SemenRanges } from '@/components/desk/semen-ranges';
+import { isVurQuestion, VurFigure } from '@/components/desk/vur-figure';
 import { logActivity } from '@/lib/desk/activity';
 
 export const Route = createFileRoute('/cards')({
@@ -304,6 +305,7 @@ function CardsPage() {
                 <p className="text-xs font-semibold tracking-wide text-muted uppercase">Answer</p>
                 <p className="mt-1">{current.back}</p>
                 {isSemenQuestion(current.topic, `${current.front} ${current.back}`) ? <SemenRanges /> : null}
+                {isVurQuestion(current.topic, `${current.front} ${current.back}`) ? <VurFigure /> : null}
               </div>
               {textOnlyBank(current.sourceQuestionId) ? null : (
                 <>

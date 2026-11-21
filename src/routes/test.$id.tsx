@@ -19,6 +19,7 @@ import { addCard } from "@/lib/cards";
 import { reportDuelScore } from "@/lib/challenges-api";
 import { textOnlyBank } from "@/lib/desk/bank-figures";
 import { isSemenQuestion, SemenRanges } from "@/components/desk/semen-ranges";
+import { isVurQuestion, VurFigure } from "@/components/desk/vur-figure";
 import { partyStrength } from "@/lib/desk/quest-bag";
 
 export const Route = createFileRoute("/test/$id")({
@@ -397,6 +398,7 @@ function Explanation({ test, questionId }: { test: TestBlock; questionId: string
       ) : null}
       <p className="mt-3 leading-relaxed">{question.explanation}</p>
       {isSemenQuestion(question.topicId, [question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <SemenRanges /> : null}
+      {isVurQuestion(question.topicId, [question.guide ?? "", question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <VurFigure /> : null}
       {textOnlyBank(question.id) ? null : (
         <>
       <AnswerExtra id={question.id} text={[question.stem.join(" "), question.explanation, question.objective].join(" ")} />

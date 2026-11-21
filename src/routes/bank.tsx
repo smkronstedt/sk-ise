@@ -9,6 +9,7 @@ import { addCard, loadCards } from "@/lib/cards";
 import { orderForSasp, selectionStatus } from "@/lib/desk/adapt";
 import { bankFigures, textOnlyBank } from "@/lib/desk/bank-figures";
 import { isSemenQuestion, SemenRanges } from "@/components/desk/semen-ranges";
+import { isVurQuestion, VurFigure } from "@/components/desk/vur-figure";
 import { loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
 import { logActivity, logCorrect } from "@/lib/desk/activity";
@@ -490,6 +491,7 @@ function Practice({
           </p>
           <p className="mt-3 leading-relaxed">{item.rationale}</p>
           {isSemenQuestion(item.topic, `${item.question} ${item.rationale} ${item.learning_point}`) ? <SemenRanges /> : null}
+          {isVurQuestion(item.topic, [item.question, item.rationale, item.learning_point, item.source_ref, ...item.key_facts, ...Object.values(item.options)].join(" ")) ? <VurFigure /> : null}
           {textOnlyBank(item.id) ? null : (
             <>
           <AnswerExtra
