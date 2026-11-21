@@ -12,7 +12,7 @@ import { InserviceCard } from "@/components/desk/inservice-card";
 import { isAdminEmail } from "@/lib/admin-email";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { bucketStats, drawQuestionIds, scoreTest, uniqueCorrectCount } from "@/lib/desk/adapt";
-import { ensureLifetime } from "@/lib/desk/activity";
+import { ensureLifetime, loadActivity, dayKey } from "@/lib/desk/activity";
 import { blueprintBankCounts, getQuestion, loadCatalog } from "@/lib/desk/catalog";
 import { listLeaders, type Leader } from "@/lib/leaderboard-api";
 import { syncDeviceProgress } from "@/lib/progress-sync";
@@ -186,6 +186,7 @@ function Home() {
   const applyFocus = (focus: Record<BlueprintId, Focus>) => desk.setFocusMap(focus);
   const [bankCorrect, setBankCorrect] = useState(0);
   const [leaders, setLeaders] = useState<Leader[] | null>(null);
+  const [todayCorrect, setTodayCorrect] = useState(0);
   const [pulse, setPulse] = useState(0);
   const { user, isPending } = useCurrentUserState();
   const mine = isAdminEmail(user?.primaryEmail);
@@ -203,8 +204,12 @@ function Home() {
 
   useEffect(() => {
     setBankCorrect(countBankCorrect());
+    setTodayCorrect(loadActivity()[dayKey()]?.correct ?? 0);
     void refreshLeaders();
-    const onActivity = () => void refreshLeaders();
+    const onActivity = () => {
+      setTodayCorrect(loadActivity()[dayKey()]?.correct ?? 0);
+      void refreshLeaders();
+    };
     window.addEventListener("ise-activity", onActivity);
     window.addEventListener("ise-progress", onActivity);
     return () => {
@@ -241,8 +246,9 @@ function Home() {
           <p className="text-xs font-semibold tracking-wide text-muted uppercase">Your questions</p>
           <Link to="/leaderboard" className="text-xs font-semibold text-navy">Full leaderboard →</Link>
         </div>
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
           {[
+            ["Today correct", todayCorrect],
             ["Done", study.done],
             ["Right", study.right],
             ["Wrong", study.wrong],
@@ -257,7 +263,7 @@ function Home() {
         <p className="mt-2 text-sm text-muted">
           {study.done === 0
             ? "No scored questions yet."
-            : `${study.right} right out of ${study.done} done${study.done ? ` (${Math.round((study.right / study.done) * 100)}%)` : ""}. ${study.wrong} wrong. ${study.open} test${study.open === 1 ? "" : "s"} still open.`}
+            : `${study.right} right out of ${study.done} done${study.done ? ` (${Math.round((study.right / study.done) * 100)}%)` : ""}. ${study.wrong} wrong. ${study.open} test${study.open === 1 ? "" : "s"} still open. Today: ${todayCorrect} correct.`}
         </p>
         {leaders && leaders.some((row) => row.done > 0 || (row.periods?.today ?? 0) > 0) ? (
           <ul className="mt-3 divide-y divide-line">
