@@ -20,6 +20,7 @@ export const bankFigures: Record<string, string> = {
   "SASP2023-074": "/bank/figures/uds-boo-guarding.jpg",
   "SASP2026-010": "/bank/figures/SASP2026-010.jpg",
   "SASP2026-019": "/bank/figures/SASP2026-019.jpg",
+  "SASP2026-023": "/bank/figures/SASP2026-023.jpg",
   "UQB-1005": "/anatomy/testis-arteries.svg",
 };
 
