@@ -42,12 +42,48 @@ function MainzReach() {
   );
 }
 
+/** Each wrong answer on the bilateral-oncocytoma item is a different syndrome. */
+function RenalSyndromes() {
+  const rows = [
+    ["Facial fibrofolliculoma", "Birt-Hogg-Dubé", "Oncocytoma, hybrid, chromophobe"],
+    ["Retinal angioma", "von Hippel-Lindau", "Clear cell"],
+    ["Uterine fibroid", "Fumarate hydratase", "Papillary, aggressive"],
+    ["Cutaneous melanoma", "BAP1", "Clear cell"],
+    ["Cardiac rhabdomyoma", "Tuberous sclerosis", "Angiomyolipoma"],
+  ];
+  return (
+    <div className="mt-3 overflow-x-auto rounded border border-line">
+      <p className="border-b border-line px-3 py-2 text-sm font-semibold">What else comes with the renal tumor</p>
+      <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
+        <thead>
+          <tr className="border-b border-line text-muted">
+            <th className="px-3 py-2 font-semibold">Finding</th>
+            <th className="px-3 py-2 font-semibold">Syndrome</th>
+            <th className="px-3 py-2 font-semibold">Renal tumor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([finding, syndrome, tumor]) => (
+            <tr key={finding} className="border-b border-line align-top last:border-b-0">
+              <td className="px-3 py-2 font-semibold">{finding}</td>
+              <td className="px-3 py-2">{syndrome}</td>
+              <td className="px-3 py-2">{tumor}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="px-3 py-2 text-xs leading-relaxed text-muted">Bilateral oncocytomas pick the first row. Lung cysts and pneumothorax come with it. The other four findings are the other four choices.</p>
+    </div>
+  );
+}
+
 /** Plates and tables that belong with the explanation, after the item is answered. */
 export function AnswerExtra({ id, text }: { id: string; text: string }) {
   const plate = answerFigures[id];
   const round = isRoundHeadText(text);
   const mainz = id === "SASP2026-017";
-  if (!plate && !round && !mainz) return null;
+  const syndromes = id === "SASP2026-047";
+  if (!plate && !round && !mainz && !syndromes) return null;
   return (
     <>
       {plate ? (
@@ -57,6 +93,7 @@ export function AnswerExtra({ id, text }: { id: string; text: string }) {
         </figure>
       ) : null}
       {mainz ? <MainzReach /> : null}
+      {syndromes ? <RenalSyndromes /> : null}
       {round ? <SpermPlan /> : null}
     </>
   );
