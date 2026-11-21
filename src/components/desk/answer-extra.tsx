@@ -1,4 +1,4 @@
-import { answerFigures } from "@/lib/desk/bank-figures";
+import { answerFigures, textOnlyBank } from "@/lib/desk/bank-figures";
 import { isRoundHeadText, SpermPlan } from "@/components/desk/sperm-plan";
 
 /** Why the right colic is the vessel that frees a Mainz pouch. */
@@ -79,6 +79,7 @@ function RenalSyndromes() {
 
 /** Plates and tables that belong with the explanation, after the item is answered. */
 export function AnswerExtra({ id, text }: { id: string; text: string }) {
+  if (textOnlyBank(id)) return null;
   const plate = answerFigures[id];
   const round = isRoundHeadText(text);
   const mainz = id === "SASP2026-017";

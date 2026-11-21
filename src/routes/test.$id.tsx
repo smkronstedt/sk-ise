@@ -17,6 +17,8 @@ import { topicById } from "@/lib/desk/topics";
 import type { TestBlock } from "@/lib/desk/types";
 import { addCard } from "@/lib/cards";
 import { reportDuelScore } from "@/lib/challenges-api";
+import { textOnlyBank } from "@/lib/desk/bank-figures";
+import { isSemenQuestion, SemenRanges } from "@/components/desk/semen-ranges";
 import { partyStrength } from "@/lib/desk/quest-bag";
 
 export const Route = createFileRoute("/test/$id")({
@@ -277,8 +279,8 @@ function TestPage() {
               {paragraph}
             </p>
           ))}
-          <AnatomyFigure topic={question.topicId} text={question.stem.join(" ")} />
-          {question.image ? (
+          {textOnlyBank(question.id) ? null : <AnatomyFigure topic={question.topicId} text={question.stem.join(" ")} />}
+          {!textOnlyBank(question.id) && question.image ? (
             <figure className="my-3">
               <img src={question.image} alt="Arteries to the testis. The testicular artery comes from the aorta and is clipped in the cord. The cremasteric artery comes from the inferior epigastric. The deferential artery comes from the superior vesical artery." className="max-h-[28rem] w-full rounded border border-line bg-white object-contain" />
             </figure>
@@ -394,11 +396,16 @@ function Explanation({ test, questionId }: { test: TestBlock; questionId: string
         <p className="mt-1 text-sm text-wrong">You chose {letters[picked]}.</p>
       ) : null}
       <p className="mt-3 leading-relaxed">{question.explanation}</p>
+      {isSemenQuestion(question.topicId, [question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <SemenRanges /> : null}
+      {textOnlyBank(question.id) ? null : (
+        <>
       <AnswerExtra id={question.id} text={[question.stem.join(" "), question.explanation, question.objective].join(" ")} />
       {question.topicId === "nlutd" ? <NlutdChart /> : null}
       {isDsdText([question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <DsdFigure /> : null}
       {isPopqText([question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <PopqFigure /> : null}
       {question.figure ? <Figure id={question.figure} /> : null}
+        </>
+      )}
       {question.wrong.some((line) => line) ? (
         <div className="mt-3">
           <p className="text-sm font-semibold">Why the others are wrong</p>

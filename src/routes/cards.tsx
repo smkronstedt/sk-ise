@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useRef } from 'react';
 import { Shell } from '@/components/desk/shell';
 import { AnatomyFigure } from '@/components/desk/anatomy-figure';
+import { textOnlyBank } from '@/lib/desk/bank-figures';
 import { isNlutdTopic, NlutdChart } from '@/components/desk/nlutd-chart';
 import { DsdFigure, isDsdText, isPopqText, PopqFigure } from '@/components/desk/dsd-figure';
 import {
@@ -16,6 +17,8 @@ import {
   type Card,
 } from '@/lib/cards';
 import { getQuestion, loadCatalog } from '@/lib/desk/catalog';
+import { StagingReview } from '@/components/desk/staging-review';
+import { isSemenQuestion, SemenRanges } from '@/components/desk/semen-ranges';
 import { logActivity } from '@/lib/desk/activity';
 
 export const Route = createFileRoute('/cards')({
@@ -24,12 +27,13 @@ export const Route = createFileRoute('/cards')({
 
 function CardsPage() {
   const [cards, setCards] = useState<Card[]>([]);
-  const [mode, setMode] = useState<'my' | 'boards' | 'edit'>('my');
+  const [mode, setMode] = useState<'my' | 'boards' | 'staging' | 'edit'>('my');
   const [current, setCurrent] = useState<Card | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [topic, setTopic] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
-  const [query, setQuery] = useState('');
+  const [boardNote, setBoardNote] = useState("");
+  const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const reviewRef = useRef({
     mode,
@@ -77,7 +81,7 @@ function CardsPage() {
       const tag = target?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return;
       const now = reviewRef.current;
-      if (now.mode === 'edit' || now.editing || !now.current) return;
+      if (now.mode === 'edit' || now.mode === 'staging' || now.editing || !now.current) return;
       event.preventDefault();
       if (!now.revealed) {
         reviewRef.current = { ...now, revealed: true };
@@ -92,12 +96,26 @@ function CardsPage() {
   }, []);
 
   const startBoards = async () => {
-    const generated = await generateTopicCards(topic);
-    addGenerated(generated);
-    const fresh = loadCards();
-    setCards(fresh);
-    const list = fresh.filter((c) => c.source === 'full' && (!topic || c.topic === topic));
-    startReview(list);
+    if (!topic) {
+      setBoardNote("Pick a topic first.");
+      return;
+    }
+    try {
+      const generated = await generateTopicCards(topic);
+      if (generated.length) addGenerated(generated);
+      const fresh = loadCards();
+      setCards(fresh);
+      const list = fresh.filter((c) => c.source === "full" && (!topic || c.topic === topic));
+      if (!list.length) {
+        setBoardNote("Nothing in that topic.");
+        setCurrent(null);
+        return;
+      }
+      setBoardNote(`${list.length} cards`);
+      startReview(list);
+    } catch {
+      setBoardNote("That set did not open. Try one topic, not every set.");
+    }
   };
 
   const mine = cards.filter((card) => card.source !== 'full');
@@ -115,7 +133,7 @@ function CardsPage() {
 
   return (
     <Shell>
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         <button
           onClick={() => setMode('my')}
           className={`px-3 py-2 rounded ${mode === 'my' ? 'bg-navy text-white' : 'border'}`}
@@ -127,6 +145,12 @@ function CardsPage() {
           className={`px-3 py-2 rounded ${mode === 'boards' ? 'bg-navy text-white' : 'border'}`}
         >
           Boards Prep
+        </button>
+        <button
+          onClick={() => setMode('staging')}
+          className={`px-3 py-2 rounded ${mode === 'staging' ? 'bg-navy text-white' : 'border'}`}
+        >
+          Staging
         </button>
         <button
           onClick={() => setMode('edit')}
@@ -156,22 +180,29 @@ function CardsPage() {
             onChange={(e) => setTopic(e.target.value || null)}
             className="border rounded px-3 py-2"
           >
-            <option value="">All topics</option>
+            <option value="">Pick a topic</option>
             <option value="NMIBC">NMIBC</option>
             <option value="MIBC">MIBC</option>
+            <option value="Oncology-Prostate">Prostate</option>
+            <option value="Oncology-Testis">Testis</option>
+            <option value="Oncology-Kidney">Kidney</option>
+            <option value="Oncology-Penis/Urethra">Penis</option>
             <option value="Stones">Stones</option>
-            <option value="Prostate">Prostate</option>
-            <option value="Andrology">Andrology</option>
-            <option value="Peds">Peds</option>
+            <option value="Andrology">Infertility / andrology</option>
+            <option value="Peds">Pediatrics</option>
           </select>
           <button
             onClick={startBoards}
-            className="ml-2 px-4 py-2 bg-navy text-white rounded"
+            disabled={!topic}
+            className="ml-2 px-4 py-2 bg-navy text-white rounded disabled:opacity-50"
           >
             Start full review
           </button>
+          {boardNote ? <p className="mt-2 text-sm text-muted">{boardNote}</p> : null}
         </div>
       )}
+
+      {mode === 'staging' && <StagingReview />}
 
       {mode === 'edit' && (
         <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
@@ -231,13 +262,13 @@ function CardsPage() {
         </div>
       )}
 
-      {mode !== 'edit' && current && (
+      {mode !== 'edit' && mode !== 'staging' && current && (
         <div className="mt-6 rounded border border-line bg-paper p-6 max-w-2xl">
           {editing ? null : (
             <>
               <p className="text-xs font-semibold tracking-wide text-muted uppercase">Question</p>
               <p className="mt-1 text-lg font-semibold whitespace-pre-wrap">{current.front}</p>
-              <AnatomyFigure topic={current.topic} text={current.front} />
+              {textOnlyBank(current.sourceQuestionId) ? null : <AnatomyFigure topic={current.topic} text={current.front} />}
             </>
           )}
           {!revealed && !editing ? (
@@ -272,10 +303,15 @@ function CardsPage() {
               <div className="mt-4 border-t border-line pt-4 text-sm leading-relaxed whitespace-pre-wrap">
                 <p className="text-xs font-semibold tracking-wide text-muted uppercase">Answer</p>
                 <p className="mt-1">{current.back}</p>
+                {isSemenQuestion(current.topic, `${current.front} ${current.back}`) ? <SemenRanges /> : null}
               </div>
+              {textOnlyBank(current.sourceQuestionId) ? null : (
+                <>
               {isNlutdTopic(current.topic) || /neurogenic bladder|\bnlutd\b/i.test(`${current.front} ${current.back}`) ? <NlutdChart /> : null}
               {isDsdText(`${current.front} ${current.back}`) ? <DsdFigure /> : null}
               {isPopqText(`${current.front} ${current.back}`) ? <PopqFigure /> : null}
+                </>
+              )}
               <div className="mt-5 flex flex-wrap gap-2">
                 <button className="bg-red-600 text-white px-3 py-2 rounded" onClick={() => rate('again')}>
                   Again 25m

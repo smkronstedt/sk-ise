@@ -1,3 +1,5 @@
+import { questions } from "@/lib/desk/questions";
+
 export type CardState = 'new' | 'learning' | 'review';
 export type Card = {
   id: string;
@@ -123,7 +125,41 @@ export function addCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto') {
   saveCards(cards);
 }
 
+const BOARD_ALIASES: Record<string, { bank: string[]; guide: string[] }> = {
+  NMIBC: { bank: ["Oncology-Bladder/Urothelial"], guide: ["nmibc"] },
+  MIBC: { bank: ["Oncology-Bladder/Urothelial"], guide: ["mibc", "utuc"] },
+  Stones: { bank: ["Stones"], guide: ["stones-med", "stones-surg"] },
+  Prostate: { bank: ["Oncology-Prostate"], guide: ["pca", "pca-adv"] },
+  Andrology: { bank: ["Infertility/Andrology", "Sexual Dysfunction"], guide: ["testosterone", "ed", "infertility", "ejac", "peyronie"] },
+  Peds: { bank: ["Pediatrics"], guide: ["crypt", "vur", "peds-mass"] },
+};
+
+function boardBlob(item: any) {
+  const stem = Array.isArray(item.stem) ? item.stem.join(" ") : "";
+  return `${item.question || ""} ${item.learning_point || ""} ${stem}`.toLowerCase();
+}
+
+function boardItems(topic: string | null, bank: any[]) {
+  if (!topic) return bank;
+  const alias = BOARD_ALIASES[topic];
+  if (!alias) return bank.filter((item) => item.topic === topic);
+  const fromBank = bank.filter((item) => alias.bank.includes(item.topic) && fitsAlias(topic, boardBlob(item)));
+  const fromGuide = questions
+    .filter((item) => alias.guide.includes(item.topicId))
+    .map((item) => ({ ...item, topic }));
+  return [...fromGuide, ...fromBank];
+}
+
+function fitsAlias(topic: string, blob: string) {
+  const mibc = /muscle-invas|neoadjuvant|trimodal|radical cystectomy|mvac/.test(blob);
+  const nmibc = /bcg|carcinoma in situ|\bcis\b|lamina propria|high-grade ta|non-muscle|intravesical|restag/.test(blob);
+  if (topic === "NMIBC") return nmibc || !mibc;
+  if (topic === "MIBC") return mibc;
+  return true;
+}
+
 export async function generateTopicCards(topic: string | null): Promise<Card[]> {
+  if (!topic) return [];
   const [uqb, sasp] = await Promise.all([
     fetch("/bank/questions.json").then((res) => res.json()),
     fetch("/bank/sasp.json").then((res) => (res.ok ? res.json() : [])),
@@ -131,10 +167,10 @@ export async function generateTopicCards(topic: string | null): Promise<Card[]> 
   const bank = [...uqb, ...sasp];
   const existing = loadCards();
   const existingIds = new Set(existing.map((c) => c.sourceQuestionId));
-  const items = topic ? bank.filter((q: any) => q.topic === topic) : bank;
+  const items = boardItems(topic, bank).map((item) => (topic ? { ...item, topic } : item));
   return items
     .filter((q: any) => !existingIds.has(q.id))
-    .map((q: any) => createCard(q, 'full'));
+    .map((q: any) => createCard(q, "full"));
 }
 
 export function addGenerated(cards: Card[]) {

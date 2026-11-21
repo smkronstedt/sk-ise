@@ -21,22 +21,11 @@ export const bankFigures: Record<string, string> = {
   "UQB-1005": "/anatomy/testis-arteries.svg",
 };
 
-/** Teaching plates shown with the explanation, not with the stem. */
-export const answerFigures: Record<string, { src: string; caption: string }> = {
-  "SASP2026-007": {
-    src: "/bank/figures/vvf-peritoneal.svg",
-    caption: "A high fistula sits at the vaginal apex. The Martius flap from the labia stops short. Peritoneum from the cul-de-sac reaches it through the vaginal incision.",
-  },
-  "SASP2026-008": {
-    src: "/bank/figures/sartorius-flap.svg",
-    caption: "The sartorius origin is taken off the anterior superior iliac spine and sewn to the inguinal ligament, so the muscle covers the femoral vessels. Gracilis is too medial.",
-  },
-  "SASP2026-011": {
-    src: "/bank/figures/kidney-posterior.svg",
-    caption: "Quadratus lumborum lies on the posterior surface. The diaphragm does too, but only at the upper pole. Psoas is medial. Transversus is anterolateral.",
-  },
-  "SASP2026-017": {
-    src: "/bank/figures/mainz-reach.svg",
-    caption: "The Mainz pouch lives on the ileocolic artery. Divide the right colic to drop the mesentery to the urethra. The marginal artery keeps the cecum alive. Confirm the edge bleeds before you close.",
-  },
-};
+/** Teaching plates shown with the explanation, not with the stem. SASP 2026 and later stay text only. */
+export const answerFigures: Record<string, { src: string; caption: string }> = {};
+
+/** SASP 2026 and later are text only: stem, choices, and the written answer. No plates. */
+export function textOnlyBank(id: string) {
+  const year = Number(/^SASP(\d{4})-/.exec(id)?.[1]);
+  return Number.isFinite(year) && year >= 2026;
+}

@@ -7,7 +7,8 @@ import { DsdFigure, isDsdText, isPopqText, PopqFigure } from "@/components/desk/
 import { AnswerExtra } from "@/components/desk/answer-extra";
 import { addCard, loadCards } from "@/lib/cards";
 import { orderForSasp, selectionStatus } from "@/lib/desk/adapt";
-import { bankFigures } from "@/lib/desk/bank-figures";
+import { bankFigures, textOnlyBank } from "@/lib/desk/bank-figures";
+import { isSemenQuestion, SemenRanges } from "@/components/desk/semen-ranges";
 import { loadCatalog } from "@/lib/desk/catalog";
 import { useDesk } from "@/lib/desk/provider";
 import { logActivity, logCorrect } from "@/lib/desk/activity";
@@ -53,7 +54,7 @@ function BankPage() {
   const [items, setItems] = useState<BankItem[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [view, setView] = useState<"practice" | "points">("practice");
-  const [setName, setSetName] = useState(place.setName || "sasp");
+  const [setName, setSetName] = useState(place.setName === "siegal" ? "2026" : place.setName || "sasp");
   const [topic, setTopic] = useState(place.topic || "all");
   const [status, setStatus] = useState<Status>(place.status || "unused");
   const [query, setQuery] = useState(place.query || "");
@@ -115,8 +116,8 @@ function BankPage() {
     const rows = (items ?? []).filter((item) => {
       if (setName === "uqb" && (item.id.startsWith("SASP") || item.id.startsWith("SIEGAL"))) return false;
       if (setName === "sasp" && !item.id.startsWith("SASP")) return false;
-      if (setName === "siegal" && !item.id.startsWith("SIEGAL")) return false;
-      if (/^\d{4}$/.test(setName) && !item.id.startsWith(`SASP${setName}`)) return false;
+      if (setName === "2026" && !(item.id.startsWith("SASP2026") || item.id.startsWith("SIEGAL"))) return false;
+      if (/^\d{4}$/.test(setName) && setName !== "2026" && !item.id.startsWith(`SASP${setName}`)) return false;
       if (topic !== "all" && item.topic !== topic) return false;
       const result = selectionStatus(desk.state, item.id);
       if (status === "unused" && result !== "unused") return false;
@@ -244,7 +245,6 @@ function BankPage() {
         >
           <option value="all">Every set</option>
           <option value="sasp">SASP, all years</option>
-          <option value="siegal">Siegal 2026 peds</option>
           <option value="uqb">Older board set</option>
           {["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2025", "2026"].map((year) => (
             <option key={year} value={year}>
@@ -315,7 +315,7 @@ function BankPage() {
               [
                 topic !== "all" ? topic : "",
                 query.trim(),
-                setName === "sasp" ? "SASP" : setName === "siegal" ? "Siegal 2026" : setName === "uqb" ? "Board set" : /^\d{4}$/.test(setName) ? `SASP ${setName}` : "",
+                setName === "sasp" ? "SASP" : setName === "uqb" ? "Board set" : /^\d{4}$/.test(setName) ? `SASP ${setName}` : "",
               ]
                 .filter(Boolean)
                 .join(" · ") || "Bank deck";
@@ -415,11 +415,11 @@ function Practice({
         <span className="mx-2 text-faint">·</span>
         {item.topic}
         <span className="mx-2 text-faint">·</span>
-        {item.id}
+        {visibleId(item.id)}
       </p>
       <p className="mt-2 leading-relaxed">{item.question}</p>
-      <AnatomyFigure topic={item.topic} text={item.question} />
-      {bankFigures[item.id] ? (
+      {textOnlyBank(item.id) ? null : <AnatomyFigure topic={item.topic} text={item.question} />}
+      {!textOnlyBank(item.id) && bankFigures[item.id] ? (
         <img src={bankFigures[item.id]} alt="Figure for this question" className="mt-3 max-h-[28rem] w-full rounded border border-line bg-white object-contain" />
       ) : null}
       <div className="mt-3 flex flex-col gap-2">
@@ -489,6 +489,9 @@ function Practice({
             {saved?.correct ? "Correct" : "Incorrect"}. Answer {item.answer}. {optionText(item, item.answer)}
           </p>
           <p className="mt-3 leading-relaxed">{item.rationale}</p>
+          {isSemenQuestion(item.topic, `${item.question} ${item.rationale} ${item.learning_point}`) ? <SemenRanges /> : null}
+          {textOnlyBank(item.id) ? null : (
+            <>
           <AnswerExtra
             id={item.id}
             text={[item.question, item.rationale, item.learning_point, ...item.key_facts].join(" ")}
@@ -504,6 +507,8 @@ function Practice({
           ) ? (
             <PopqFigure />
           ) : null}
+            </>
+          )}
           <p className="mt-3 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
             <span className="font-semibold">Learning point. </span>
             {item.learning_point}
@@ -516,7 +521,7 @@ function Practice({
               ))}
             </ul>
           ) : null}
-          <p className="mt-3 text-sm text-muted">{item.source_ref}</p>
+          <p className="mt-3 text-sm text-muted">{visibleSource(item.source_ref)}</p>
         </div>
       ) : null}
       <label className="mt-4 block text-sm font-semibold">
@@ -530,6 +535,14 @@ function Practice({
       </label>
     </article>
   );
+}
+
+function visibleId(id: string) {
+  return id.startsWith("SIEGAL-") ? `2026-${id.slice("SIEGAL-".length)}` : id;
+}
+
+function visibleSource(ref: string) {
+  return ref.replace(/\bSiegal\b/gi, "").replace(/\s{2,}/g, " ").trim();
 }
 
 function GuidelineNote({ topic }: { topic: string }) {
@@ -570,7 +583,7 @@ function Points({ items }: { items: BankItem[] }) {
               onClick={() => setOpen(shown ? null : item.id)}
               className="flex w-full items-start gap-3 px-4 py-3 text-left"
             >
-              <span className="min-w-16 text-sm font-semibold text-muted">{item.id.replace("UQB-", "")}</span>
+              <span className="min-w-16 text-sm font-semibold text-muted">{visibleId(item.id).replace("UQB-", "")}</span>
               <span>
                 <span className="block text-sm font-semibold text-blue">{item.topic}</span>
                 {item.learning_point}
@@ -583,7 +596,7 @@ function Points({ items }: { items: BankItem[] }) {
                     <li key={fact}>{fact}</li>
                   ))}
                 </ul>
-                <p className="mt-2 text-muted">{item.source_ref}</p>
+                <p className="mt-2 text-muted">{visibleSource(item.source_ref)}</p>
               </div>
             ) : null}
           </li>
