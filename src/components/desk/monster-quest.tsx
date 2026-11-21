@@ -17,6 +17,7 @@ import { NlutdChart } from "@/components/desk/nlutd-chart";
 import { Figure } from "@/components/desk/figure";
 import { DsdFigure, isDsdText, isPopqText, PopqFigure } from "@/components/desk/dsd-figure";
 import { isVurQuestion, VurFigure } from "@/components/desk/vur-figure";
+import { AdtTable, isAdvancedPca } from "@/components/desk/adt-table";
 import { musicOn, setTownMusic } from "@/lib/desk/town-music";
 import { questCash } from "@/lib/desk/purse";
 import {
@@ -2946,6 +2947,7 @@ export function MonsterQuest({
             {battle.reveal && question && isDsdText([question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <DsdFigure /> : null}
             {battle.reveal && question && isPopqText([question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <PopqFigure /> : null}
             {battle.reveal && question && isVurQuestion(question.topicId, [question.guide ?? "", question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <VurFigure /> : null}
+            {battle.reveal && question && isAdvancedPca(question.topicId, [question.guide ?? "", question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <AdtTable /> : null}
             {battle.reveal && question?.objective ? (
               <p className="mt-2 rounded border border-obj-line bg-obj px-3 py-2 text-sm">
                 <span className="font-semibold">Teaching point. </span>

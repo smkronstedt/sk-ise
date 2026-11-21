@@ -20,6 +20,7 @@ import { reportDuelScore } from "@/lib/challenges-api";
 import { textOnlyBank } from "@/lib/desk/bank-figures";
 import { isSemenQuestion, SemenRanges } from "@/components/desk/semen-ranges";
 import { isVurQuestion, VurFigure } from "@/components/desk/vur-figure";
+import { AdtTable, isAdvancedPca } from "@/components/desk/adt-table";
 import { partyStrength } from "@/lib/desk/quest-bag";
 
 export const Route = createFileRoute("/test/$id")({
@@ -399,6 +400,7 @@ function Explanation({ test, questionId }: { test: TestBlock; questionId: string
       <p className="mt-3 leading-relaxed">{question.explanation}</p>
       {isSemenQuestion(question.topicId, [question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <SemenRanges /> : null}
       {isVurQuestion(question.topicId, [question.guide ?? "", question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <VurFigure /> : null}
+      {isAdvancedPca(question.topicId, [question.guide ?? "", question.stem.join(" "), question.explanation, question.objective, ...question.choices].join(" ")) ? <AdtTable /> : null}
       {textOnlyBank(question.id) ? null : (
         <>
       <AnswerExtra id={question.id} text={[question.stem.join(" "), question.explanation, question.objective].join(" ")} />
