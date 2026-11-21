@@ -24,6 +24,7 @@ export const Route = createFileRoute("/test/$id")({
 });
 
 const letters = "ABCDEFGHIJ";
+const MISSING_KEY = "callroom-missing-images";
 
 function TestPage() {
   const { id } = Route.useParams();
@@ -33,6 +34,7 @@ function TestPage() {
   const [cardAdded, setCardAdded] = useState(false);
   const [savedNote, setSavedNote] = useState("");
   const [duelNote, setDuelNote] = useState("");
+  const [flagged, setFlagged] = useState(false);
 
   useEffect(() => {
     void loadCatalog().finally(() => setBankReady(true));
@@ -130,6 +132,7 @@ function TestPage() {
   const jump = (index: number) => {
     desk.patchTest(test.id, (current) => ({ ...current, index }));
     setCardAdded(false);
+    setFlagged(false);
   };
 
   const endBlock = () => {
@@ -153,6 +156,20 @@ function TestPage() {
       "manual",
     );
     setCardAdded(true);
+  };
+
+  const flagMissingImage = () => {
+    try {
+      const raw = localStorage.getItem(MISSING_KEY);
+      const list: string[] = raw ? JSON.parse(raw) : [];
+      if (!list.includes(question.id)) {
+        list.push(question.id);
+        localStorage.setItem(MISSING_KEY, JSON.stringify(list));
+      }
+      setFlagged(true);
+    } catch {
+      setFlagged(true);
+    }
   };
 
   return (
@@ -306,6 +323,14 @@ function TestPage() {
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={() => desk.toggleMark(question.id)} className="min-h-11 rounded border border-line px-3 text-sm font-semibold">
               {desk.state.marks[question.id] ? "Unmark" : "Mark"}
+            </button>
+            <button
+              type="button"
+              onClick={flagMissingImage}
+              disabled={flagged}
+              className="min-h-11 rounded border border-orange-500 bg-orange-50 px-3 text-sm font-semibold text-orange-800 disabled:opacity-50"
+            >
+              {flagged ? "Flagged" : "Flag missing image"}
             </button>
             <button
               type="button"
