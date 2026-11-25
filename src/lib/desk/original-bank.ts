@@ -24,7 +24,7 @@ const KEY = "callroom-original-bank-v1";
 
 /** UQB items plus the SASP spreadsheet. The desk's vignettes are separate. */
 export const UQB_TOTAL = 1295;
-export const SASP_TOTAL = 1279;
+export const SASP_TOTAL = 1280;
 export const BANK_TOTAL = UQB_TOTAL + SASP_TOTAL;
 
 export const letters = ["A", "B", "C", "D", "E"] as const;
