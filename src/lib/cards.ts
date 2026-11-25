@@ -15,6 +15,7 @@ export type Card = {
   lapses: number;
   source: 'auto' | 'manual' | 'full';
   custom?: boolean;
+  deck?: string;
 };
 
 const INTERVALS = {
@@ -67,7 +68,7 @@ export function quizFace(q: any): { front: string; back: string } {
   return { front, back };
 }
 
-export function createCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto'): Card {
+export function createCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto', deck = "Default"): Card {
   const face = quizFace(q);
   return {
     id: crypto.randomUUID(),
@@ -82,6 +83,7 @@ export function createCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto'):
     reps: 0,
     lapses: 0,
     source,
+    deck,
   };
 }
 
@@ -118,7 +120,7 @@ export function refreshQuizCards(lookup: (id: string) => any | undefined): Card[
   return next;
 }
 
-export function makeBlankCard(): Card {
+export function makeBlankCard(deck = "Mine"): Card {
   const card: Card = {
     id: crypto.randomUUID(),
     sourceQuestionId: `custom-${crypto.randomUUID()}`,
@@ -133,6 +135,7 @@ export function makeBlankCard(): Card {
     lapses: 0,
     source: "manual",
     custom: true,
+    deck,
   };
   const cards = loadCards();
   cards.unshift(card);
@@ -140,11 +143,27 @@ export function makeBlankCard(): Card {
   return card;
 }
 
-export function addCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto') {
+export function addCard(q: any, source: 'auto' | 'manual' | 'full' = 'auto', deck = "Default") {
   const cards = loadCards();
   if (cards.some((c) => c.sourceQuestionId === q.id && c.source !== 'full')) return;
-  cards.push(createCard(q, source));
+  cards.push(createCard(q, source, deck));
   saveCards(cards);
+}
+
+export function getDecks(cards: Card[]): string[] {
+  const decks = new Set<string>();
+  for (const card of cards) {
+    decks.add(card.deck || "Default");
+  }
+  return [...decks].sort();
+}
+
+export function dueInDeck(cards: Card[], deck: string | null): Card[] {
+  return cards.filter((c) => {
+    if (c.due > Date.now() || c.source === "full" || !c.front.trim()) return false;
+    if (deck && (c.deck || "Default") !== deck) return false;
+    return true;
+  });
 }
 
 const BOARD_ALIASES: Record<string, { bank: string[]; guide: string[] }> = {
@@ -192,7 +211,7 @@ export async function generateTopicCards(topic: string | null): Promise<Card[]> 
   const items = boardItems(topic, bank).map((item) => (topic ? { ...item, topic } : item));
   return items
     .filter((q: any) => !existingIds.has(q.id))
-    .map((q: any) => createCard(q, "full"));
+    .map((q: any) => createCard(q, "full", topic || "Boards"));
 }
 
 export function addGenerated(cards: Card[]) {
@@ -200,7 +219,7 @@ export function addGenerated(cards: Card[]) {
   saveCards([...current, ...cards]);
 }
 
-export function updateCard(id: string, patch: Partial<Pick<Card, "front" | "back" | "topic">>) {
+export function updateCard(id: string, patch: Partial<Pick<Card, "front" | "back" | "topic" | "deck">>) {
   const cards = loadCards().map((card) => (card.id === id ? { ...card, ...patch, custom: true } : card));
   saveCards(cards);
   return cards;
