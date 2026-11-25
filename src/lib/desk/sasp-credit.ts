@@ -74,6 +74,7 @@ export const saspCredits: SaspCredit[] = [
   { id: "SASP2026-065", choice: "A", correct: false, day: "2026-11-24" },
   { id: "SASP2026-066", choice: "B", correct: false, day: "2026-11-24" },
   { id: "SASP2026-067", choice: "A", correct: true, day: "2026-11-24" },
+  { id: "SASP2026-068", choice: "B", correct: false, day: "2026-11-24" },
 ];
 
 type Bank = {
