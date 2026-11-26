@@ -1657,6 +1657,32 @@ export const questions: Question[] = [
     ],
     objective: "Sensitivity is disease found. Specificity is health cleared. Predictive value depends on how common the disease is.",
   },
+  {
+    id: "sm-struvite-1",
+    topicId: "stones-med",
+    stem: [
+      "A woman has a staghorn and repeated Proteus mirabilis urinary infections. Stone analysis from a prior fragment was magnesium ammonium phosphate. She still has a 2 cm residual stone.",
+      "Which plan best prevents the next struvite stone?",
+    ],
+    choices: [
+      "Remove every fragment. The stone is the infected nidus.",
+      "Lifelong suppressive antibiotics, and leave the stone",
+      "Renacidin by mouth as chronic prevention",
+      "Acetohydroxamic acid as the first treatment, before any attempt to clear the stone",
+      "Potassium citrate to alkalinize the urine",
+    ],
+    answer: 0,
+    explanation:
+      "Struvite is magnesium ammonium phosphate. Proteus, and the other urease producers (Klebsiella, Pseudomonas, some staphylococci), split urea to ammonia and drive the urine alkaline. The bacteria live inside the stone, so antibiotics in the urine never reach them. Suppressive antibiotics do not prevent regrowth while a fragment remains. The prevention is a stone-free kidney, usually by PCNL for a staghorn, then culture-specific antibiotics until the urine is sterile. Renacidin (10% hemiacidrin) is not an oral prevention pill. It is nephrostomy irrigation used to dissolve residual struvite or carbonate apatite after the urine has been sterilized. It can cause sepsis or magnesium toxicity if the urine is still infected, so it is chemolysis of leftovers, not first-line prevention. Acetohydroxamic acid (Lithostat) is an oral urease inhibitor for residual or recurrent struvite only after surgical clearance is not possible. It does not dissolve stone, and the side effects (hemolytic anemia, thrombosis, tremor, headache) keep it off the first line. Potassium citrate alkalinizes urine and is the wrong direction for a stone that already formed because the urine was alkaline.",
+    wrong: [
+      "",
+      "Antibiotics treat the urine. They do not sterilize bacteria sequestered in stone.",
+      "Renacidin is irrigation through a nephrostomy, used for residual fragments once the urine is sterile. It is not a daily pill.",
+      "Acetohydroxamic acid is for struvite that cannot be cleared surgically. It is not the opening move when the stone can still come out.",
+      "Struvite already requires an alkaline urine. More alkali favors it.",
+    ],
+    objective: "Prevent the next struvite stone by removing it. Antibiotics and Renacidin do not replace a stone-free kidney.",
+  },
 ];
 
 export const questionById: Record<string, Question> = Object.fromEntries(
