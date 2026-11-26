@@ -189,12 +189,14 @@ function makeTerrain() {
   const pos = geo.attributes.position;
   const colors = new Float32Array(pos.count * 3);
   const uv = geo.attributes.uv;
+  const white = new THREE.Color("#ffffff");
   for (let i = 0; i < pos.count; i += 1) {
     const x = pos.getX(i);
     const z = pos.getZ(i);
     const h = heightAt(x, z);
     pos.setY(i, h);
     const c = groundColor(x, z, h);
+    c.lerp(white, 0.28);
     colors[i * 3] = c.r;
     colors[i * 3 + 1] = c.g;
     colors[i * 3 + 2] = c.b;
@@ -204,16 +206,29 @@ function makeTerrain() {
   geo.computeVertexNormals();
   const mat = new THREE.MeshStandardMaterial({
     vertexColors: true,
-    map: detailAlbedo(),
+    map: fileTex("/vale/grass.jpg"),
     normalMap: detailNormal(),
-    normalScale: new THREE.Vector2(0.85, 0.85),
-    roughness: 0.88,
+    normalScale: new THREE.Vector2(0.45, 0.45),
+    roughness: 0.9,
     metalness: 0,
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.receiveShadow = true;
   mesh.name = "terrain";
   return mesh;
+}
+
+const fileCache = new Map<string, THREE.Texture>();
+function fileTex(url: string) {
+  const hit = fileCache.get(url);
+  if (hit) return hit;
+  const tex = new THREE.TextureLoader().load(url);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  fileCache.set(url, tex);
+  return tex;
 }
 
 function makeTexture(paint: (ctx: CanvasRenderingContext2D, s: number) => void, size = 128, color = true) {
@@ -327,40 +342,107 @@ function paintTerrain(canvas: HTMLCanvasElement, parchment: boolean) {
 }
 
 function bark() {
-  return makeTexture((ctx, s) => {
-    ctx.fillStyle = "#6b4426";
-    ctx.fillRect(0, 0, s, s);
-    for (let y = 0; y < s; y += 4) {
-      ctx.fillStyle = y % 8 === 0 ? "#4a2e16" : "#7a5230";
-      ctx.fillRect(0, y, s, 2);
-    }
-    ctx.strokeStyle = "#3a2412";
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 6; i += 1) {
-      ctx.beginPath();
-      ctx.moveTo((i * s) / 6, 0);
-      ctx.bezierCurveTo((i * s) / 6 + 8, s * 0.3, (i * s) / 6 - 6, s * 0.7, (i * s) / 6 + 4, s);
-      ctx.stroke();
-    }
-  });
+  return fileTex("/vale/bark.jpg");
 }
 
-function leafTex(hex: string) {
+function foliageTex() {
   return makeTexture((ctx, s) => {
     ctx.clearRect(0, 0, s, s);
-    ctx.fillStyle = hex;
-    ctx.beginPath();
-    ctx.arc(s / 2, s / 2, s * 0.46, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
-    ctx.beginPath();
-    ctx.arc(s * 0.38, s * 0.34, s * 0.16, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "rgba(0,0,0,0.12)";
-    ctx.beginPath();
-    ctx.arc(s * 0.62, s * 0.6, s * 0.12, 0, Math.PI * 2);
-    ctx.fill();
+    const leaf = (x: number, y: number, rx: number, ry: number, rot: number, v: number) => {
+      ctx.save();
+      ctx.translate(x * s, y * s);
+      ctx.rotate(rot);
+      ctx.fillStyle = `rgb(${v},${v},${v})`;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx * s, ry * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+    for (let i = 0; i < 70; i += 1) {
+      const a = (i * 2.399) % (Math.PI * 2);
+      const ring = 0.08 + (i % 9) * 0.035;
+      const x = 0.5 + Math.cos(a) * ring * (0.7 + (i % 3) * 0.15);
+      const y = 0.46 + Math.sin(a) * ring * 0.85 - (i % 5) * 0.01;
+      const v = 150 + (i * 17) % 100;
+      leaf(x, y, 0.055 + (i % 4) * 0.012, 0.028 + (i % 3) * 0.008, a, v);
+    }
+  }, 256);
+}
+
+function crownCards() {
+  const base = new THREE.PlaneGeometry(1.9, 1.6);
+  base.translate(0, 0.62, 0);
+  const parts = [0, Math.PI / 3, -Math.PI / 3].map((rot) => {
+    const geo = base.clone();
+    geo.rotateY(rot);
+    return geo;
   });
+  const top = new THREE.PlaneGeometry(1.15, 1.05);
+  top.translate(0, 1.22, 0);
+  top.rotateY(0.45);
+  parts.push(top);
+  return mergeGeometries(parts) ?? base;
+}
+
+function foliageClump(mat: THREE.Material, s = 1) {
+  const g = new THREE.Group();
+  const geo = new THREE.PlaneGeometry(1.7 * s, 1.45 * s);
+  for (const rot of [0, 1.05, -1.05]) {
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.y = rot;
+    mesh.position.y = 0.35 * s;
+    g.add(mesh);
+  }
+  return g;
+}
+
+let stoneMap: THREE.Texture | undefined;
+function stonePattern() {
+  if (!stoneMap) stoneMap = fileTex("/vale/stone.jpg");
+  return stoneMap;
+}
+
+let plasterMap: THREE.Texture | undefined;
+function plasterTex() {
+  if (!plasterMap) plasterMap = fileTex("/vale/stone.jpg");
+  return plasterMap;
+}
+
+let roofMap: THREE.Texture | undefined;
+function roofTex() {
+  if (!roofMap) roofMap = fileTex("/vale/roof.jpg");
+  return roofMap;
+}
+
+function hideTex(base: string, mark: string, kind: "fur" | "scale" | "bristle") {
+  return makeTexture((ctx, s) => {
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, s, s);
+    if (kind === "scale") {
+      for (let y = 6; y < s; y += 12) {
+        const shift = Math.floor(y / 12) % 2 ? 7 : 0;
+        for (let x = -8; x < s; x += 14) {
+          ctx.fillStyle = (x + y) % 28 === 0 ? mark : base;
+          ctx.beginPath();
+          ctx.ellipse(x + shift + 7, y, 7, 5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(0,0,0,0.4)";
+          ctx.stroke();
+        }
+      }
+    } else {
+      for (let i = 0; i < 160; i += 1) {
+        ctx.strokeStyle = i % 4 === 0 ? mark : "rgba(20,10,6,0.35)";
+        ctx.lineWidth = kind === "bristle" ? 2 : 1;
+        ctx.beginPath();
+        const x = (i * 19) % s;
+        const y = (i * 11) % s;
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + (kind === "bristle" ? 3 : 1), y + 8 + (i % 6));
+        ctx.stroke();
+      }
+    }
+  }, 128);
 }
 
 function grassTex() {
@@ -437,19 +519,29 @@ function scatterTrees(root: THREE.Object3D) {
     placeTree(1000 + i, px, pz, true, 0.85 + hash01(i, 9) * 0.55);
   }
   if (!trunks.length) return;
-  const trunkGeo = new THREE.CylinderGeometry(0.18, 0.28, 1.7, 6);
-  trunkGeo.translate(0, 0.85, 0);
-  const roundGeo = new THREE.IcosahedronGeometry(0.9, 1);
-  const pineGeo = new THREE.ConeGeometry(0.85, 2.2, 7);
+  const trunkGeo = new THREE.CylinderGeometry(0.16, 0.32, 1.9, 10);
+  trunkGeo.translate(0, 0.95, 0);
+  const roundGeo = crownCards();
+  const pineLow = new THREE.ConeGeometry(0.98, 1.4, 14);
+  pineLow.translate(0, 0.15, 0);
+  const pineHigh = new THREE.ConeGeometry(0.55, 1.15, 14);
+  pineHigh.translate(0, 1.15, 0);
+  const pineGeo = mergeGeometries([pineLow, pineHigh]) ?? pineLow;
   const trunkMesh = new THREE.InstancedMesh(trunkGeo, new THREE.MeshStandardMaterial({ map: bark(), roughness: 0.92 }), trunks.length);
   const roundMesh = new THREE.InstancedMesh(
     roundGeo,
-    new THREE.MeshStandardMaterial({ map: leafTex("#3d9a44"), roughness: 0.72, color: "#ffffff" }),
+    new THREE.MeshStandardMaterial({
+      map: foliageTex(),
+      color: "#ffffff",
+      roughness: 0.78,
+      alphaTest: 0.42,
+      side: THREE.DoubleSide,
+    }),
     Math.max(rounds.length, 1),
   );
   const pineMesh = new THREE.InstancedMesh(
     pineGeo,
-    new THREE.MeshStandardMaterial({ color: "#2c7a3a", roughness: 0.78 }),
+    new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.74 }),
     Math.max(pines.length, 1),
   );
   trunks.forEach((m, i) => trunkMesh.setMatrixAt(i, m));
@@ -527,9 +619,20 @@ function addGrass(root: THREE.Object3D) {
   return mat;
 }
 
+function rockGeo() {
+  const geo = new THREE.IcosahedronGeometry(0.85, 1);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i += 1) {
+    const wobble = 0.72 + ((i * 13) % 9) / 22;
+    pos.setXYZ(i, pos.getX(i) * wobble * 1.25, pos.getY(i) * (0.42 + (i % 4) * 0.06), pos.getZ(i) * (0.85 + (i % 3) * 0.1));
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
 function addRocks(root: THREE.Object3D) {
-  const geo = new THREE.DodecahedronGeometry(0.85, 0);
-  const mat = new THREE.MeshStandardMaterial({ color: "#8d877e", roughness: 0.94 });
+  const geo = rockGeo();
+  const mat = new THREE.MeshStandardMaterial({ map: stonePattern(), color: "#9a9288", roughness: 0.94 });
   const mesh = new THREE.InstancedMesh(geo, mat, 90);
   const dummy = new THREE.Object3D();
   let n = 0;
@@ -565,12 +668,12 @@ function addHorizon(root: THREE.Object3D) {
     const tall = 16 + (i % 5) * 7;
     const west = Math.cos(a) < -0.45;
     const mat = west && i % 2 === 0 ? rust : hill;
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(7 + (i % 4) * 2.2, tall, 6), mat);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(9 + (i % 4) * 2.4, tall, 16), mat);
     cone.position.set(Math.cos(a) * r, tall * 0.28, Math.sin(a) * r);
     cone.castShadow = false;
     cone.receiveShadow = true;
     if (i % 4 === 0) {
-      const cap = new THREE.Mesh(new THREE.ConeGeometry(3.1, 4.2, 5), snow);
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(3.4, 3.2, 12), snow);
       cap.position.y = tall * 0.42;
       cone.add(cap);
     }
@@ -578,29 +681,34 @@ function addHorizon(root: THREE.Object3D) {
   }
 }
 
-function std(color: string | number, roughness = 0.75, emissive?: string) {
+function std(color: string | number, roughness = 0.75, emissive?: string, map?: THREE.Texture) {
   return new THREE.MeshStandardMaterial({
     color,
     roughness,
     metalness: 0.02,
     emissive: emissive ?? "#000",
     emissiveIntensity: emissive ? 0.7 : 0,
+    map: map ?? null,
   });
 }
 
 function house(parent: THREE.Object3D, x: number, z: number, rot: number) {
   const g = new THREE.Group();
-  const wall = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.6, 1.7), std("#f3ead8", 0.86));
-  wall.position.y = 0.8;
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.85, 1.15, 4), std("#8d342c", 0.62));
-  roof.position.y = 2.05;
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(2.55, 1.45, 1.85), std("#ffffff", 0.84, undefined, plasterTex()));
+  wall.position.y = 0.95;
+  const found = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.32, 2.1), std("#c8bfb0", 0.9, undefined, stonePattern()));
+  found.position.y = 0.16;
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.05, 1.2, 4), std("#ffffff", 0.6, undefined, roofTex()));
+  roof.position.y = 2.15;
   roof.rotation.y = Math.PI / 4;
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.78, 0.08), std("#5c3a22", 0.8));
-  door.position.set(0, 0.42, 0.88);
+  const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.72, 0.34), std("#d9cfc2", 0.86, undefined, stonePattern()));
+  chimney.position.set(0.72, 2.35, -0.28);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.78, 0.08), std("#ffffff", 0.8, undefined, bark()));
+  door.position.set(0, 0.55, 0.96);
   const win = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.32, 0.06), std("#f2e2a8", 0.3, "#ffd27a"));
-  win.position.set(0.7, 0.95, 0.86);
+  win.position.set(0.72, 1.05, 0.96);
   win.name = "lamp";
-  g.add(wall, roof, door, win);
+  g.add(found, wall, roof, chimney, door, win);
   g.position.set(x, heightAt(x, z), z);
   g.rotation.y = rot;
   g.traverse((obj) => {
@@ -614,13 +722,13 @@ function house(parent: THREE.Object3D, x: number, z: number, rot: number) {
 
 function landmark(kind: Place["kind"], tintHex: number) {
   const g = new THREE.Group();
-  const stone = std(tintHex, 0.72);
-  const dark = std("#3a342c", 0.82);
-  const wood = std("#6b4324", 0.8);
+  const stone = std(tintHex, 0.76, undefined, stonePattern());
+  const dark = std("#6a6158", 0.84, undefined, stonePattern());
+  const wood = std("#ffffff", 0.82, undefined, bark());
   if (kind === "meadow") {
     for (let i = 0; i < 8; i += 1) {
       const a = (i / 8) * Math.PI * 2;
-      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 2.4, 6), stone);
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 2.4, 12), stone);
       col.position.set(Math.cos(a) * 2.1, 1.2, Math.sin(a) * 2.1);
       g.add(col);
     }
@@ -641,9 +749,9 @@ function landmark(kind: Place["kind"], tintHex: number) {
     banner.position.set(0, 4.1, 0.4);
     g.add(l, r, beam, banner);
   } else if (kind === "mesa") {
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, 1.3, 6), stone);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, 1.3, 16), stone);
     base.position.y = 0.65;
-    const mid = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, 1.1, 6), std("#c48a3a", 0.7));
+    const mid = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, 1.1, 16), std("#c48a3a", 0.7, undefined, stonePattern()));
     mid.position.y = 1.7;
     const shrine = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.3, 1.1), dark);
     shrine.position.y = 2.8;
@@ -651,7 +759,7 @@ function landmark(kind: Place["kind"], tintHex: number) {
   } else if (kind === "lock") {
     const mill = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.4, 3.1, 8), stone);
     mill.position.y = 1.55;
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.7, 1.1, 8), std("#6a3a28", 0.65));
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.7, 1.1, 12), std("#ffffff", 0.62, undefined, roofTex()));
     roof.position.y = 3.5;
     const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.08, 6, 14), dark);
     wheel.position.set(1.55, 1.3, 0);
@@ -673,22 +781,31 @@ function landmark(kind: Place["kind"], tintHex: number) {
   } else if (kind === "keep") {
     const base = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.4, 4.4), std("#c4a36a", 0.8));
     base.position.y = 0.7;
-    const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.7, 7.2, 8), stone);
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.7, 7.2, 16), stone);
     tower.position.y = 4.2;
-    const side = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 4.4, 7), std("#b8924e", 0.75));
+    const side = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 4.4, 12), std("#b8924e", 0.75, undefined, stonePattern()));
     side.position.set(2.1, 2.6, 0.4);
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.85, 1.8, 8), std("#8d2f2a", 0.55));
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.85, 1.8, 12), std("#ffffff", 0.55, undefined, roofTex()));
     roof.position.y = 8.6;
-    const sideRoof = new THREE.Mesh(new THREE.ConeGeometry(0.95, 1.1, 7), std("#8d2f2a", 0.55));
+    const sideRoof = new THREE.Mesh(new THREE.ConeGeometry(0.95, 1.1, 12), std("#ffffff", 0.55, undefined, roofTex()));
     sideRoof.position.set(2.1, 5.2, 0.4);
     const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.45), std("#f2d15a", 0.5));
     flag.position.set(0.55, 9.5, 0);
     g.add(base, tower, side, roof, sideRoof, flag);
   } else if (kind === "wood") {
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.9, 3.6, 7), dark);
-    trunk.position.y = 1.8;
-    const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(2.3, 1), stone);
-    crown.position.y = 4.3;
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.95, 3.8, 12), wood);
+    trunk.position.y = 1.9;
+    const leafMat = new THREE.MeshStandardMaterial({
+      map: foliageTex(),
+      color: "#2f7a34",
+      roughness: 0.75,
+      alphaTest: 0.4,
+      side: THREE.DoubleSide,
+    });
+    const crown = foliageClump(leafMat, 2.35);
+    crown.position.y = 3.55;
+    const crownHigh = foliageClump(leafMat, 1.45);
+    crownHigh.position.set(0.35, 4.7, -0.15);
     for (let i = 0; i < 3; i += 1) {
       const cap = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 6), std("#e7d27a", 0.4, "#d8e38a"));
       cap.position.set(Math.cos(i * 2) * 1.4, 0.35, Math.sin(i * 2) * 1.4);
@@ -697,17 +814,17 @@ function landmark(kind: Place["kind"], tintHex: number) {
       stem.position.set(cap.position.x, 0.15, cap.position.z);
       g.add(cap, stem);
     }
-    g.add(trunk, crown);
+    g.add(trunk, crown, crownHigh);
   } else {
     const wall = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.6, 2.8), stone);
     wall.position.y = 1.3;
     const gate = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.5, 0.2), dark);
     gate.position.set(0, 0.8, 1.45);
-    const spireL = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.55, 3.4, 6), dark);
+    const spireL = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.55, 3.4, 12), dark);
     spireL.position.set(-1.6, 3.2, 0);
     const spireR = spireL.clone();
     spireR.position.x = 1.6;
-    const capL = new THREE.Mesh(new THREE.ConeGeometry(0.62, 1.3, 5), std("#2a242c", 0.5));
+    const capL = new THREE.Mesh(new THREE.ConeGeometry(0.62, 1.3, 12), std("#2a242c", 0.5));
     capL.position.set(-1.6, 5.3, 0);
     const capR = capL.clone();
     capR.position.x = 1.6;
@@ -777,7 +894,13 @@ function makeHero() {
   const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), std("#f6e2a4", 0.25, "#ffc56a"));
   lantern.position.set(-0.32, 0.82, 0.12);
   lantern.name = "lamp";
-  g.add(hips, torso, tunic, belt, head, hairCap, bootL, bootR, armL, armR, satchel, cloak, lantern);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), skin);
+  nose.position.set(0, 1.54, 0.18);
+  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.026, 8, 6), std("#1c140e", 0.3));
+  eyeL.position.set(-0.07, 1.61, 0.16);
+  const eyeR = eyeL.clone();
+  eyeR.position.x = 0.07;
+  g.add(hips, torso, tunic, belt, head, hairCap, bootL, bootR, armL, armR, satchel, cloak, lantern, nose, eyeL, eyeR);
   g.traverse((obj) => {
     if (obj instanceof THREE.Mesh) obj.castShadow = true;
   });
@@ -791,11 +914,11 @@ function makeSteed() {
   const dark = std("#24160f", 0.55);
   const tack = std("#1f6b45", 0.45);
   const leather = std("#6a3a22", 0.42);
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14), coat);
-  body.scale.set(0.82, 0.72, 1.55);
-  body.position.set(0, 1.08, 0);
-  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 12), coat);
-  chest.position.set(0, 1.12, 0.46);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.28, 0.72, 6, 12), coat);
+  body.rotation.x = Math.PI / 2;
+  body.position.set(0, 1.02, 0.04);
+  const chest = new THREE.Mesh(new THREE.CapsuleGeometry(0.16, 0.14, 4, 8), coat);
+  chest.position.set(0, 1.08, 0.52);
   const neck = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.34, 4, 8), coat);
   neck.position.set(0, 1.46, 0.66);
   neck.rotation.x = 0.75;
@@ -847,21 +970,369 @@ function makeSteed() {
   return g;
 }
 
-function makeSpirit(color: string) {
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 12), std(color, 0.35, color));
-  body.position.y = 0.7;
-  body.scale.set(1, 1.2, 0.8);
-  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), std("#1a120c", 0.3));
-  eye.position.set(0.14, 0.82, 0.36);
-  const eye2 = eye.clone();
-  eye2.position.x = -0.14;
-  const horn = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.32, 6), std("#f2d15a", 0.3, "#f2d15a"));
-  horn.position.y = 1.32;
-  g.add(body, eye, eye2, horn);
-  g.traverse((obj) => {
-    if (obj instanceof THREE.Mesh) obj.castShadow = true;
+function peg(mat: THREE.Material, len = 0.42, rad = 0.055) {
+  const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(rad, Math.max(0.05, len - rad * 2), 3, 8), mat);
+  mesh.geometry.translate(0, -len * 0.5, 0);
+  return mesh;
+}
+
+function addLegs(g: THREE.Group, mat: THREE.Material, hips: [number, number, number][], len = 0.42, rad = 0.055) {
+  hips.forEach(([x, y, z], i) => {
+    const leg = peg(mat, len, rad);
+    leg.position.set(x, y, z);
+    leg.name = `leg${i}`;
+    g.add(leg);
   });
+}
+
+function glowEye(color: string, r = 0.045) {
+  return new THREE.Mesh(
+    new THREE.SphereGeometry(r, 10, 8),
+    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.15, roughness: 0.2 }),
+  );
+}
+
+function makeWing(tint: string) {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0);
+  shape.bezierCurveTo(0.45, 0.22, 1.05, 0.62, 1.55, 0.78);
+  shape.lineTo(1.72, 0.22);
+  shape.bezierCurveTo(1.15, 0.12, 0.62, -0.08, 0.18, -0.16);
+  shape.closePath();
+  const membrane = new THREE.Mesh(
+    new THREE.ShapeGeometry(shape, 12),
+    new THREE.MeshStandardMaterial({
+      color: tint,
+      map: hideTex("#6d8f62", "#1d3324", "scale"),
+      roughness: 0.5,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.94,
+    }),
+  );
+  const boneMat = std("#1c2418", 0.45);
+  const bone1 = new THREE.Mesh(new THREE.CapsuleGeometry(0.018, 1.15, 2, 5), boneMat);
+  bone1.rotation.z = -0.42;
+  bone1.position.set(0.62, 0.32, 0.02);
+  const bone2 = new THREE.Mesh(new THREE.CapsuleGeometry(0.014, 1.35, 2, 5), boneMat);
+  bone2.rotation.z = -0.1;
+  bone2.position.set(0.8, 0.06, 0.02);
+  const g = new THREE.Group();
+  g.add(membrane, bone1, bone2);
+  return g;
+}
+
+function makeHound() {
+  const g = new THREE.Group();
+  const fur = std("#ffffff", 0.68, undefined, hideTex("#6e4a32", "#e6c6a4", "fur"));
+  const dark = std("#24160f", 0.5);
+  const ivory = std("#f4efe4", 0.32);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.78, 6, 12), fur);
+  body.rotation.x = Math.PI / 2;
+  body.position.set(0, 0.62, -0.02);
+  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 12), fur);
+  chest.scale.set(0.95, 0.88, 1.05);
+  chest.position.set(0, 0.64, 0.46);
+  const neck = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.18, 4, 8), fur);
+  neck.position.set(0, 0.84, 0.62);
+  neck.rotation.x = 0.95;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 14, 12), fur);
+  head.scale.set(0.92, 0.8, 1.2);
+  head.position.set(0, 0.98, 0.82);
+  const snout = new THREE.Mesh(new THREE.CapsuleGeometry(0.065, 0.18, 3, 8), std("#e7c2a4", 0.48));
+  snout.rotation.x = Math.PI / 2;
+  snout.position.set(0, 0.9, 1.08);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), dark);
+  nose.position.set(0, 0.92, 1.22);
+  const earL = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.32, 7), dark);
+  earL.position.set(-0.12, 1.26, 0.7);
+  earL.rotation.z = 0.28;
+  earL.rotation.x = -0.25;
+  const earR = earL.clone();
+  earR.position.x = 0.12;
+  earR.rotation.z = -0.28;
+  const eyeL = glowEye("#f2c14a", 0.042);
+  eyeL.position.set(-0.09, 1.04, 0.94);
+  const eyeR = eyeL.clone();
+  eyeR.position.x = 0.09;
+  for (let i = 0; i < 5; i += 1) {
+    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.18, 5), dark);
+    spike.position.set(0, 0.98 - i * 0.02, 0.32 + i * 0.08);
+    spike.rotation.x = -0.55;
+    g.add(spike);
+  }
+  for (const x of [-0.045, 0.045]) {
+    const fang = new THREE.Mesh(new THREE.ConeGeometry(0.022, 0.08, 5), ivory);
+    fang.position.set(x, 0.8, 1.12);
+    fang.rotation.x = Math.PI;
+    g.add(fang);
+  }
+  const tail = new THREE.Group();
+  tail.name = "tail";
+  tail.position.set(0, 0.74, -0.52);
+  for (let i = 0; i < 4; i += 1) {
+    const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.08 - i * 0.012, 0.32, 6), i % 2 ? fur : dark);
+    tuft.position.set((i - 1.5) * 0.06, 0.14, -0.08 * i);
+    tuft.rotation.x = 1.25;
+    tail.add(tuft);
+  }
+  g.add(body, chest, neck, head, snout, nose, earL, earR, eyeL, eyeR, tail);
+  addLegs(
+    g,
+    dark,
+    [
+      [-0.16, 0.48, 0.34],
+      [0.16, 0.48, 0.34],
+      [-0.16, 0.46, -0.3],
+      [0.16, 0.46, -0.3],
+    ],
+    0.48,
+    0.055,
+  );
+  g.scale.setScalar(2.2);
+  return g;
+}
+
+function makeBoar() {
+  const g = new THREE.Group();
+  const hide = std("#ffffff", 0.74, undefined, hideTex("#5c4034", "#1a100c", "bristle"));
+  const dark = std("#1c120c", 0.5);
+  const ivory = std("#f6f1e4", 0.28);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.34, 0.78, 6, 12), hide);
+  body.rotation.x = Math.PI / 2;
+  body.position.set(0, 0.58, 0);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 12), hide);
+  head.scale.set(1.2, 0.82, 1.05);
+  head.position.set(0, 0.64, 0.62);
+  const snout = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.2, 12), std("#e0b0a0", 0.48));
+  snout.rotation.x = Math.PI / 2;
+  snout.position.set(0, 0.52, 0.9);
+  for (const x of [-0.045, 0.045]) {
+    const nostril = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 6), dark);
+    nostril.position.set(x, 0.52, 1.0);
+    g.add(nostril);
+  }
+  const tuskL = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.02, 6, 12, Math.PI * 0.9), ivory);
+  tuskL.position.set(-0.12, 0.4, 0.84);
+  tuskL.rotation.set(0.2, 0.5, 0.9);
+  const tuskR = tuskL.clone();
+  tuskR.position.x = 0.12;
+  tuskR.rotation.set(0.2, -0.5, -0.9);
+  const earL = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.14, 5), dark);
+  earL.position.set(-0.2, 0.86, 0.5);
+  earL.rotation.z = 1.15;
+  const earR = earL.clone();
+  earR.position.x = 0.2;
+  earR.rotation.z = -1.15;
+  const eyeL = glowEye("#f2d15a", 0.03);
+  eyeL.position.set(-0.14, 0.72, 0.8);
+  const eyeR = eyeL.clone();
+  eyeR.position.x = 0.14;
+  for (let i = 0; i < 8; i += 1) {
+    const bristle = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.26 + (i % 3) * 0.05, 5), dark);
+    bristle.position.set(0, 0.98, -0.32 + i * 0.12);
+    bristle.rotation.x = -0.3;
+    g.add(bristle);
+  }
+  const tail = new THREE.Group();
+  tail.name = "tail";
+  tail.position.set(0, 0.68, -0.52);
+  const curl = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.022, 6, 12, Math.PI * 1.5), hide);
+  curl.rotation.y = Math.PI / 2;
+  tail.add(curl);
+  g.add(body, head, snout, tuskL, tuskR, earL, earR, eyeL, eyeR, tail);
+  addLegs(
+    g,
+    dark,
+    [
+      [-0.2, 0.4, 0.3],
+      [0.2, 0.4, 0.3],
+      [-0.2, 0.38, -0.28],
+      [0.2, 0.38, -0.28],
+    ],
+    0.38,
+    0.065,
+  );
+  g.scale.setScalar(2.15);
+  return g;
+}
+
+function makeDrake() {
+  const g = new THREE.Group();
+  const scale = std("#ffffff", 0.46, undefined, hideTex("#3a6a48", "#e4d39a", "scale"));
+  const belly = std("#e4d39a", 0.42);
+  const dark = std("#142018", 0.4);
+  const hornMat = std("#e2b34a", 0.32);
+  const ivory = std("#f4efe4", 0.3);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, 0.9, 6, 12), scale);
+  body.rotation.x = Math.PI / 2;
+  body.position.set(0, 0.5, 0);
+  const under = new THREE.Mesh(new THREE.CapsuleGeometry(0.09, 0.62, 4, 8), belly);
+  under.rotation.x = Math.PI / 2;
+  under.position.set(0, 0.34, 0.02);
+  const neck = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.32, 4, 8), scale);
+  neck.position.set(0, 0.74, 0.58);
+  neck.rotation.x = 0.9;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 10), scale);
+  head.scale.set(0.82, 0.68, 1.5);
+  head.position.set(0, 0.96, 0.88);
+  const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.04, 0.26), belly);
+  jaw.position.set(0, 0.84, 1.05);
+  for (const x of [-0.04, 0.04]) {
+    const fang = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 5), ivory);
+    fang.position.set(x, 0.86, 1.14);
+    fang.rotation.x = Math.PI;
+    g.add(fang);
+  }
+  const hornL = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.26, 6), hornMat);
+  hornL.position.set(-0.08, 1.14, 0.76);
+  hornL.rotation.set(-0.45, 0, 0.45);
+  const hornR = hornL.clone();
+  hornR.position.x = 0.08;
+  hornR.rotation.z = -0.45;
+  const eyeL = glowEye("#ffb03a", 0.038);
+  eyeL.position.set(-0.09, 1.0, 0.98);
+  const eyeR = eyeL.clone();
+  eyeR.position.x = 0.09;
+  for (let i = 0; i < 6; i += 1) {
+    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.18, 5), dark);
+    spike.position.set(0, 0.76, -0.38 + i * 0.16);
+    g.add(spike);
+  }
+  const wingL = new THREE.Group();
+  wingL.name = "wingL";
+  wingL.position.set(-0.2, 0.66, 0.05);
+  const left = makeWing("#2f5c42");
+  left.scale.x = -1;
+  wingL.add(left);
+  const wingR = new THREE.Group();
+  wingR.name = "wingR";
+  wingR.position.set(0.2, 0.66, 0.05);
+  wingR.add(makeWing("#2f5c42"));
+  const tail = new THREE.Group();
+  tail.name = "tail";
+  tail.position.set(0, 0.44, -0.58);
+  const whip = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.85, 4, 6), scale);
+  whip.rotation.x = Math.PI / 2;
+  whip.position.set(0, 0, -0.48);
+  const spade = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.26, 4), dark);
+  spade.rotation.x = Math.PI / 2;
+  spade.position.set(0, 0.02, -1.0);
+  tail.add(whip, spade);
+  g.add(body, under, neck, head, jaw, hornL, hornR, eyeL, eyeR, wingL, wingR, tail);
+  addLegs(
+    g,
+    dark,
+    [
+      [-0.16, 0.38, 0.3],
+      [0.16, 0.38, 0.3],
+      [-0.16, 0.36, -0.24],
+      [0.16, 0.36, -0.24],
+    ],
+    0.36,
+    0.05,
+  );
+  g.scale.setScalar(2.3);
+  return g;
+}
+
+function shellGeo() {
+  const pts: THREE.Vector2[] = [];
+  for (let i = 0; i <= 14; i += 1) {
+    const t = i / 14;
+    const ridge = 1 + 0.1 * Math.sin(t * Math.PI * 6);
+    const r = Math.sin(t * Math.PI) * 0.62 * ridge;
+    pts.push(new THREE.Vector2(Math.max(0.02, r), t * 0.7));
+  }
+  return new THREE.LatheGeometry(pts, 20);
+}
+
+function makeShellback() {
+  const g = new THREE.Group();
+  const shellMat = std("#ffffff", 0.4, undefined, hideTex("#3e5648", "#c4a36a", "scale"));
+  const dark = std("#1a120c", 0.48);
+  const shell = new THREE.Mesh(shellGeo(), shellMat);
+  shell.scale.set(1.35, 0.9, 1.5);
+  shell.position.y = 0.08;
+  const belly = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, 0.4, 4, 10), std("#cbb89a", 0.55));
+  belly.rotation.x = Math.PI / 2;
+  belly.scale.y = 0.45;
+  belly.position.set(0, 0.18, 0.02);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), std("#6a5344", 0.5));
+  head.scale.set(1.15, 0.72, 1.25);
+  head.position.set(0, 0.34, 0.78);
+  const horn = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.24, 6), dark);
+  horn.position.set(0, 0.56, 0.74);
+  horn.rotation.x = -0.55;
+  const eyeL = glowEye("#ff5a3c", 0.042);
+  eyeL.position.set(-0.1, 0.42, 0.9);
+  const eyeR = eyeL.clone();
+  eyeR.position.x = 0.1;
+  const jawL = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.2, 5), dark);
+  jawL.position.set(-0.09, 0.24, 0.98);
+  jawL.rotation.set(1.35, 0, 0.45);
+  const jawR = jawL.clone();
+  jawR.position.x = 0.09;
+  jawR.rotation.z = -0.45;
+  g.add(shell, belly, head, horn, eyeL, eyeR, jawL, jawR);
+  const hips: [number, number, number][] = [
+    [-0.48, 0.3, 0.32],
+    [0.48, 0.3, 0.32],
+    [-0.56, 0.28, 0.02],
+    [0.56, 0.28, 0.02],
+    [-0.46, 0.26, -0.32],
+    [0.46, 0.26, -0.32],
+  ];
+  hips.forEach(([x, y, z], i) => {
+    const leg = peg(dark, 0.34, 0.04);
+    leg.position.set(x, y, z);
+    leg.rotation.z = x > 0 ? -0.75 : 0.75;
+    leg.name = `leg${i}`;
+    g.add(leg);
+  });
+  const tail = new THREE.Group();
+  tail.name = "tail";
+  const spike = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.32, 5), dark);
+  spike.position.set(0, 0.3, -0.78);
+  spike.rotation.x = 1.15;
+  tail.add(spike);
+  g.add(tail);
+  g.scale.setScalar(2.15);
+  return g;
+}
+
+const CREATURE_ART: Record<string, [string, number, number]> = {
+  hound: ["/vale/hound.png", 724 / 768, 3.6],
+  boar: ["/vale/boar.png", 768 / 668, 3.2],
+  drake: ["/vale/drake.png", 768 / 699, 4.2],
+  shell: ["/vale/shell.png", 768 / 458, 2.7],
+};
+
+function makeCreature(kind: string) {
+  const [url, aspect, height] = CREATURE_ART[kind] ?? CREATURE_ART.hound;
+  const tex = fileTex(url);
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  const mat = new THREE.MeshStandardMaterial({
+    map: tex,
+    transparent: true,
+    alphaTest: 0.2,
+    roughness: 0.78,
+    metalness: 0,
+    side: THREE.DoubleSide,
+  });
+  const geo = new THREE.PlaneGeometry(height * aspect, height);
+  geo.translate(0, height * 0.5, 0);
+  const board = new THREE.Mesh(geo, mat);
+  board.name = "billboard";
+  const g = new THREE.Group();
+  const shadow = new THREE.Mesh(
+    new THREE.CircleGeometry(height * 0.32, 20),
+    new THREE.MeshBasicMaterial({ color: "#1a140c", transparent: true, opacity: 0.3, depthWrite: false }),
+  );
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = 0.05;
+  g.add(shadow, board);
   return g;
 }
 
@@ -1058,6 +1529,7 @@ function makeClouds() {
       sphere.position.set((k - 1.5) * 3.6, (k % 2) * 1.1, 0);
       puff.add(sphere);
     }
+    puff.scale.set(1.45, 0.38, 1);
     const a = (i / 8) * Math.PI * 2;
     const r = 62 + (i % 3) * 10;
     const y = 36 + (i % 4) * 3;
@@ -1141,7 +1613,7 @@ export function ValeWorld({
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2("#b9d6f0", 0.0095);
-    const camera = new THREE.PerspectiveCamera(52, host.clientWidth / Math.max(host.clientHeight, 1), 0.12, 520);
+    const camera = new THREE.PerspectiveCamera(46, host.clientWidth / Math.max(host.clientHeight, 1), 0.12, 520);
     const skyMat = skyMaterial();
     scene.add(new THREE.Mesh(new THREE.SphereGeometry(200, 32, 24), skyMat));
     const stars = makeStars();
@@ -1227,13 +1699,13 @@ export function ValeWorld({
     const interior = makeInterior();
     scene.add(interior);
     const spiritSpots = [
-      { id: "basic", x: 14, z: 18, color: "#6fbf5c" },
-      { id: "core", x: -30, z: 14, color: "#c45c4a" },
-      { id: "stones", x: 34, z: -14, color: "#e0b15a" },
-      { id: "peds", x: -22, z: -14, color: "#2f7a46" },
+      { id: "basic", kind: "hound", x: 14, z: 18 },
+      { id: "core", kind: "drake", x: -30, z: 14 },
+      { id: "stones", kind: "boar", x: 34, z: -14 },
+      { id: "peds", kind: "shell", x: -22, z: -14 },
     ];
     const spirits = spiritSpots.map((spot) => {
-      const mesh = makeSpirit(spot.color);
+      const mesh = makeCreature(spot.kind);
       mesh.position.set(spot.x, heightAt(spot.x, spot.z), spot.z);
       scene.add(mesh);
       return { ...spot, mesh };
@@ -1534,11 +2006,11 @@ export function ValeWorld({
       camYaw += camDelta * Math.min(1, follow);
       const cfx = -Math.sin(camYaw);
       const cfz = -Math.cos(camYaw);
-      const dist = mounted ? 9.2 : 6.4;
-      const camH = mounted ? 4.6 : 3.4;
+      const dist = mounted ? 8.6 : 7.2;
+      const camH = mounted ? 4.1 : 3.15;
       tmp.set(pos.x - cfx * dist, ground + camH, pos.z - cfz * dist);
       camera.position.lerp(tmp, 1 - Math.pow(0.0015, dt));
-      camera.lookAt(pos.x, ground + 1.45, pos.z);
+      camera.lookAt(pos.x, ground + 1.2, pos.z);
       sun.position.set(pos.x + (hourRef.current === "night" ? -16 : 22), hourRef.current === "night" ? 28 : 36, pos.z + (hourRef.current === "night" ? -10 : 12));
       sun.target.position.set(pos.x, ground, pos.z);
       sun.target.updateMatrixWorld();
@@ -1566,9 +2038,11 @@ export function ValeWorld({
       let touched: string | null = null;
       for (const spot of spirits) {
         const groundY = heightAt(spot.x, spot.z);
-        spot.mesh.position.set(spot.x, groundY + Math.sin(clock.t * 2 + spot.x) * 0.12, spot.z);
-        spot.mesh.rotation.y = clock.t * 0.7;
-        if (Math.hypot(pos.x - spot.x, pos.z - spot.z) < 4.2) touched = spot.id;
+        spot.mesh.position.set(spot.x, groundY, spot.z);
+        const dx = camera.position.x - spot.x;
+        const dz = camera.position.z - spot.z;
+        spot.mesh.rotation.y = Math.atan2(dx, dz);
+        if (Math.hypot(pos.x - spot.x, pos.z - spot.z) < 5.8) touched = spot.id;
       }
       if (touched !== lastSpirit) {
         lastSpirit = touched;
