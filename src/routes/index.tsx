@@ -344,12 +344,6 @@ function Home() {
         }}
       />
 
-      <SKHYPlan
-        onStart={(input) => {
-          void openUnused(input);
-        }}
-      />
-
       <PrizeLadder />
 
       <HeatMap />
@@ -386,6 +380,13 @@ function Home() {
       )}
       {mode === "rpg" && <RpgMode battleDone={battleDone} startTopicBattle={startTopicBattle} />}
       {mode === "ops" && <Operations correct={experience} total={experienceTotal} />}
+      {mode === "exam" && (
+        <SKHYPlan
+          onStart={(input) => {
+            void openUnused(input);
+          }}
+        />
+      )}
     </Shell>
   );
 }

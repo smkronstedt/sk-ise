@@ -6,6 +6,7 @@ import { topics } from "@/lib/desk/topics";
 type Place = {
   id: string;
   name: string;
+  realm: string;
   x: number;
   z: number;
   tint: number;
@@ -14,14 +15,14 @@ type Place = {
 
 /** Original overworld. The shape is an adventure field, not a Nintendo map. */
 export const valePlaces: Place[] = [
-  { id: "basic", name: "Willow Meadow", x: 0, z: 38, tint: 0x7dce6a, kind: "meadow" },
-  { id: "core", name: "Red Canyon", x: -52, z: 4, tint: 0xc45c4a, kind: "canyon" },
-  { id: "stones", name: "Amber Mesa", x: 54, z: 2, tint: 0xe0b15a, kind: "mesa" },
-  { id: "obstruction", name: "Lockwater", x: 26, z: 36, tint: 0x3aa0b8, kind: "lock" },
-  { id: "urogyn", name: "Marble Court", x: -30, z: 44, tint: 0xf2efe6, kind: "court" },
-  { id: "andrology", name: "High Keep", x: 6, z: -46, tint: 0xd7a24a, kind: "keep" },
-  { id: "peds", name: "Fernwood", x: -46, z: -30, tint: 0x2f7a46, kind: "wood" },
-  { id: "oncology", name: "Ash Citadel", x: 48, z: -38, tint: 0x6a5a78, kind: "citadel" },
+  { id: "basic", name: "Willow Meadow", realm: "Home field", x: 0, z: 38, tint: 0x7dce6a, kind: "meadow" },
+  { id: "core", name: "Red Canyon", realm: "Canyon temple", x: -52, z: 4, tint: 0xc45c4a, kind: "canyon" },
+  { id: "stones", name: "Amber Mesa", realm: "Mountain folk", x: 54, z: 2, tint: 0xe0b15a, kind: "mesa" },
+  { id: "obstruction", name: "Lockwater", realm: "River domain", x: 26, z: 36, tint: 0x3aa0b8, kind: "lock" },
+  { id: "urogyn", name: "Marble Court", realm: "White temple", x: -30, z: 44, tint: 0xf2efe6, kind: "court" },
+  { id: "andrology", name: "High Keep", realm: "The castle", x: 6, z: -46, tint: 0xd7a24a, kind: "keep" },
+  { id: "peds", name: "Fernwood", realm: "Deep wood", x: -46, z: -30, tint: 0x2f7a46, kind: "wood" },
+  { id: "oncology", name: "Ash Citadel", realm: "Ash temple", x: 48, z: -38, tint: 0x6a5a78, kind: "citadel" },
 ];
 
 const SPAN = 108;
@@ -736,42 +737,45 @@ function landmark(kind: Place["kind"], tintHex: number) {
 
 function makeHero() {
   const g = new THREE.Group();
-  const skin = std("#e7b894", 0.55);
-  const cloth = std("#1f6b4a", 0.5);
-  const shirt = std("#f4efe4", 0.6);
-  const leather = std("#5c3a22", 0.7);
-  const gold = std("#e2b34a", 0.35);
-  const hair = std("#3a2418", 0.7);
-  const hips = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.28, 0.28), cloth);
+  const skin = std("#e7b894", 0.45);
+  const cloth = std("#1e6a48", 0.4);
+  const shirt = std("#f6f1e6", 0.48);
+  const leather = std("#5a3820", 0.55);
+  const gold = std("#e2b34a", 0.28);
+  const hair = std("#3a2418", 0.5);
+  const hips = new THREE.Mesh(new THREE.CapsuleGeometry(0.18, 0.12, 4, 8), cloth);
   hips.position.y = 0.72;
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.48, 0.3), shirt);
-  torso.position.y = 1.12;
-  const tunic = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.62, 0.16), cloth);
-  tunic.position.set(0, 1.08, 0.08);
-  const belt = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.08, 0.32), gold);
-  belt.position.y = 0.9;
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 12), skin);
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, 0.26, 4, 10), shirt);
+  torso.position.y = 1.16;
+  const tunic = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.18, 4, 8), cloth);
+  tunic.position.set(0, 1.08, 0.02);
+  const belt = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 8, 12), gold);
+  belt.rotation.x = Math.PI / 2;
+  belt.position.y = 0.92;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 14), skin);
   head.position.y = 1.58;
-  const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.21, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), hair);
-  hairCap.position.y = 1.64;
-  const bootL = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.28, 0.3), leather);
-  bootL.position.set(-0.12, 0.16, 0.04);
+  const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.21, 14, 10, 0, Math.PI * 2, 0, Math.PI / 1.7), hair);
+  hairCap.position.y = 1.62;
+  const bootL = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.16, 3, 6), leather);
+  bootL.position.set(-0.1, 0.2, 0.04);
   const bootR = bootL.clone();
-  bootR.position.x = 0.12;
+  bootR.position.x = 0.1;
   bootL.name = "bootL";
   bootR.name = "bootR";
-  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.42, 0.12), cloth);
-  armL.position.set(-0.34, 1.12, 0);
+  const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.28, 3, 6), cloth);
+  armL.position.set(-0.3, 1.12, 0);
   armL.name = "armL";
   const armR = armL.clone();
-  armR.position.x = 0.34;
+  armR.position.x = 0.3;
   armR.name = "armR";
-  const satchel = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.26, 0.1), leather);
-  satchel.position.set(0.22, 0.95, -0.16);
-  const cloak = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.06), std("#174e34", 0.65));
-  cloak.position.set(0, 1.05, -0.18);
-  const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.12), std("#f6e2a4", 0.25, "#ffc56a"));
-  lantern.position.set(-0.34, 0.78, 0.12);
+  const satchel = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), leather);
+  satchel.scale.set(1, 1.1, 0.55);
+  satchel.position.set(0.2, 0.98, -0.16);
+  const cloak = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, 0.4, 3, 6), std("#174e34", 0.55));
+  cloak.scale.z = 0.25;
+  cloak.position.set(0, 1.08, -0.16);
+  const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), std("#f6e2a4", 0.25, "#ffc56a"));
+  lantern.position.set(-0.32, 0.82, 0.12);
   lantern.name = "lamp";
   g.add(hips, torso, tunic, belt, head, hairCap, bootL, bootR, armL, armR, satchel, cloak, lantern);
   g.traverse((obj) => {
@@ -782,31 +786,125 @@ function makeHero() {
 
 function makeSteed() {
   const g = new THREE.Group();
-  const coat = std("#8a4b2a", 0.65);
-  const dark = std("#2a1c16", 0.7);
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.48, 1.25), coat);
-  body.position.set(0, 1.05, 0);
-  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.55, 0.28), coat);
-  neck.position.set(0, 1.4, 0.48);
-  neck.rotation.x = 0.5;
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.28, 0.5), coat);
-  head.position.set(0, 1.62, 0.82);
-  const mane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.28, 0.55), dark);
-  mane.position.set(0, 1.58, 0.5);
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), dark);
-  tail.position.set(0, 1.15, -0.68);
+  const coat = std("#8d4a28", 0.48);
+  const flax = std("#f3e2b0", 0.5);
+  const dark = std("#24160f", 0.55);
+  const tack = std("#1f6b45", 0.45);
+  const leather = std("#6a3a22", 0.42);
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14), coat);
+  body.scale.set(0.82, 0.72, 1.55);
+  body.position.set(0, 1.08, 0);
+  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 12), coat);
+  chest.position.set(0, 1.12, 0.46);
+  const neck = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.34, 4, 8), coat);
+  neck.position.set(0, 1.46, 0.66);
+  neck.rotation.x = 0.75;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 12), coat);
+  head.scale.set(0.78, 0.82, 1.45);
+  head.position.set(0, 1.7, 0.92);
+  const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), std("#c48a62", 0.45));
+  muzzle.position.set(0, 1.62, 1.1);
+  const earL = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.14, 6), coat);
+  earL.position.set(-0.06, 1.88, 0.84);
+  const earR = earL.clone();
+  earR.position.x = 0.06;
+  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 6), dark);
+  eyeL.position.set(-0.07, 1.74, 1.02);
+  const eyeR = eyeL.clone();
+  eyeR.position.x = 0.07;
+  g.add(body, chest, neck, head, muzzle, earL, earR, eyeL, eyeR);
+  for (let i = 0; i < 6; i += 1) {
+    const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.2, 5), flax);
+    tuft.position.set(0, 1.62 - i * 0.05, 0.42 + i * 0.08);
+    tuft.rotation.x = 1.1;
+    g.add(tuft);
+  }
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.72, 6), flax);
+  tail.geometry.translate(0, -0.36, 0);
+  tail.position.set(0, 1.22, -0.7);
+  tail.rotation.x = 0.35;
   tail.name = "tail";
-  g.add(body, neck, head, mane, tail);
+  const blanket = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.05, 0.58), tack);
+  blanket.position.set(0, 1.32, -0.02);
+  const saddle = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8), leather);
+  saddle.scale.set(1.05, 0.4, 1.25);
+  saddle.position.set(0, 1.4, 0);
+  const strap = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.015, 6, 10), std("#e2b34a", 0.3));
+  strap.position.set(0, 1.66, 0.98);
+  strap.rotation.y = Math.PI / 2;
+  g.add(tail, blanket, saddle, strap);
   for (let i = 0; i < 4; i += 1) {
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.62, 0.12), dark);
-    leg.geometry.translate(0, -0.31, 0);
-    leg.position.set(i % 2 ? 0.18 : -0.18, 0.78, i < 2 ? 0.38 : -0.38);
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.38, 3, 6), dark);
+    leg.geometry.translate(0, -0.26, 0);
+    leg.position.set(i % 2 ? 0.16 : -0.16, 0.78, i < 2 ? 0.36 : -0.38);
     leg.name = `leg${i}`;
     g.add(leg);
   }
   g.traverse((obj) => {
     if (obj instanceof THREE.Mesh) obj.castShadow = true;
   });
+  g.visible = false;
+  return g;
+}
+
+function makeSpirit(color: string) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 12), std(color, 0.35, color));
+  body.position.y = 0.7;
+  body.scale.set(1, 1.2, 0.8);
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), std("#1a120c", 0.3));
+  eye.position.set(0.14, 0.82, 0.36);
+  const eye2 = eye.clone();
+  eye2.position.x = -0.14;
+  const horn = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.32, 6), std("#f2d15a", 0.3, "#f2d15a"));
+  horn.position.y = 1.32;
+  g.add(body, eye, eye2, horn);
+  g.traverse((obj) => {
+    if (obj instanceof THREE.Mesh) obj.castShadow = true;
+  });
+  return g;
+}
+
+function makeInterior() {
+  const g = new THREE.Group();
+  g.position.set(0, 120, 0);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(7.2, 28), std("#cbb892", 0.75));
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  const wallMat = std("#6e6256", 0.72);
+  const back = new THREE.Mesh(new THREE.BoxGeometry(10.4, 4.2, 0.35), wallMat);
+  back.position.set(0, 2.1, -5);
+  back.name = "roomWall";
+  const left = new THREE.Mesh(new THREE.BoxGeometry(0.35, 4.2, 10.2), wallMat);
+  left.position.set(-5.1, 2.1, 0);
+  left.name = "roomWall";
+  const right = left.clone();
+  right.position.x = 5.1;
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(2.2, 20), std("#7a2e2a", 0.65));
+  rug.rotation.x = -Math.PI / 2;
+  rug.position.y = 0.03;
+  const altar = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 1.05, 16), std("#efe6d4", 0.45));
+  altar.position.set(0, 0.52, -2.5);
+  const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.28, 0), std("#d7f3ff", 0.2, "#7ec8e3"));
+  gem.position.set(0, 1.35, -2.5);
+  gem.name = "innerGem";
+  const npc = new THREE.Group();
+  npc.position.set(0, 0, -3.4);
+  const robe = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.7, 6, 12), std("#24365f", 0.45));
+  robe.position.y = 1.05;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), std("#e7b894", 0.45));
+  head.position.y = 1.78;
+  npc.add(robe, head);
+  for (const x of [-2.5, 2.5]) {
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 3.6, 12), std("#f4efe4", 0.4));
+    col.position.set(x, 1.8, -1.1);
+    col.castShadow = true;
+    g.add(col);
+  }
+  const lamp = new THREE.PointLight("#ffe1b0", 0, 18, 2);
+  lamp.position.set(0, 3.5, -0.4);
+  lamp.name = "roomLamp";
+  g.add(floor, back, left, right, rug, altar, gem, npc, lamp);
   g.visible = false;
   return g;
 }
@@ -1000,6 +1098,9 @@ export function ValeWorld({
   const [weather, setWeather] = useState<Weather>("clear");
   const [riding, setRiding] = useState(false);
   const [dot, setDot] = useState({ x: 0, z: 30 });
+  const [inside, setInside] = useState<string | null>(null);
+  const [questsOpen, setQuestsOpen] = useState(false);
+  const [spirit, setSpirit] = useState<string | null>(null);
   const openRef = useRef(startTopicBattle);
   openRef.current = startTopicBattle;
   const battleRef = useRef(battleDone);
@@ -1012,6 +1113,8 @@ export function ValeWorld({
   weatherRef.current = weather;
   const ridingRef = useRef(false);
   ridingRef.current = riding;
+  const insideRef = useRef<string | null>(null);
+  insideRef.current = inside;
 
   const nextIn = (blueprintId: string) => topics.find((topic) => topic.blueprintId === blueprintId && !battleRef.current.has(topic.id));
   const cleared = (blueprintId: string) => {
@@ -1121,6 +1224,27 @@ export function ValeWorld({
     scene.add(hero);
     const steed = makeSteed();
     scene.add(steed);
+    const interior = makeInterior();
+    scene.add(interior);
+    const spiritSpots = [
+      { id: "basic", x: 14, z: 18, color: "#6fbf5c" },
+      { id: "core", x: -30, z: 14, color: "#c45c4a" },
+      { id: "stones", x: 34, z: -14, color: "#e0b15a" },
+      { id: "peds", x: -22, z: -14, color: "#2f7a46" },
+    ];
+    const spirits = spiritSpots.map((spot) => {
+      const mesh = makeSpirit(spot.color);
+      mesh.position.set(spot.x, heightAt(spot.x, spot.z), spot.z);
+      scene.add(mesh);
+      return { ...spot, mesh };
+    });
+    const marker = new THREE.Mesh(
+      new THREE.RingGeometry(0.42, 0.68, 24),
+      new THREE.MeshBasicMaterial({ color: "#f2d15a", side: THREE.DoubleSide, transparent: true, opacity: 0.92, depthWrite: false }),
+    );
+    marker.rotation.x = -Math.PI / 2;
+    marker.visible = false;
+    scene.add(marker);
     const lamp = new THREE.PointLight("#ffc27a", 0, 9, 2);
     lamp.position.set(-0.3, 1.0, 0.2);
     hero.add(lamp);
@@ -1151,6 +1275,10 @@ export function ValeWorld({
     const held = (code: string) => keys.has(code) || injected.has(code);
     const joy = { x: 0, y: 0 };
     let lastNear: string | null = null;
+    let lastSpirit: string | null = null;
+    let goal: { x: number; z: number } | null = null;
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
     const dotMem = { x: 0, z: 30 };
 
     window.__controlsTest = {
@@ -1197,14 +1325,33 @@ export function ValeWorld({
     };
 
     const tryEnter = () => {
-      const place = nearest();
-      if (!place) return;
-      const topic = nextIn(place.id);
-      if (!topic) {
-        setLine(`${place.name} is clear.`);
+      if (insideRef.current) {
+        const here = valePlaces.find((item) => item.id === insideRef.current);
+        const topic = here ? nextIn(here.id) : undefined;
+        if (!here || !topic) {
+          setLine(here ? `${here.name} is clear.` : "The hall is empty.");
+          return;
+        }
+        openRef.current(topic.id);
         return;
       }
-      openRef.current(topic.id);
+      const place = nearest();
+      if (!place) {
+        if (lastSpirit) {
+          const topic = nextIn(lastSpirit);
+          if (topic) openRef.current(topic.id);
+          else setLine("That spirit has nothing left to ask.");
+        }
+        return;
+      }
+      insideRef.current = place.id;
+      setInside(place.id);
+      interior.traverse((obj) => {
+        if (obj.name === "roomWall" && obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+          obj.material.color.set(place.tint);
+        }
+      });
+      setLine(`${place.name}. ${place.realm}. The keeper is waiting. Begin the questions, or step back outside.`);
     };
 
     let raf = 0;
@@ -1224,6 +1371,34 @@ export function ValeWorld({
       skyMat.uniforms.uTime.value = clock.t;
       const grassShader = grassMat?.userData.shader as { uniforms: { uTime: { value: number } } } | undefined;
       if (grassShader) grassShader.uniforms.uTime.value = clock.t;
+
+      if (insideRef.current) {
+        interior.visible = true;
+        hero.visible = false;
+        steed.visible = false;
+        const here = valePlaces.find((item) => item.id === insideRef.current);
+        interior.traverse((obj) => {
+          if (here && obj.name === "roomWall" && obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+            obj.material.color.set(here.tint);
+          }
+        });
+        const roomLamp = interior.getObjectByName("roomLamp") as THREE.PointLight | null;
+        if (roomLamp) roomLamp.intensity = 1.5;
+        const gem = interior.getObjectByName("innerGem") as THREE.Mesh | null;
+        if (gem) {
+          gem.rotation.y = clock.t * 1.4;
+          gem.position.y = 1.35 + Math.sin(clock.t * 2) * 0.08;
+        }
+        camera.position.set(0.35, 123.15, 6.6);
+        camera.lookAt(0, 122.05, -1.4);
+        renderer.render(scene, camera);
+        raf = requestAnimationFrame(frame);
+        return;
+      }
+      interior.visible = false;
+      hero.visible = true;
+      const roomLamp = interior.getObjectByName("roomLamp") as THREE.PointLight | null;
+      if (roomLamp) roomLamp.intensity = 0;
 
       const look = PRESET[hourRef.current];
       const rainOn = weatherRef.current === "rain";
@@ -1280,6 +1455,8 @@ export function ValeWorld({
       const wish = Math.hypot(wishX, wishZ);
       const run = mounted ? 20 : 11;
       if (wish > 0.08 && !mapOpenRef.current) {
+        goal = null;
+        marker.visible = false;
         const targetYaw = Math.atan2(-wishX, -wishZ);
         let deltaYaw = targetYaw - yaw;
         while (deltaYaw > Math.PI) deltaYaw -= Math.PI * 2;
@@ -1288,6 +1465,27 @@ export function ValeWorld({
         pos.x += wishX * run * dt;
         pos.z += wishZ * run * dt;
         speed = run * Math.min(1, wish);
+      } else if (goal && !mapOpenRef.current) {
+        const dx = goal.x - pos.x;
+        const dz = goal.z - pos.z;
+        const distLeft = Math.hypot(dx, dz);
+        if (distLeft < 0.75) {
+          goal = null;
+          marker.visible = false;
+          speed = 0;
+        } else {
+          const stepX = dx / distLeft;
+          const stepZ = dz / distLeft;
+          const targetYaw = Math.atan2(-stepX, -stepZ);
+          let deltaYaw = targetYaw - yaw;
+          while (deltaYaw > Math.PI) deltaYaw -= Math.PI * 2;
+          while (deltaYaw < -Math.PI) deltaYaw += Math.PI * 2;
+          yaw += deltaYaw * Math.min(1, dt * (mounted ? 6 : 10));
+          pos.x += stepX * run * dt;
+          pos.z += stepZ * run * dt;
+          speed = run;
+          marker.position.y = heightAt(goal.x, goal.z) + 0.18 + Math.sin(clock.t * 5) * 0.04;
+        }
       } else {
         speed = 0;
       }
@@ -1336,8 +1534,8 @@ export function ValeWorld({
       camYaw += camDelta * Math.min(1, follow);
       const cfx = -Math.sin(camYaw);
       const cfz = -Math.cos(camYaw);
-      const dist = mounted ? 12.5 : 8.6;
-      const camH = mounted ? 6.4 : 4.8;
+      const dist = mounted ? 9.2 : 6.4;
+      const camH = mounted ? 4.6 : 3.4;
       tmp.set(pos.x - cfx * dist, ground + camH, pos.z - cfz * dist);
       camera.position.lerp(tmp, 1 - Math.pow(0.0015, dt));
       camera.lookAt(pos.x, ground + 1.45, pos.z);
@@ -1363,7 +1561,22 @@ export function ValeWorld({
       if (label !== lastNear) {
         lastNear = label;
         setNear(label);
-        if (label) setLine(`${label}. Press E to study this place.`);
+        if (label) setLine(`${place?.realm ?? label}. Click the ground to walk. E steps inside.`);
+      }
+      let touched: string | null = null;
+      for (const spot of spirits) {
+        const groundY = heightAt(spot.x, spot.z);
+        spot.mesh.position.set(spot.x, groundY + Math.sin(clock.t * 2 + spot.x) * 0.12, spot.z);
+        spot.mesh.rotation.y = clock.t * 0.7;
+        if (Math.hypot(pos.x - spot.x, pos.z - spot.z) < 4.2) touched = spot.id;
+      }
+      if (touched !== lastSpirit) {
+        lastSpirit = touched;
+        setSpirit(touched);
+        if (touched) {
+          const named = valePlaces.find((item) => item.id === touched);
+          setLine(`${named?.realm ?? "A spirit"} is in the path. Press E, or answer it.`);
+        }
       }
       if (mapOpenRef.current && Math.hypot(pos.x - dotMem.x, pos.z - dotMem.z) > 0.8) {
         dotMem.x = pos.x;
@@ -1424,6 +1637,19 @@ export function ValeWorld({
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", clearKeys);
+    const onPointerDown = (event: PointerEvent) => {
+      if (mapOpenRef.current || insideRef.current || event.button !== 0) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / Math.max(rect.width, 1)) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / Math.max(rect.height, 1)) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hit = raycaster.intersectObject(terrain, false)[0];
+      if (!hit) return;
+      goal = { x: hit.point.x, z: hit.point.z };
+      marker.visible = true;
+      marker.position.set(goal.x, heightAt(goal.x, goal.z) + 0.18, goal.z);
+    };
+    renderer.domElement.addEventListener("pointerdown", onPointerDown);
 
     const stick = host.parentElement?.querySelector("[data-stick]") as HTMLElement | null;
     const onStickDown = (event: PointerEvent) => {
@@ -1457,6 +1683,7 @@ export function ValeWorld({
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", clearKeys);
+      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
       stick?.removeEventListener("pointerdown", onStickDown);
       stick?.removeEventListener("pointermove", onStickMove);
       stick?.removeEventListener("pointerup", endStick);
@@ -1484,12 +1711,17 @@ export function ValeWorld({
     if (mapOpen && mapRef.current) paintTerrain(mapRef.current, true);
   }, [mapOpen]);
 
+  const insidePlace = valePlaces.find((item) => item.id === inside) ?? null;
   const place = valePlaces.find((item) => item.name === near) ?? null;
-  const topic = place ? nextIn(place.id) : undefined;
+  const active = insidePlace ?? place;
+  const topic = active ? nextIn(active.id) : undefined;
+  const spiritPlace = valePlaces.find((item) => item.id === spirit) ?? null;
 
   const travel = (item: Place) => {
+    setInside(null);
     setMapOpen(false);
-    setLine(`Traveled to ${item.name}.`);
+    setQuestsOpen(false);
+    setLine(`Traveled to ${item.name}, ${item.realm}.`);
     const event = new CustomEvent("vale-travel", { detail: { x: item.x, z: item.z + 6 } });
     window.dispatchEvent(event);
   };
@@ -1509,7 +1741,7 @@ export function ValeWorld({
   return (
     <div className="relative bg-[#16324a] text-[#f4efe4]">
       <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
-        <p className="font-semibold">{near ?? "The Vale"}</p>
+        <p className="font-semibold">{insidePlace ? insidePlace.name : near ?? "The Vale"}</p>
         <p className="min-w-0 flex-1 truncate text-[#d7c7a4]">{riding ? `Riding. ${line}` : line}</p>
         <div className="flex flex-wrap gap-1">
           {HOURS.map((item) => (
@@ -1523,6 +1755,9 @@ export function ValeWorld({
           <button type="button" className={chip(riding)} onClick={() => setRiding((on) => !on)}>
             {riding ? "Dismount" : "Ride"}
           </button>
+          <button type="button" onClick={() => setQuestsOpen(true)} className={chip(false)}>
+            Quests
+          </button>
           <button type="button" onClick={() => setMapOpen(true)} className={chip(false)}>
             Map
           </button>
@@ -1534,13 +1769,37 @@ export function ValeWorld({
         <div data-stick className="relative h-24 w-24 touch-none rounded-full border border-[#d7c7a4] bg-[#0e2418]/50 md:hidden" aria-label="Move" />
         <button
           type="button"
-          disabled={!topic}
-          onClick={() => topic && startTopicBattle(topic.id)}
+          disabled={insidePlace ? !topic : !place}
+          onClick={() => {
+            if (insidePlace) {
+              if (topic) startTopicBattle(topic.id);
+              return;
+            }
+            if (place) setInside(place.id);
+          }}
           className="min-h-11 rounded bg-[#f2d15a] px-4 text-sm font-bold text-[#1a2416] disabled:opacity-40"
         >
-          {topic ? `Enter ${topic.short}` : place ? "Place clear" : "Walk to a place"}
+          {insidePlace ? (topic ? `Questions · ${topic.short}` : "Hall clear") : place ? `Step into ${place.realm}` : "Walk to a place"}
         </button>
-        <p className="text-sm text-[#d7c7a4]">WASD walks. F calls the horse. M opens the map. E studies the place in front of you.</p>
+        {insidePlace ? (
+          <button type="button" onClick={() => setInside(null)} className="min-h-11 rounded border border-[#d7c7a4] px-4 text-sm font-semibold">
+            Leave
+          </button>
+        ) : null}
+        {spiritPlace && !insidePlace ? (
+          <button
+            type="button"
+            onClick={() => {
+              const next = nextIn(spiritPlace.id);
+              if (next) startTopicBattle(next.id);
+              else setLine("That spirit has nothing left to ask.");
+            }}
+            className="min-h-11 rounded border border-[#f2d15a] px-4 text-sm font-semibold"
+          >
+            Answer the spirit
+          </button>
+        ) : null}
+        <p className="text-sm text-[#d7c7a4]">Click the ground to walk. WASD still works. F calls the horse. E steps inside.</p>
       </div>
       {mapOpen ? (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0c1c16]/80 p-4">
@@ -1568,11 +1827,41 @@ export function ValeWorld({
                     top: `${((item.z + SPAN) / (SPAN * 2)) * 100}%`,
                   }}
                 >
-                  {item.name}
+                  {item.realm}
                 </button>
               ))}
             </div>
             <p className="mt-2 text-sm">Tap a place to travel. Gold marks on the little map mean that region is cleared.</p>
+          </div>
+        </div>
+      ) : null}
+      {questsOpen ? (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0c1c16]/80 p-4">
+          <div className="max-h-[80%] w-full max-w-lg overflow-auto rounded-lg border-4 border-[#8a5a2a] bg-[#e7d3a1] p-4 text-[#3a2a16]">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-serif text-2xl">Quests</h2>
+              <button type="button" onClick={() => setQuestsOpen(false)} className="min-h-11 px-3 text-sm font-semibold">
+                Close
+              </button>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {valePlaces.map((item) => {
+                const done = cleared(item.id);
+                const next = nextIn(item.id);
+                return (
+                  <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-[#8a5a2a]/40 bg-[#f4e7c4] px-3 py-2">
+                    <div>
+                      <p className="font-semibold">{item.realm}</p>
+                      <p className="text-sm">{item.name}. {done ? "Cleared." : next ? `Next: ${next.short}.` : "Open."}</p>
+                    </div>
+                    <button type="button" onClick={() => travel(item)} className="min-h-11 rounded bg-[#3a2a16] px-3 text-sm font-semibold text-[#f4efe4]">
+                      Travel
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-sm">Spirits on the field ask the same regions. Step into a hall, then start the questions.</p>
           </div>
         </div>
       ) : null}

@@ -58,7 +58,53 @@ export function SKHYPlan({
 }) {
   return (
     <section className="mb-4 rounded border border-line bg-paper px-4 py-3">
-      <p className="text-xs font-semibold tracking-wide text-muted uppercase">SK HY Plan</p>
+      <p className="text-xs font-semibold tracking-wide text-muted uppercase">Read this once</p>
+      <h2 className="font-serif text-2xl tracking-tight">Sensitivity, specificity, predictive value</h2>
+      <p className="mt-1 text-sm text-muted">
+        A urine marker in 500 men. 100 have cancer. 80 of those test positive. 400 do not have cancer. 40 of those test positive.
+      </p>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full max-w-md text-left text-sm">
+          <thead>
+            <tr className="text-muted">
+              <th className="py-1 pr-3 font-semibold" />
+              <th className="py-1 pr-3 font-semibold">Cancer</th>
+              <th className="py-1 pr-3 font-semibold">No cancer</th>
+              <th className="py-1 font-semibold">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="py-1 pr-3 font-semibold">Positive</td>
+              <td className="py-1 pr-3">80</td>
+              <td className="py-1 pr-3">40</td>
+              <td className="py-1">120</td>
+            </tr>
+            <tr>
+              <td className="py-1 pr-3 font-semibold">Negative</td>
+              <td className="py-1 pr-3">20</td>
+              <td className="py-1 pr-3">360</td>
+              <td className="py-1">380</td>
+            </tr>
+            <tr>
+              <td className="py-1 pr-3 font-semibold">Total</td>
+              <td className="py-1 pr-3">100</td>
+              <td className="py-1 pr-3">400</td>
+              <td className="py-1">500</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ul className="mt-3 space-y-1 text-sm">
+        <li><span className="font-semibold">Sensitivity 80%.</span> 80 of 100 with cancer are caught.</li>
+        <li><span className="font-semibold">Specificity 90%.</span> 360 of 400 without cancer are cleared.</li>
+        <li><span className="font-semibold">Positive predictive value 67%.</span> 80 of 120 positive tests are real.</li>
+        <li><span className="font-semibold">Negative predictive value 95%.</span> 360 of 380 negative tests are truly clear.</li>
+      </ul>
+      <p className="mt-2 text-sm text-muted">
+        Sensitivity and specificity stay put if you change who walks in. Predictive value does not. The same marker in a clinic where only 1% of men have cancer would make most positive tests false. That is the PSA problem. The question is in Physiology.
+      </p>
+      <p className="mt-6 text-xs font-semibold tracking-wide text-muted uppercase">SK HY Plan</p>
       <h2 className="font-serif text-2xl tracking-tight">Sunday → Friday night</h2>
       <p className="mt-1 text-sm text-muted">
         Highest-yield daily blocks. Each button starts an adaptive unused set for that day. Exam is Saturday Nov 21.

@@ -398,7 +398,7 @@ function pictureMissing(question: Question) {
   if (question.image || question.figure) return false;
   const text = [question.stem.join(" "), question.objective].join(" ");
   if (question.topicId === "nlutd" || isDsdText(text) || isPopqText(text)) return false;
-  return /\b(figure|figures|photograph|photographs|diagram|radiograph|depicted|shown below|shown above|image below|image above|the image|this image|following image|see the image|the photo|this photo|the pictures?)\b/i.test(text);
+  return /\b(figure|figures|photograph|photographs|diagram|radiograph|depicted|shown below|shown above|is shown|are shown|shown here|image below|image above|the image|this image|following image|see the image|the photo|this photo|the pictures?)\b/i.test(text);
 }
 
 function parkAtHome() {
@@ -2150,7 +2150,8 @@ export function MonsterQuest({
     if (!battle || battle.reveal || battle.over) return;
     const id = battle.ids[battle.index];
     const question = id ? getQuestion(id) : undefined;
-    if (!id || !question || !pictureMissing(question)) return;
+    if (!id || !question) return;
+    desk.flagNoImage(id);
     if (!desk.state.marks[id]) desk.toggleMark(id);
     desk.setNote(id, "Missing picture. Sent back from Monster Quest.");
     desk.recycle([id]);
@@ -2168,6 +2169,31 @@ export function MonsterQuest({
         reveal: { correct: true, note: "Sent back and marked. It does not count." },
         menu: null,
         over: "Sent back. This fight is over.",
+      });
+      return;
+    }
+    setBattle({ ...battle, ids, reveal: null, menu: "fight", moveId: undefined, committed: false });
+  };
+
+  const skipQuestion = () => {
+    if (!battle || battle.reveal || battle.over) return;
+    const id = battle.ids[battle.index];
+    if (!id) return;
+    desk.recycle([id]);
+    const ids = battle.ids.filter((item) => item !== id);
+    desk.patchTest(battle.testId, (current) => ({
+      ...current,
+      questionIds: current.questionIds.filter((item) => item !== id),
+    }));
+    setNotice("Skipped. It stays unused and does not count.");
+    if (battle.index >= ids.length) {
+      seal(false);
+      setBattle({
+        ...battle,
+        ids,
+        reveal: { correct: true, note: "Skipped. It does not count." },
+        menu: null,
+        over: "Skipped. This fight is over.",
       });
       return;
     }
@@ -2930,12 +2956,26 @@ export function MonsterQuest({
             ) : null}
             {question?.figure && !battle.over ? <Figure id={question.figure} /> : null}
             {question && pictureMissing(question) && !battle.reveal && !battle.over ? (
-              <button type="button" onClick={sendBack} className="mt-2 min-h-11 border-4 border-black bg-[#fff4a8] px-3 text-left text-sm font-bold">
-                No picture in this one. Send it back and mark it.
-              </button>
+              <p className="mt-2 text-sm font-bold">This one mentions a picture, and none is on the card.</p>
+            ) : null}
+            {question && !battle.reveal && !battle.over ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button type="button" onClick={sendBack} className="min-h-11 border-4 border-black bg-[#fff4a8] px-3 text-left text-sm font-bold">
+                  No photo — send back
+                </button>
+                <button type="button" onClick={skipQuestion} className="min-h-11 border-4 border-black bg-white px-3 text-left text-sm font-bold">
+                  Skip
+                </button>
+              </div>
             ) : null}
             {!battle.menu && !battle.reveal && !battle.over ? <p className="mt-2 text-sm font-bold">Pick an attack for this question, or run.</p> : null}
-            {battle.reveal ? <p className="mt-2 text-sm font-bold">{battle.reveal.correct ? "Hit." : "Miss."} {battle.reveal.note}</p> : null}
+            {battle.reveal ? (
+              <p className="mt-2 text-sm font-bold">
+                {battle.reveal.note.startsWith("Skipped") || battle.reveal.note.startsWith("Sent back")
+                  ? battle.reveal.note
+                  : `${battle.reveal.correct ? "Hit." : "Miss."} ${battle.reveal.note}`}
+              </p>
+            ) : null}
             {battle.reveal && question ? (
               <p className="mt-2 text-sm font-bold">Correct answer: {"ABCDE"[question.answer]}. {question.choices[question.answer]}</p>
             ) : null}

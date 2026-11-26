@@ -1630,6 +1630,33 @@ export const questions: Question[] = [
     wrong: ["", "You cannot book an outlet procedure on a flow rate alone.", "Compliance needs a filling pressure.", "Reflux needs imaging.", "Sphincter deficiency is a leak, usually with a normal or high flow."],
     objective: "A low free flow is not a diagnosis of obstruction.",
   },
+  {
+    id: "basic-stats-1",
+    topicId: "basic",
+    stem: [
+      "A urine marker is checked in 500 men. Cancer is already known from biopsy.",
+      "Of 100 men with cancer, 80 are positive. Of 400 men without cancer, 40 are positive.",
+      "Which row is sensitivity, specificity, positive predictive value, and negative predictive value?",
+    ],
+    choices: [
+      "80%, 90%, 67%, 95%",
+      "90%, 80%, 95%, 67%",
+      "80%, 90%, 95%, 67%",
+      "20%, 10%, 67%, 95%",
+      "80%, 10%, 80%, 90%",
+    ],
+    answer: 0,
+    explanation:
+      "Lay the counts out before you touch a formula. Disease in the columns, test in the rows. True positive 80, false negative 20, false positive 40, true negative 360. Sensitivity is true positives over everyone with disease: 80/100 = 80%. Specificity is true negatives over everyone without disease: 360/400 = 90%. Positive predictive value is true positives over every positive test: 80/(80+40) = 80/120 = 67%. Negative predictive value is true negatives over every negative test: 360/(360+20) = 360/380 = 95%. Sensitivity and specificity do not care how common the disease is. The predictive values do. In this clinic 100 of 500 men have cancer, so prevalence is 20%. The same 80% sensitivity and 90% specificity in a clinic where only 1% of men have cancer would drop the positive predictive value near 7%, because almost every positive test would be one of the false positives. That is why a positive PSA is not the same statement as 'he has cancer.'",
+    wrong: [
+      "",
+      "That swaps sensitivity with specificity, and the predictive values with each other.",
+      "95% is the negative predictive value, not the positive one. Most of the negative tests are true negatives here.",
+      "Those are the false-negative and false-positive rates, not the test characteristics.",
+      "Specificity is not the false-positive rate, and 80/100 is sensitivity, not the positive predictive value.",
+    ],
+    objective: "Sensitivity is disease found. Specificity is health cleared. Predictive value depends on how common the disease is.",
+  },
 ];
 
 export const questionById: Record<string, Question> = Object.fromEntries(

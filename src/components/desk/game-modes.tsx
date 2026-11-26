@@ -100,7 +100,7 @@ export function RpgMode({
         <p className="text-xs font-semibold tracking-wide text-stone uppercase">Overworld</p>
         <h1 className="font-serif text-3xl tracking-tight">The Vale</h1>
         <p className="mt-1 max-w-xl text-sm text-stone">
-          An open field between eight places. Walk or ride, change the hour and the weather, and open the map to travel. Stand at a marker and enter to study that region.
+          An open field between eight places. Click the ground or ride. Step inside a hall to study. Quests lists the river domain, the mountain folk, the wood, and the castle.
         </p>
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-2">

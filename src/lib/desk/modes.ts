@@ -1,4 +1,4 @@
-export type DeskMode = "classic" | "base" | "trail" | "encounter" | "rpg" | "notes" | "ops";
+export type DeskMode = "classic" | "base" | "trail" | "encounter" | "rpg" | "notes" | "ops" | "exam";
 
 export const deskModes: { id: DeskMode; label: string }[] = [
   { id: "classic", label: "Classic" },
@@ -8,6 +8,7 @@ export const deskModes: { id: DeskMode; label: string }[] = [
   { id: "notes", label: "Monster Quest" },
   { id: "rpg", label: "RPG" },
   { id: "ops", label: "Black Ops" },
+  { id: "exam", label: "Exam week" },
 ];
 
 export const MODE_KEY = "callroom-desk-mode";
